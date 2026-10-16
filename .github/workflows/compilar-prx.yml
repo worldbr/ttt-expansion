@@ -16,41 +16,35 @@ jobs:
       image: pspdev/pspdev:v20261001
     steps:
       - uses: actions/checkout@v5
-      - name: Verificar SDK e compilar PRX
+      - name: Compilar PRX e preparar arquivos para instalar
         shell: bash
         run: |
           set -euo pipefail
           export PSPDEV=/usr/local/pspdev
           export PATH="$PSPDEV/bin:$PATH"
-          echo "PSPDEV=$PSPDEV"
-          command -v psp-gcc
           psp-gcc --version | head -n 1
           echo "PSPSDK=$(psp-config --pspsdk-path)"
-          echo "--- Arquivos de biblioteca relevantes ---"
-          SDK_LIB="$(psp-config --pspsdk-path)/lib"
-          for lib in libpspdisplay.a libpspctrl.a libpspuser.a libpspiofilemgr.a; do
-            if test -f "$SDK_LIB/$lib"; then echo "OK: $lib"; else echo "NAO ENCONTRADA: $lib"; fi
-          done
-          echo "--- Inicio da compilacao ---"
           make --no-print-directory 2>&1 | tee build.log
           test -s ttt_expansion.prx
           mkdir -p dist/TTT_EXPANSION
-          cp ttt_expansion.prx dist/TTT_EXPANSION/
-          cp TTT_EXPANSION/plugin.ini dist/TTT_EXPANSION/
-          cd dist
-          zip -r ../TTT_EXPANSION_INSTALAR.zip TTT_EXPANSION
-      - name: Disponibilizar log (inclusive em falhas)
+          cp ttt_expansion.prx dist/TTT_EXPANSION/ttt_expansion.prx
+          cp TTT_EXPANSION/plugin.ini dist/TTT_EXPANSION/plugin.ini
+          test -s dist/TTT_EXPANSION/ttt_expansion.prx
+          test -s dist/TTT_EXPANSION/plugin.ini
+          echo "--- Conteudo pronto para o PPSSPP ---"
+          ls -lh dist/TTT_EXPANSION/
+      - name: Disponibilizar log mesmo em caso de falha
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: TTT-Expansion-Build-Log-V031
+          name: TTT-Expansion-Build-Log-V032
           path: build.log
           if-no-files-found: warn
       - name: Disponibilizar plugin para instalar
         if: success()
         uses: actions/upload-artifact@v4
         with:
-          name: TTT-Expansion-PRX-V031
-          path: |
-            ttt_expansion.prx
-            TTT_EXPANSION_INSTALAR.zip
+          name: TTT-Expansion-PRX-V032
+          path: dist/
+          if-no-files-found: error
+          compression-level: 6
