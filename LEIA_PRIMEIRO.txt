@@ -1,0 +1,33 @@
+TTT EXPANSION PRX - DIAGNOSTICO V0.3
+==================================
+Jogo: Dragon Ball Z: Tenkaichi Tag Team (ULUS10537)
+Atalho: L + R + QUADRADO
+
+ESTE ZIP CONTEM CODIGO-FONTE, NAO O ARQUIVO .PRX COMPILADO.
+O PSPDEV/PSPSDK NAO ESTA INSTALADO NO AMBIENTE DE CRIACAO.
+Nao copie este ZIP para PSP/PLUGINS e espere que ele rode.
+
+COMO GERAR O PRX (GITHUB ACTIONS - SEM INSTALAR COMPILADOR NO WINDOWS):
+1. Crie um repositorio no GitHub.
+2. Extraia este ZIP e envie a pasta INTERNA do projeto para a raiz do repositorio,
+   inclusive .github/workflows/compilar-prx.yml (diretorio oculto).
+3. Abra Actions > Compilar PRX de diagnostico > Run workflow.
+4. Se o build passar, baixe TTT-Expansion-PRX-V03 em Artifacts.
+5. Extraia TTT_EXPANSION_INSTALAR.zip de dentro do Artifact.
+6. Copie a pasta TTT_EXPANSION gerada para PSP/PLUGINS no Memory Stick do PPSSPP.
+7. Ative plugins no PPSSPP e reinicie o jogo (nao use savestate antigo).
+8. Observe rodape esquerdo 'TTT EXP PRX V03' ou abra
+   PSP/PLUGINS/TTT_EXPANSION/diagnostico.txt para ver module_start OK.
+9. Aperte L+R+QUADRADO para exibir/ocultar um pequeno painel diagnostico.
+
+O QUE ESTE TESTE NAO FAZ:
+- nao carrega o menu bonito HTML V0.2 dentro do jogo;
+- nao troca personagens nem modifica IDs, recursos, PACKFILE ou ISO;
+- nao intercepta controles do jogo; a combinacao tambem pode acionar coisas do jogo.
+
+O painel usa escrita no framebuffer existente, experimental, podendo nao
+aparecer em alguns backends. O log e a prova alternativa do carregamento.
+Se houver travamento ou glitches, desative o plugin e abra o jogo novamente.
+
+Se o build falhar, envie a mensagem de erro (nao renomeie uma DLL/ELF para PRX).
+Mais detalhes: README.md.
