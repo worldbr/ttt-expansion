@@ -1,0 +1,35 @@
+name: Compilar PRX de diagnostico
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - 'src/**'
+      - 'Makefile'
+      - 'exports.exp'
+      - 'TTT_EXPANSION/plugin.ini'
+      - '.github/workflows/compilar-prx.yml'
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    container:
+      image: pspdev/pspdev:v20261001
+    steps:
+      - uses: actions/checkout@v4
+      - name: Construir plugin com PSPSDK
+        shell: bash
+        run: |
+          export PSPDEV=/usr/local/pspdev
+          export PATH="$PSPDEV/bin:$PATH"
+          make
+          test -s ttt_expansion.prx
+          mkdir -p dist/TTT_EXPANSION
+          cp ttt_expansion.prx dist/TTT_EXPANSION/
+          cp TTT_EXPANSION/plugin.ini dist/TTT_EXPANSION/
+          cd dist
+          zip -r ../TTT_EXPANSION_INSTALAR.zip TTT_EXPANSION
+      - uses: actions/upload-artifact@v4
+        with:
+          name: TTT-Expansion-PRX-V03
+          path: |
+            ttt_expansion.prx
+            TTT_EXPANSION_INSTALAR.zip
