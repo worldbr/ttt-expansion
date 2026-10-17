@@ -1,4 +1,4 @@
-/* TTT Expansion V1.0C: patch verified JAL call sites, not HLE import stub. */
+/* TTT Expansion V1.0D: patch verified JAL call sites, not HLE import stub. */
 #include <pspuser.h>
 #include <pspctrl.h>
 #include <pspdisplay.h>
@@ -39,7 +39,7 @@ static void hex(char *d,int *p,int cap,uint32_t v) {
 static void probe_log(const char *phase) {
     TTTStubProbe x=ttt_frame_hook_probe();
     char s[270];int pos=0;s[0]=0;
-    append(s,&pos,sizeof(s),"[TTT V1.0C] STUB ");
+    append(s,&pos,sizeof(s),"[TTT V1.0D] STUB ");
     append(s,&pos,sizeof(s),phase);
     append(s,&pos,sizeof(s)," 08A66A80=");hex(s,&pos,sizeof(s),x.at_80);
     append(s,&pos,sizeof(s)," 08A66A84=");hex(s,&pos,sizeof(s),x.at_84);
@@ -50,7 +50,7 @@ static void probe_log(const char *phase) {
 static void callsites_log(const char *phase) {
     TTTCallsProbe c=ttt_frame_hook_probe_calls();
     char s[280];int p=0;s[0]=0;
-    append(s,&p,sizeof(s),"[TTT V1.0C] CALLS ");
+    append(s,&p,sizeof(s),"[TTT V1.0D] CALLS ");
     append(s,&p,sizeof(s),phase);
     append(s,&p,sizeof(s)," 08A63A48=");hex(s,&p,sizeof(s),c.site_a);
     append(s,&p,sizeof(s)," 08A63B10=");hex(s,&p,sizeof(s),c.site_b);
@@ -60,7 +60,7 @@ static void callsites_log(const char *phase) {
 }
 static void stats_log(void) {
     TTTFrameHookStats st=ttt_frame_hook_stats();char s[240];int p=0;s[0]=0;
-    append(s,&p,sizeof(s),"[TTT V1.0C] HOOK installed=");hex(s,&p,sizeof(s),(uint32_t)st.installed);
+    append(s,&p,sizeof(s),"[TTT V1.0D] HOOK installed=");hex(s,&p,sizeof(s),(uint32_t)st.installed);
     append(s,&p,sizeof(s)," calls=");hex(s,&p,sizeof(s),st.calls);
     append(s,&p,sizeof(s)," draws=");hex(s,&p,sizeof(s),st.draws);
     append(s,&p,sizeof(s)," buffer=");hex(s,&p,sizeof(s),st.last_buffer);
@@ -71,7 +71,7 @@ static void stats_log(void) {
 static void gpu_guard_log(const char *phase) {
     TTTGeGuardStats g=ttt_gpu_guard_stats();
     char s[290];int p=0;s[0]=0;
-    append(s,&p,sizeof(s),"[TTT V1.0C] GE GUARD ");append(s,&p,sizeof(s),phase);
+    append(s,&p,sizeof(s),"[TTT V1.0D] GE GUARD ");append(s,&p,sizeof(s),phase);
     append(s,&p,sizeof(s)," init_save=");hex(s,&p,sizeof(s),(uint32_t)g.init_save);
     append(s,&p,sizeof(s)," init_restore=");hex(s,&p,sizeof(s),(uint32_t)g.init_restore);
     append(s,&p,sizeof(s)," frame_save=");hex(s,&p,sizeof(s),(uint32_t)g.frame_save);
@@ -83,7 +83,7 @@ static void gpu_guard_log(const char *phase) {
 }
 static void input_log(const char *phase) {
     TTTInputHookStats st=ttt_input_hook_stats();char s[300];int p=0;s[0]=0;
-    append(s,&p,sizeof(s),"[TTT V1.0C] INPUT ");append(s,&p,sizeof(s),phase);
+    append(s,&p,sizeof(s),"[TTT V1.0D] INPUT ");append(s,&p,sizeof(s),phase);
     append(s,&p,sizeof(s)," installed=");hex(s,&p,sizeof(s),(uint32_t)st.installed);
     append(s,&p,sizeof(s)," site=");hex(s,&p,sizeof(s),st.site_opcode);
     append(s,&p,sizeof(s)," target=");hex(s,&p,sizeof(s),st.target);
@@ -97,7 +97,7 @@ static void input_log(const char *phase) {
 }
 static void bridge_log(const char *phase){
     TTTBridgeStats st=ttt_bridge_stats();char b[300];int p=0;b[0]=0;
-    append(b,&p,sizeof(b),"[TTT V1.0C] BRIDGE ");append(b,&p,sizeof(b),phase);
+    append(b,&p,sizeof(b),"[TTT V1.0D] BRIDGE ");append(b,&p,sizeof(b),phase);
     append(b,&p,sizeof(b)," installed=");hex(b,&p,sizeof(b),(uint32_t)st.installed);
     append(b,&p,sizeof(b)," error=");hex(b,&p,sizeof(b),(uint32_t)st.last_error);
     append(b,&p,sizeof(b)," A00=");hex(b,&p,sizeof(b),st.a);
@@ -110,7 +110,7 @@ static void bridge_log(const char *phase){
 static void resource_log(const char *phase){
     TTTResourceHookStats st=ttt_res_hook_stats();
     char b[400];int p=0;b[0]=0;
-    append(b,&p,sizeof(b),"[TTT V1.0C] RESOURCE ");append(b,&p,sizeof(b),phase);
+    append(b,&p,sizeof(b),"[TTT V1.0D] RESOURCE ");append(b,&p,sizeof(b),phase);
     append(b,&p,sizeof(b)," installed=");hex(b,&p,sizeof(b),(uint32_t)st.installed);
     append(b,&p,sizeof(b)," error=");hex(b,&p,sizeof(b),(uint32_t)st.last_error);
     append(b,&p,sizeof(b)," checked=");hex(b,&p,sizeof(b),st.calls_checked);
@@ -130,7 +130,7 @@ static void resource_log(const char *phase){
      * resource requests and tells us exactly what the redirect returned. */
     if(st.match_count){
         char m[260];int q=0;m[0]=0;
-        append(m,&q,sizeof(m),"[TTT V1.0C] RESOURCE MATCH count=");
+        append(m,&q,sizeof(m),"[TTT V1.0D] RESOURCE MATCH count=");
         hex(m,&q,sizeof(m),st.match_count);
         append(m,&q,sizeof(m)," id=");hex(m,&q,sizeof(m),st.match_id);
         append(m,&q,sizeof(m)," offset=");hex(m,&q,sizeof(m),st.match_offset);
@@ -145,7 +145,7 @@ static int diagnostic_thread(SceSize args,void *argp) {
     (void)args;(void)argp;
     ttt_toggle_init(&toggle);
     ttt_menu_init(&menu);
-    log_line("[TTT V1.0C] Thread iniciada. X em Goku Early 1P arma ID00 e CHR1194 Color1; QUADRADO desfaz.\n");
+    log_line("[TTT V1.0D] Thread iniciada. X em Goku Early 1P arma ID00 e CHR1194 Color1; QUADRADO desfaz.\n");
     /* Wait until game starts drawing and the loader finishes linking imports. */
     sceKernelDelayThread(1500000);
     probe_log("APOS_START");
@@ -155,10 +155,10 @@ static int diagnostic_thread(SceSize args,void *argp) {
         int rc=ttt_input_hook_install();
         if(rc<0) {
             char s[120];int p=0;s[0]=0;
-            append(s,&p,sizeof(s),"[TTT V1.0C] INPUT INSTALAR ERRO=");
+            append(s,&p,sizeof(s),"[TTT V1.0D] INPUT INSTALAR ERRO=");
             hex(s,&p,sizeof(s),(uint32_t)rc);
             append(s,&p,sizeof(s)," (controle do jogo NAO bloqueado)\n");log_line(s);
-        } else log_line("[TTT V1.0C] INPUT HOOK INSTALADO.\n");
+        } else log_line("[TTT V1.0D] INPUT HOOK INSTALADO.\n");
         input_log("APOS_INSTALAR");
     }
     while(g_running) {
@@ -171,18 +171,18 @@ static int diagnostic_thread(SceSize args,void *argp) {
             ttt_menu_rebase(&menu,pad.Buttons);
             if(toggle.open) {
                 int rc;
-                log_line("[TTT V1.0C] MENU ABERTO. Preparando GE.\n");
+                log_line("[TTT V1.0D] MENU ABERTO. Preparando GE.\n");
                 probe_log("ANTES_GPU");
                 if(!gpu_ready) {
                     rc=ttt_gpu_init();
-                    if(rc<0){log_line("[TTT V1.0C] GPU INIT ERRO.\n");toggle.open=0;ttt_input_hook_menu(0);}
+                    if(rc<0){log_line("[TTT V1.0D] GPU INIT ERRO.\n");toggle.open=0;ttt_input_hook_menu(0);}
                     else gpu_ready=1;
                     probe_log("DEPOIS_GPU");gpu_guard_log("INIT");
                 }
                 if(gpu_ready) {
                     {
                         char b[96];int q=0;b[0]=0;
-                        append(b,&q,sizeof(b),"[TTT V1.0C] PORTRAITS bits=");
+                        append(b,&q,sizeof(b),"[TTT V1.0D] PORTRAITS bits=");
                         hex(b,&q,sizeof(b),(uint32_t)ttt_gpu_portrait_status());
                         append(b,&q,sizeof(b)," (1=EARLY 2=MID)\n");
                         log_line(b);
@@ -194,17 +194,17 @@ static int diagnostic_thread(SceSize args,void *argp) {
                     rc=ttt_frame_hook_install();
                     if(rc<0) {
                         char s[80];int p=0;s[0]=0;
-                        append(s,&p,sizeof(s),"[TTT V1.0C] HOOK INSTALAR ERRO=");hex(s,&p,sizeof(s),(uint32_t)rc);
+                        append(s,&p,sizeof(s),"[TTT V1.0D] HOOK INSTALAR ERRO=");hex(s,&p,sizeof(s),(uint32_t)rc);
                         append(s,&p,sizeof(s),"\n");log_line(s);
                         probe_log("FALHA_HOOK");
                         callsites_log("FALHA_HOOK");
                         toggle.open=0;
                         ttt_input_hook_menu(0);
-                    } else {log_line("[TTT V1.0C] HOOK INSTALADO.\n");callsites_log("INSTALADO");armed=1;}
+                    } else {log_line("[TTT V1.0D] HOOK INSTALADO.\n");callsites_log("INSTALADO");armed=1;}
                 }
             } else {
                 ttt_frame_hook_remove();armed=0;gpu_guard_log("CLOSE");
-                log_line("[TTT V1.0C] MENU FECHADO. HOOK RESTAURADO.\n");callsites_log("RESTAURADO");
+                log_line("[TTT V1.0D] MENU FECHADO. HOOK RESTAURADO.\n");callsites_log("RESTAURADO");
             }
             stats_log();
             input_log("TOGGLE");
@@ -213,7 +213,7 @@ static int diagnostic_thread(SceSize args,void *argp) {
             ttt_gpu_set_menu(ttt_menu_snapshot(&menu)|((uint32_t)ttt_bridge_is_active()<<25));
             if(ev==TTT_EVENT_CONFIRM) {
                 char line[230];int p=0;line[0]=0;
-                append(line,&p,sizeof(line),"[TTT V1.0C] CONFIRMACAO personagem=");
+                append(line,&p,sizeof(line),"[TTT V1.0D] CONFIRMACAO personagem=");
                 append(line,&p,sizeof(line),menu.character?"GOKU_MID":"GOKU_EARLY");
                 append(line,&p,sizeof(line)," ID=");
                 append(line,&p,sizeof(line),menu.character?"01":"00");
@@ -227,8 +227,8 @@ static int diagnostic_thread(SceSize args,void *argp) {
                     {
                         TTTExternalStage ex;
                         int erc=ttt_external_stage_load(TTT_EXTERNAL_EARLY_COLOR1,TTT_EXTERNAL_TEST_SIZE,&ex);
-                        char e[360];int ep=0;e[0]=0;
-                        append(e,&ep,sizeof(e),"[TTT V1.0C] EXTERNAL STAGE rc=");
+                        char e[480];int ep=0;e[0]=0;
+                        append(e,&ep,sizeof(e),"[TTT V1.0D] EXTERNAL STAGE rc=");
                         hex(e,&ep,sizeof(e),(uint32_t)erc);
                         append(e,&ep,sizeof(e)," expected=");hex(e,&ep,sizeof(e),ex.reference_size);
                         append(e,&ep,sizeof(e)," size=");hex(e,&ep,sizeof(e),ex.actual_size);
@@ -237,7 +237,10 @@ static int diagnostic_thread(SceSize args,void *argp) {
                         append(e,&ep,sizeof(e)," fnv1a=");hex(e,&ep,sizeof(e),ex.fnv1a);
                         append(e,&ep,sizeof(e)," address=");hex(e,&ep,sizeof(e),ex.address);
                         append(e,&ep,sizeof(e)," retained=");hex(e,&ep,sizeof(e),ex.retained);
-                        append(e,&ep,sizeof(e)," (SOMENTE RAM DO PLUGIN; BATALHA USA ISO 1194)\n");
+                        append(e,&ep,sizeof(e)," allocator=");hex(e,&ep,sizeof(e),ex.allocator);
+                        append(e,&ep,sizeof(e)," alloc_err=");hex(e,&ep,sizeof(e),(uint32_t)ex.alloc_error);
+                        append(e,&ep,sizeof(e)," block_uid=");hex(e,&ep,sizeof(e),(uint32_t)ex.block_uid);
+                        append(e,&ep,sizeof(e)," (RAM PLUGIN; BATALHA USA ISO 1194)\n");
                         log_line(e);
                     }
                     int rc=ttt_res_hook_install();
@@ -255,14 +258,14 @@ static int diagnostic_thread(SceSize args,void *argp) {
                 ttt_external_stage_release();
                 ttt_res_hook_remove();
                 int rc=ttt_bridge_remove();
-                log_line(rc==0?"[TTT V1.0C] BRIDGE DESARMADA PELO QUADRADO.\n":"[TTT V1.0C] AVISO BRIDGE RESTAURACAO INCOMPLETA.\n");
+                log_line(rc==0?"[TTT V1.0D] BRIDGE DESARMADA PELO QUADRADO.\n":"[TTT V1.0D] AVISO BRIDGE RESTAURACAO INCOMPLETA.\n");
                 bridge_log("DESARMAR");resource_log("DESARMAR");
                 ttt_gpu_set_menu(ttt_menu_snapshot(&menu)|((uint32_t)ttt_bridge_is_active()<<25));
             } else if(ev==TTT_EVENT_CLOSE) {
                 toggle.open=0;
                 ttt_input_hook_menu(0);
                 ttt_frame_hook_remove();armed=0;gpu_guard_log("CLOSE");
-                log_line("[TTT V1.0C] MENU FECHADO CIRCULO. HOOK RESTAURADO.\n");
+                log_line("[TTT V1.0D] MENU FECHADO CIRCULO. HOOK RESTAURADO.\n");
                 callsites_log("RESTAURADO");
             }
         } else {
@@ -285,11 +288,11 @@ static int diagnostic_thread(SceSize args,void *argp) {
 }
 int module_start(SceSize args,void *argp) {
     (void)args;(void)argp;
-    log_line("\n[TTT V1.0C] module_start OK - ULUS10537\n");
+    log_line("\n[TTT V1.0D] module_start OK - ULUS10537\n");
     g_running=1;
     g_worker=sceKernelCreateThread("TTTExpMenuWorker",diagnostic_thread,0x20,0x4000,0,NULL);
-    if(g_worker<0){g_running=0;log_line("[TTT V1.0C] ERROR: thread create\n");return 0;}
-    if(sceKernelStartThread(g_worker,0,NULL)<0){g_running=0;log_line("[TTT V1.0C] ERROR: thread start\n");}
+    if(g_worker<0){g_running=0;log_line("[TTT V1.0D] ERROR: thread create\n");return 0;}
+    if(sceKernelStartThread(g_worker,0,NULL)<0){g_running=0;log_line("[TTT V1.0D] ERROR: thread start\n");}
     return 0;
 }
 int module_stop(SceSize args,void *argp) {

@@ -1,4 +1,3 @@
-TTT Expansion V1.0C: CHR externo completo mantido em RAM privada do plugin.
-O jogo AINDA usa PACKFILE 1194 da ISO; nao existe injecao no loader.
-O arquivo externo continua em PSP/PLUGINS/TTT_EXPANSION/characters/goku_early/color_1.pck1
-Consulte README.md e EXTERNAL STAGE no diagnostico.txt.
+TTT Expansion V1.0D - allocacao direta em memoria USER para CHR externo.
+Leia README.md para testar o EXTERNAL STAGE e verificar alloc_err.
+O CHR externo nao e injetado na batalha; PACKFILE 1194 continua.

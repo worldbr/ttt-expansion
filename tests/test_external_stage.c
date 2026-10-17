@@ -24,12 +24,14 @@ int main(void) {
     fclose(f);
     assert(ttt_external_stage_load(tmp,0x143000,&a)==0);
     assert(a.result==0 && a.retained==1 && a.address!=0);
+    assert(a.allocator==2 && a.alloc_error==0 && a.block_uid==-1);
     assert(a.actual_size==n && a.bytes_read==n && a.fnv1a==expect);
     assert(ttt_external_stage_size()==n);
     assert(ttt_external_stage_data()!=NULL);
     assert(ttt_external_stage_data()[0]==17);
     assert(ttt_external_stage_load("/tmp/nonexistent_ttt_stage_file.zzz",0,&b)==-1);
     assert(b.retained==0 && ttt_external_stage_size()==0 && !ttt_external_stage_data());
+    assert(b.allocator==0 && b.alloc_error==0);
     ttt_external_stage_release();
     remove(tmp);
     return 0;
