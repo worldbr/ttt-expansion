@@ -1,1 +1,3 @@
-TTT Expansion PRX V0.5.1 — identificar por que o hook retorna -12. Leia README.md.
+TTT Expansion PRX V0.5.2 — corrigir o erro de hook -12 sem modificar o stub HLE do PPSSPP.
+Atualize o GitHub, compile o artifact TTT-Expansion-PRX-V052 e siga o README.md.
+Atalho: L + R + Quadrado. Teste experimental: pode haver glitches/travamento.

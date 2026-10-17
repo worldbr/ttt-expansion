@@ -8,7 +8,11 @@ typedef struct TTTFrameHookStats {
 typedef struct TTTStubProbe {
     uint32_t at_80, at_84, at_88, at_8c;
 } TTTStubProbe;
+typedef struct TTTCallsProbe {
+    uint32_t site_a, site_b, site_c, replacement;
+} TTTCallsProbe;
 TTTStubProbe ttt_frame_hook_probe(void);
+TTTCallsProbe ttt_frame_hook_probe_calls(void);
 int ttt_frame_hook_install(void);
 void ttt_frame_hook_remove(void);
 void ttt_frame_hook_gpu_ready(int enabled);
