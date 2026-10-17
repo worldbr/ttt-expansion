@@ -1,10 +1,12 @@
-/* TTT Expansion V0.6 -- first navigable PPSSPP overlay.
+/* TTT Expansion V0.7 -- Goku Early and Goku Mid with replaceable portraits.
  * Draw via established V0.5.3 verified three-callsite framebuffer hook.
  * This is UI ONLY: X confirms to a log; no game IDs are modified.
  * PSP uses ABGR8888; all text is simple 5x7 all-caps font rendered via GE.
  */
 #include <pspgu.h>
 #include <pspdisplay.h>
+#include <pspiofilemgr.h>
+#include <psputils.h>
 #include <stdint.h>
 #include <stddef.h>
 #include "framecheck.h"
@@ -23,6 +25,37 @@
 static uint32_t __attribute__((aligned(16))) gu_list[32768];
 static int gu_initialized;
 static volatile uint32_t menu_snapshot;
+/* These RGBA8888 textures live in stable, 16-byte-aligned user RAM.
+ * A plain 64x64 RGBA file is used instead of runtime PNG decoding.
+ * Pixel bytes R,G,B,A match the PSP's little-endian GU_PSM_8888 order. */
+#define PORT_W 64
+#define PORT_H 64
+#define PORT_LEN (PORT_W * PORT_H * 4)
+static uint8_t portrait_pixels[2][PORT_LEN] __attribute__((aligned(16)));
+static int portrait_present[2];
+static const char *portrait_paths[2]={
+    "ms0:/PSP/PLUGINS/TTT_EXPANSION/portraits/goku_early.rgba",
+    "ms0:/PSP/PLUGINS/TTT_EXPANSION/portraits/goku_mid.rgba"
+};
+static int load_portrait(int id) {
+    SceUID f; int count=0;
+    if(id<0||id>=2) return 0;
+    f=sceIoOpen(portrait_paths[id],PSP_O_RDONLY,0);
+    if(f<0)return 0;
+    while(count<PORT_LEN){
+        int n=sceIoRead(f,portrait_pixels[id]+count,PORT_LEN-count);
+        if(n<=0)break;
+        count+=n;
+    }
+    sceIoClose(f);
+    if(count!=PORT_LEN)return 0;
+    sceKernelDcacheWritebackRange(portrait_pixels[id],PORT_LEN);
+    return 1;
+}
+int ttt_gpu_portrait_status(void) {
+    return (portrait_present[0]?1:0) | (portrait_present[1]?2:0);
+}
+
 
 typedef struct { int16_t x,y,z; } Vertex;
 static void box(int x,int y,int w,int h,uint32_t color) {
@@ -89,6 +122,25 @@ static void txt(int x,int y,const char *s,int scale,uint32_t color) {
         }
     }
 }
+typedef struct { int16_t u,v,x,y,z; } TTexVertex;
+static void portrait(int which,int x,int y,int w,int h) {
+    TTexVertex *v;
+    if(which<0||which>=2 || !portrait_present[which])return;
+    if(x<0||y<0||x+w>480||y+h>272)return;
+    v=(TTexVertex*)sceGuGetMemory(2*sizeof(TTexVertex));
+    if(!v)return;
+    v[0].u=0;v[0].v=0;v[0].x=x;v[0].y=y;v[0].z=0;
+    v[1].u=64;v[1].v=64;v[1].x=x+w;v[1].y=y+h;v[1].z=0;
+    sceGuEnable(GU_TEXTURE_2D);
+    sceGuTexMode(GU_PSM_8888,0,0,0);
+    sceGuTexFunc(GU_TFX_MODULATE,GU_TCC_RGBA);
+    sceGuTexFilter(GU_LINEAR,GU_LINEAR);
+    sceGuTexWrap(GU_CLAMP,GU_CLAMP);
+    sceGuTexImage(0,PORT_W,PORT_H,PORT_W,portrait_pixels[which]);
+    sceGuColor(C_WHITE);
+    sceGuDrawArray(GU_SPRITES,GU_TEXTURE_16BIT | GU_VERTEX_16BIT | GU_TRANSFORM_2D,2,NULL,v);
+    sceGuDisable(GU_TEXTURE_2D);
+}
 static const char *titles[3][3]={
     {"PERSONAGENS","MAPAS","AJUSTES"},
     {"CHARACTERS","MAPS","SETTINGS"},
@@ -97,34 +149,43 @@ static const char *titles[3][3]={
 static const char *colors[3]={"TRAJE","COSTUME","TRAJE"};
 static const char *maps_pending[3]={"MAPAS EM DESENVOLVIMENTO","MAPS UNDER DEVELOPMENT","MAPAS EN DESARROLLO"};
 static const char *settings_hint[3]={"SELECT MUDA IDIOMA","SELECT CHANGES LANGUAGE","SELECT CAMBIA IDIOMA"};
-static const char *confirm_hint[3]={"X TESTA SELECAO","X TEST SELECTION","X PRUEBA SELECCION"};
-static const char *preview[3]={"APENAS PREVIA","PREVIEW ONLY","SOLO VISTA PREVIA"};
+static const char *preview[3]={"X TESTE  SEM ID","X TEST  NO ID","X PRUEBA SIN ID"};
+static const char *nav_hints[3]={
+    "ESQ/DIR PERSONAGEM  CIMA/BAIXO TRAJE",
+    "LEFT/RIGHT CHARACTER  UP/DOWN COSTUME",
+    "IZQ/DER PERSONA  ARR/ABA TRAJE"
+};
+static const char *foot_hints[3]={
+    "TRIANGULO ABA  SELECT IDIOMA  CIRCULO FECHA",
+    "TRIANGLE TAB  SELECT LANGUAGE  CIRCLE CLOSE",
+    "TRIANGULO MENU  SELECT IDIOMA  CIRCULO CIERRA"
+};
 
-static void card(int x,int y,int selected,const char *name,const char *detail) {
-    box(x,y,168,51,selected?C_GOLD:C_OUTER);
-    box(x+2,y+2,164,47,selected?C_BLUE:C_DARK);
-    box(x+7,y+7,36,36,selected?C_GOLD:C_LIGHT);
-    box(x+11,y+10,28,30,C_DARK);
-    txt(x+21,y+16,selected?"G":"S",2,C_WHITE);
-    txt(x+49,y+9,name,1,C_WHITE);
-    txt(x+49,y+27,detail,1,selected?C_GOLD:C_SOFT);
+static void card(int slot,int x,int y,int selected,const char *name,const char *detail) {
+    box(x,y,168,54,selected?C_GOLD:C_OUTER);
+    box(x+2,y+2,164,50,selected?C_BLUE:C_DARK);
+    box(x+6,y+6,43,42,selected?C_GOLD:C_LIGHT);
+    box(x+8,y+8,39,38,C_BLACK);
+    if(portrait_present[slot])portrait(slot,x+8,y+8,39,38);
+    else txt(x+21,y+18,slot==0?"E":"M",2,C_WHITE);
+    txt(x+54,y+10,name,1,C_WHITE);
+    txt(x+54,y+29,detail,1,selected?C_GOLD:C_SOFT);
 }
 static void render_menu(uint32_t data) {
-    int form=(int)(data&1u),color=(int)((data>>1)&3u);
-    int tab=(int)((data>>3)&3u),lang=(int)((data>>5)&3u);
-    int i;
+    int character=(int)(data&1u),color=(int)((data>>1)&3u);
+    int tab=(int)((data>>3)&3u),lang=(int)((data>>5)&3u),i;
     char clr[]="1/4";
     if(tab>2)tab=0;
     if(lang>2)lang=0;
     clr[0]=(char)('1'+color);
-    /* Thick outlined window, original TTT-inspired blue/gold language. */
+    /* Same original blue/gold identity; enlarged photo cards and preview. */
     box(35,12,410,250,C_OUTER);
     box(39,16,402,242,C_DARK);
     box(44,17,392,7,C_GOLD);
     box(44,248,392,5,C_GOLD);
     box(47,29,386,27,C_BLUE);
     txt(59,36,"TTT EXPANSION",2,C_WHITE);
-    txt(343,37,"V0.6",1,C_GOLD);
+    txt(345,37,"V0.7",1,C_GOLD);
     for(i=0;i<3;i++) {
         int xx=57+123*i;
         box(xx,62,118,21,tab==i?C_GOLD:C_BLUE);
@@ -133,16 +194,22 @@ static void render_menu(uint32_t data) {
     }
     box(56,89,368,149,C_BLUE);
     if(tab==0) {
-        card(64,96,form==0,"GOKU BASE","RECURSO 00");
-        card(64,153,form==1,"GOKU SSJ1","RECURSO 01");
-        box(242,96,173,108,C_DARK);
-        box(247,100,163,5,C_GOLD);
-        txt(251,114,"ID 0XA0",2,C_WHITE);
-        txt(252,142,colors[lang],1,C_SOFT);
-        txt(326,142,clr,1,C_GOLD);
-        txt(252,164,confirm_hint[lang],1,C_GOLD);
-        txt(252,183,preview[lang],1,C_SOFT);
-        txt(69,213,"ESQ/DIR FORMA - CIMA/BAIXO TRAJE",1,C_WHITE);
+        card(0,64,96,character==0,"GOKU EARLY","SAGA SAIYAN");
+        card(1,64,155,character==1,"GOKU MID","SAGA NAMEK");
+        box(239,96,177,117,C_DARK);
+        box(244,100,167,5,C_GOLD);
+        box(244,110,88,88,C_GOLD);
+        box(246,112,84,84,C_BLACK);
+        if(portrait_present[character]) portrait(character,246,112,84,84);
+        else txt(259,140,character==0?"EARLY":"MID",1,C_WHITE);
+        txt(339,112,"GOKU",1,C_WHITE);
+        txt(339,124,character==0?"EARLY":"MID",1,C_GOLD);
+        txt(339,145,"ID TBD",1,C_SOFT);
+        txt(339,156,colors[lang],1,C_SOFT);
+        txt(339,168,clr,1,C_GOLD);
+        txt(339,184,"EXTRA",1,C_WHITE);
+        txt(252,200,preview[lang],1,C_SOFT);
+        txt(69,219,nav_hints[lang],1,C_WHITE);
     } else if(tab==1) {
         txt(77,112,"TTT EXTRA MAPS",2,C_GOLD);
         txt(78,153,maps_pending[lang],1,C_WHITE);
@@ -152,11 +219,15 @@ static void render_menu(uint32_t data) {
         txt(78,150,settings_hint[lang],1,C_WHITE);
         txt(78,174,lang==0?"PORTUGUES":lang==1?"ENGLISH":"ESPANOL",1,C_GOLD);
     }
-    txt(58,241,"TRIANGULO ABA   SELECT IDIOMA   CIRCULO FECHA",1,C_WHITE);
+    txt(58,240,foot_hints[lang],1,C_WHITE);
 }
 int ttt_gpu_init(void) {
     int rc;if(gu_initialized)return 0;
-    rc=sceGuInit();if(rc>=0)gu_initialized=1;
+    rc=sceGuInit();if(rc>=0) {
+        portrait_present[0]=load_portrait(0);
+        portrait_present[1]=load_portrait(1);
+        gu_initialized=1;
+    }
     return rc;
 }
 void ttt_gpu_set_menu(uint32_t snapshot) {menu_snapshot=snapshot;}

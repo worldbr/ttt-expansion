@@ -14,7 +14,7 @@
 #define TTT_EVENT_CLOSE 2
 typedef struct TTTMenuState {
     uint32_t previous;
-    uint8_t form;       /* 0 = Goku Base, 1 = Goku SSJ1, resource mapping demo only */
+    uint8_t character;  /* 0 = Goku Early, 1 = Goku Mid; two DIFFERENT extra entries, preview only */
     uint8_t color;      /* 0..3; preview, not applied to game */
     uint8_t tab;        /* 0 = characters, 1 = maps, 2 = settings */
     uint8_t lang;       /* 0 = PT, 1 = EN, 2 = ES */

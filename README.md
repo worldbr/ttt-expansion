@@ -1,39 +1,48 @@
-# TTT Expansion Menu V0.6.1 — Bloqueio de controles do jogo
+# TTT Expansion PRX V0.7 — Goku Early e Goku Mid
 
-**PPSSPP / ULUS10537 (EBOOT.OLD testado pelo usuário).** Evolução da V0.6, preservando o menu azul/amarelo e o hook de apresentação de quadros da V0.5.3. **L + R + Quadrado** permanece o atalho.
+**Base: V0.6.1 confirmada pelo usuário como funcional (overlay + bloqueio de comandos).**
 
-## Implementação
+## Duas entradas NOVAS, separadas
 
-- O `EBOOT.OLD` foi analisado: há um `jal 0x08A66A6C` em **`0x0881A158`**, opcode original **`0x0E299A9B`**, na rotina que chama `sceCtrlReadBufferPositive` e grava na região do pad `0x08AF31A0`.
-- Na inicialização, o plugin valida essa instrução; se coincidir, troca **somente o JAL desse endereço** para um interceptador na memória do PRX. Não modifica o stub HLE do PPSSPP e preserva a chamada original pela importação independente do plugin.
-- Com o menu aberto, o jogo recebe `Buttons=0`, `Lx=128`, `Ly=128`; o plugin continua usando `sceCtrlPeekBufferPositive` para os comandos REAIS.
-- O atalho e o botão que fecha o menu são consumidos até **todos** os botões serem liberados; isso evita que o quadrado, círculo ou X vaze para o menu original ao fechar.
-- Ao fechar o menu, o controle é restaurado. Ao encerrar a sessão do plugin, o JAL original é restaurado (desde que ainda seja nosso opcode).
-- Caso a assinatura seja diferente (ou o JAL não possa alcançar o plugin), **não instala o bloqueio** e registra `INPUT INSTALAR ERRO` (sem forçar alteração indevida).
-- **Nenhuma alteração ao EBOOT/ISO em disco, ao PACKFILE ou aos IDs de personagens.** A confirmação por X continua sendo somente um teste registrado no log.
+- `GOKU EARLY` = Goku (Early), era Saiyajin de Dragon Ball Z (adulto), não o Goku criança.
+- `GOKU MID` = Goku (Mid), era Namek/Freeza de Dragon Ball Z (adulto).
 
-## Instalação
+**Importante:** a interface mostra as duas entradas independentes; o PRX ainda NÃO criou no motor do jogo dois IDs extras, novos CHR ou golpes. Não se deve confundir com os Goku Base/SSJ1 originais. IDs permanecem **TBD / pendentes de testes**. O ID `A0` experimental continua validado no projeto antigo, mas a V0.7 NÃO o atribui silenciosamente a um ou aos dois personagens. Pressionar X só gera registro no diagnostico.txt.
 
-1. Faça backup da V0.6 que já funcionou.
-2. Extraia o `ATUALIZACAO.zip` para a raiz do repositório GitHub, preservando `src/`, `tests/`, `Makefile` e `.github/workflows/`.
-3. Commit, Actions > Compilar PRX do menu > Run workflow. Artifact esperado: `TTT-Expansion-PRX-V061`.
-4. Copie `TTT_EXPANSION` para `PSP/PLUGINS/` do PPSSPP substituindo o `ttt_expansion.prx` anterior.
-5. Reinicie o PPSSPP e o jogo completamente. Na seleção de personagens pressione L+R+Quadrado; tente mover esquerda/direita e X enquanto nosso menu está aberto.
-6. Verifique `diagnostico.txt`: linhas `INPUT HOOK INSTALADO` e `INPUT STATUS` com `muted` aumentando. Ao fechar, navegação do jogo deve voltar ao normal.
+## Retratos ilustrativos — substituíveis
 
-## Limitações e segurança
+Incluí retratos de exemplo produzidos a partir de arte ilustrativa para facilitar o primeiro teste. Eles não são recursos oficiais do Tenkaichi 3 e podem ser substituídos.
 
-- **Primeiro teste:** interceptamos a única chamada direta `sceCtrlReadBufferPositive` encontrada no EBOOT principal. Outras rotinas, módulos carregáveis e caminhos de entrada podem existir e não foram confirmados. Se o menu original continuar se mexendo, envie logs para localizar o caminho efetivamente utilizado. Não é bloqueio universal garantido.
-- O jogo pode manter uma ação já iniciada no quadro em que o atalho foi reconhecido. Há um filtro preventivo do próprio atalho, mas a sincronização de threads ainda pode gerar um quadro de diferença.
-- O código altera **uma instrução MIPS na memória em execução**, podendo provocar glitches/travamento. Mantenha backup, teste com progresso salvo e remova o plugin se houver problema.
-- Não sabemos se todas as revisões do ULUS10537 têm as mesmas instruções. A validação faz o plugin recusar patches incompatíveis.
-- Compilação PSPSDK e comportamento PPSSPP a validar no GitHub e no emulador do usuário; aqui foram feitos apenas testes nativos e inspeção do ELF.
+- `TTT_EXPANSION/portraits/goku_early.rgba` (16.384 bytes, 64×64 RGBA8888)
+- `TTT_EXPANSION/portraits/goku_mid.rgba` (16.384 bytes, 64×64 RGBA8888)
+- PNGs de referência correspondentes, para inspeção e edição.
 
-## Testes em PC (sem PSPSDK)
+O PRX carrega os arquivos `.rgba` na abertura inicial, guarda as texturas em buffers estáveis e as desenha pela GE no seletor. Se um arquivo não for encontrado, mostra a letra E/M em vez da imagem. Log `PORTRAITS bits=0x00000003` significa que ambos os retratos foram lidos (não prova renderização visual).
 
-```bash
-cc -std=gnu11 -Wall -Wextra -Isrc tests/test_input_guard.c src/input_guard.c src/input_plan.c -o /tmp/test_input && /tmp/test_input
-cc -std=gnu11 -Wall -Wextra -Isrc tests/test_menu_state.c src/menu_state.c -o /tmp/test_menu && /tmp/test_menu
-cc -std=gnu11 -Wall -Wextra -Isrc tests/test_callsite_plan.c src/callsite_plan.c -o /tmp/test_calls && /tmp/test_calls
-cc -std=gnu11 -Wall -Wextra -Isrc tests/test_native.c src/toggle.c src/overlay.c src/framecheck.c -o /tmp/test_fb && /tmp/test_fb
+Para trocar as imagens use `py -m pip install pillow` e depois:
+
+```sh
+py tools/converter_retratos.py nova_imagem_early.png TTT_EXPANSION/portraits/goku_early.rgba
+py tools/converter_retratos.py nova_imagem_mid.png TTT_EXPANSION/portraits/goku_mid.rgba
 ```
+
+Copie os `.rgba` resultantes para a pasta `PSP/PLUGINS/TTT_EXPANSION/portraits/` do PPSSPP e reinicie o jogo. Não precisa recompilar o PRX **para trocar só retratos**.
+
+## Como compilar
+
+1. Faça backup do PRX da V0.6.1.
+2. Substitua os arquivos do projeto no GitHub, preservando pastas `src/`, `.github/workflows/`, `TTT_EXPANSION/` e `tools/`.
+3. Faça commit, Actions → Compilar PRX do menu → Run workflow.
+4. Baixe `TTT-Expansion-PRX-V070`; dentro haverá `TTT_EXPANSION/ttt_expansion.prx`, `plugin.ini` e `portraits/*.rgba`.
+5. Copie **a pasta inteira TTT_EXPANSION** para `PSP/PLUGINS/`, habilite plugins e reinicie completamente o PPSSPP.
+6. L + R + Quadrado para abrir/fechar. Setas selecionam personagem e Color; X registra a prévia; Círculo fecha.
+
+## O que não mudou
+
+- Hook de apresentação GE pelos JALs `08A63A48`, `08A63B10`, `08A6408C`.
+- Bloqueio de controles na chamada em `0881A158` enquanto o menu está aberto.
+- Suporte a português, inglês e espanhol. Não há alteração no EBOOT/ISO ou no PACKFILE.
+
+## Segurança
+
+Os hooks modificam instruções em RAM, podem gerar glitches/travamentos, e foram verificados apenas com a versão de ULUS10537 em uso nos testes anteriores. Esta versão tem **testes locais de controle e assets, mas não foi compilada com PSPSDK nem executada no PPSSPP aqui**. Mantenha a V0.6.1 funcional como backup.
