@@ -12,10 +12,14 @@
 #define TTT_RES_CHECKED_JAL UINT32_C(0x0E271B28)
 #define TTT_RES_UNCHECKED_JAL UINT32_C(0x0E271B58)
 
+/* Match snapshot is updated ONLY by a request actually mapped to the
+ * independent CHR. Subsequent ordinary calls cannot overwrite this data. */
 typedef struct {
     int installed, last_error;
     uint32_t calls_checked,calls_unchecked,redirects;
     uint32_t last_id,last_variant,last_original,last_result;
+    uint32_t match_count, match_id, match_offset, match_original, match_redirected;
+    uint32_t match_path; /* 1=checked resolver, 2=unchecked resolver */
     uint32_t pack_magic,pack_count,resource_id,resource_size;
     uint32_t original_size;
 } TTTResourceHookStats;
@@ -25,6 +29,8 @@ int ttt_res_make_jal(uint32_t site,uint32_t dest,uint32_t observed,
                       uint32_t expected,uint32_t *patched);
 int ttt_res_validate_pack(uint32_t magic,uint32_t count,uint32_t resource_id,
                           uint32_t size);
+/* Pure predicate shared by both resolver interceptors and host tests. */
+int ttt_res_should_redirect(int bridge_active,int id,int offset);
 int ttt_res_hook_install(void);
 void ttt_res_hook_remove(void);
 TTTResourceHookStats ttt_res_hook_stats(void);

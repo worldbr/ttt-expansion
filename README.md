@@ -1,39 +1,35 @@
-# TTT Expansion Menu V0.9.2 — Teste CHR independente (ULUS10537)
+# TTT Expansion PRX V0.9.3 — Diagnóstico do primeiro CHR independente
 
-Esta versão parte da **V0.9.1**, que você confirmou entrar em batalha mantendo ID externo `00` e gráficos normais. Preserva o GPU Guard, o menu visual, retratos e bloqueio de controles.
+A V0.9.2 carregou a batalha normalmente com Goku Early (`ID 00`) e instalou o hook de recursos; o log mostrou `redirects=1`, mas os campos `last_id`, `old` e `new` foram sobrescritos por uma solicitação posterior do ID `0x12`. **Esta versão mantém exatamente o mesmo redirecionamento e corrige o diagnóstico, não adiciona um Mod Loader externo.**
 
 ## O que muda
 
-Ao confirmar **1P → Goku Early → Color 1 → X**, a V0.9.2 instala uma *ponte* que:
+- Preserva **GPU Guard**, menu V0.8.1, retratos, seleção 1P–4P e o bloqueio de controles.
+- Preserva Goku Early `ID 00` + ponte temporária Videl forma 2.
+- Preserva a regra **ID 00 + Color 1 → índice PACKFILE 0x4A9 (entrada 1194 no Index Editor)**, sem mudar o Goku `ID 03`.
+- Registra separadamente o último **redirecionamento real**, para que as solicitações posteriores de outros personagens não sobrescrevam `id/offset/old/new` de interesse.
+- Novo registro `RESOURCE MATCH`: `count`, `id`, `offset`, `old`, `new`, `path` (1 = resolver checado, 2 = não checado).
+- Não realiza I/O no interceptor; logs continuam vindo da thread principal.
 
-1. Preserva o ID externo `00` na seleção experimental **Videl forma 2**, conforme V0.9.1.
-2. Intercepta cinco chamadas verificadas do jogo às rotinas `089C6CA0` e `089C6D60` que convertem ID do personagem + variante em ID de recurso do PACKFILE.
-3. **Somente se `external_id == 0` e `resource_offset == 0`**, devolve o ID de recurso **`0x4A9`**, correspondente ao arquivo **1194 (`0x4AA` mostrado pelo Index Editor)**.
-4. Para os demais pedidos, chama a rotina original e devolve seu resultado. Não altera os arquivos do Goku original (ID `03`).
-5. Antes de instalar, confere os cinco opcodes `JAL`, o cabeçalho `PacK`, o total de 14097 registros e a entrada `0x4A9` do índice em memória, recusando valores incompatíveis.
+## Compilar e testar
 
-**Não é Mod Loader externo**: o arquivo novo continua sendo lido pela rotina original do PACKFILE na sua ISO. A versão atual não redireciona Color 2–4 nem SFX, e continua dependendo do slot experimental da Videl. O modelo será visualmente igual ao Goku original porque você colocou uma cópia idêntica do CHR no índice 1194.
+1. Faça backup do PRX V0.9.2. Use sua ISO atual contendo o CHR do Goku na entrada **1194**, e desative cheats antigos de expansão. Não substitua outros recursos.
+2. Atualize seu repositório GitHub com os arquivos do ZIP, faça commit e execute **Actions → Compilar PRX do menu**. Artifact esperado: `TTT-Expansion-PRX-V093`.
+3. Instale o PRX novo e reinicie completamente o PPSSPP.
+4. Teste rapidamente o Goku original `03` em batalha para garantir que os gráficos continuam normais.
+5. Abra o TTT Expansion por `L+R+Quadrado`; selecione `1P → Goku Early → Color 1`, confirme `X`. Feche com Círculo.
+6. Selecione a **segunda forma experimental da Videl** no menu original, entre em batalha, e depois confira `diagnostico.txt`.
 
-## Testar
+## Resultado esperado no log
 
-1. Utilize a ISO que você já confirmou conter uma cópia do CHR Goku Base Color 1 na entrada **1194 do Index Editor**. Faça backup da ISO e do PRX anterior.
-2. Desabilite quaisquer cheats antigos de expansão. Use o EBOOT original da versão ULUS10537; não aplique patches concorrentes nesses endereços.
-3. Atualize GitHub com os arquivos do projeto (ou só o ZIP atualização), commit e execute Actions **Compilar PRX do menu**. Artifact esperado: `TTT-Expansion-PRX-V092`.
-4. Instale o PRX V0.9.2, reinicie completamente o PPSSPP. Teste abrir/fechar o menu e uma batalha normal com Goku original ID03, antes de ativar a ponte.
-5. Reinicie o jogo, selecione **1P → Goku Early → Color 1 → X** dentro do TTT Expansion. Verifique em `diagnostico.txt` a linha `RESOURCE CONFIRMAR` com `installed=0x00000001`, `record_id=0x000004A9` e `size_1194` > 0, e `BRIDGE CONFIRMAR installed=1`.
-6. Feche o plugin com Círculo, selecione **Videl segunda forma experimental** no menu original e entre em batalha.
-7. Confirme o ID de batalha do 1P em `08B48AE8 == 00`. Após a batalha, abra o overlay para ler os contadores `RESOURCE STATUS`: `redirects` deverá aumentar e `last_result` quando corresponder à primeira Color pode ser `0x4A9`. `checked`/`unchecked` contam todas as conversões de recursos interceptadas, mesmo quando não há redirecionamento.
+```text
+[TTT V0.9.3] RESOURCE MATCH count=0x00000001 id=0x00000000 offset=0x00000000 old=0x00000593 new=0x000004A9 path=0x00000001
+```
 
-### Quando o resultado não for o esperado
+A linha acima é **exemplo**, não resultado real. `old` e `path` poderão variar. `RESOURCE STATUS` preserva o formato e os contadores anteriores. O `RESOURCE MATCH` informa a chamada em que ocorreu o redirecionamento; mesmo confirmando `new=0x4A9`, ainda não comprova, sozinho, a leitura final do arquivo ou o uso dos dados pelo renderizador. Como a entrada 1194 contém uma cópia visualmente idêntica, o modelo deve permanecer igual.
 
-- `RESOURCE CONFIRMAR installed=0`: envie a linha completa, sobretudo `error`, `pack_magic`, `count`, `record_id`, `size_1194`. Um erro -10 a -13 indica metadados do PACKFILE inesperados; NÃO force patch nem carregamento.
-- `BRIDGE CONFIRMAR installed=0`: a ponte ID00 foi recusada; o hook de recursos é desinstalado automaticamente. Envie o erro.
-- Se `redirects=0` em batalha: nossas cinco chamadas interceptadas não receberam o par `(id=00,offset=0)`; precisaremos achar a rotina/caminho real do carregamento antes de considerar comprovada a independência.
-- Se modelo visual igual ao Goku: esperado, pois os dados da entrada 1194 são uma cópia. Não considere comprovação visual.
-- Se travamento, textura/cenário corrompidos ou erro de recursos: feche completamente o PPSSPP, restaure PRX V0.9.1 e backup da ISO se necessário.
+Se `count=0`, a condição do hook não foi atendida. Se houver travamentos, gráficos corrompidos ou erros, feche o PPSSPP e restaure a V0.9.2. Nunca desarme a ponte no meio da batalha.
 
-**Quadrado sozinho**, com o overlay aberto e fora da batalha, tenta desarmar primeiro o redirecionamento e depois a ponte ID00. Não desarme durante carregamento ou batalha.
+### Próxima etapa
 
-## Limites
-
-Testes C locais não substituem compilação PSPSDK ou validação no PPSSPP. Os hooks alteram instruções executáveis em RAM: uso experimental e somente ULUS10537 com EBOOT.OLD correspondente. O tamanho do PACKFILE foi mantido em 14097 registros; são reaproveitadas entradas existentes, não criadas novas.
+Depois de validar `RESOURCE MATCH`, comprovar a leitura efetiva da entrada `0x4A9` e testar uma Color visivelmente diferente em um arquivo separado, antes de criar o carregamento de PCK1 por pasta externa.
