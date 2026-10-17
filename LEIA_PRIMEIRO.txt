@@ -1,13 +1,3 @@
-TTT EXPANSION V0.8.1 - MENU ESTILO V0.2
-
-Atualiza apenas a aparencia da V0.8 que voce ja testou.
-1. Envie os arquivos ao GitHub preservando os caminhos (inclusive .github).
-2. Actions > Compilar PRX do menu > Run workflow.
-3. Baixe o artifact TTT-Expansion-PRX-V081.
-4. Copie a pasta TTT_EXPANSION para PSP/PLUGINS e reinicie PPSSPP.
-5. Abra com L+R+Quadrado.
-
-O menu e somente uma previa: X nao grava os IDs 00/01 no jogo.
-A V0.9 com personagens jogaveis e o Mod Loader externo ficarao para depois.
-
-Faca backup do plugin V0.8 antes de instalar.
+TTT EXPANSION V0.9: Teste EXTERNO ID 00 usando o slot experimental da Videl.
+IMPORTANTE: nao e um modloader CHR; teste com ID 00, P1 e Goku Base provisoriamente.
+Leia o README.md para instrucoes de seguranca, ativacao por X e desativacao por Quadrado sozinho.

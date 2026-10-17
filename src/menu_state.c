@@ -24,6 +24,9 @@ int ttt_menu_buttons(TTTMenuState *m,uint32_t buttons) {
     if(pressed & TTT_BTN_TRIANGLE) m->tab=(uint8_t)((m->tab+1u)%3u);
     if(pressed & TTT_BTN_SELECT) m->lang=(uint8_t)((m->lang+1u)%3u);
     if(m->tab==0) {
+        /* SQUARE (alone) removes the temporary ID00 battle bridge. */
+        if((pressed & TTT_BTN_SQUARE) && !(buttons & (TTT_BTN_L|TTT_BTN_R)))
+            return TTT_EVENT_BRIDGE_RESET;
         /* L/R selecionam 1P..4P; apertar ambos nao muda jogador. */
         if((pressed & TTT_BTN_L) && !(buttons & TTT_BTN_R))change_player(m,-1);
         if((pressed & TTT_BTN_R) && !(buttons & TTT_BTN_L))change_player(m,1);

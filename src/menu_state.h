@@ -10,9 +10,11 @@
 #define TTT_BTN_TRIANGLE UINT32_C(0x00001000)
 #define TTT_BTN_CIRCLE   UINT32_C(0x00002000)
 #define TTT_BTN_CROSS    UINT32_C(0x00004000)
+#define TTT_BTN_SQUARE   UINT32_C(0x00008000)
 #define TTT_BTN_SELECT   UINT32_C(0x00000001)
 #define TTT_EVENT_CONFIRM 1
 #define TTT_EVENT_CLOSE 2
+#define TTT_EVENT_BRIDGE_RESET 3
 /* IDs externos de Tenkaichi 3, nao ativos no TTT original. */
 #define TTT_ID_GOKU_EARLY 0u
 #define TTT_ID_GOKU_MID   1u
