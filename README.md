@@ -1,35 +1,39 @@
-# TTT Expansion PRX V0.9.3 — Diagnóstico do primeiro CHR independente
+# TTT Expansion V1.0A - Mod Loader: primeiro teste de leitura externa
 
-A V0.9.2 carregou a batalha normalmente com Goku Early (`ID 00`) e instalou o hook de recursos; o log mostrou `redirects=1`, mas os campos `last_id`, `old` e `new` foram sobrescritos por uma solicitação posterior do ID `0x12`. **Esta versão mantém exatamente o mesmo redirecionamento e corrige o diagnóstico, não adiciona um Mod Loader externo.**
+**A V0.9.3 ja comprovou o CHR separado do Goku Early (ID 00):** voce trocou o arquivo 1194 pelo CHR SSJ1 e o personagem apareceu SSJ, mantendo ID 00. **Esta V1.0A NAO carrega CHR externo na batalha**. E uma etapa intermediaria necessaria para diagnosticar a leitura externa, preservando o comportamento e o GPU Guard da V0.9.3.
 
-## O que muda
+## Arquivos esperados
 
-- Preserva **GPU Guard**, menu V0.8.1, retratos, seleção 1P–4P e o bloqueio de controles.
-- Preserva Goku Early `ID 00` + ponte temporária Videl forma 2.
-- Preserva a regra **ID 00 + Color 1 → índice PACKFILE 0x4A9 (entrada 1194 no Index Editor)**, sem mudar o Goku `ID 03`.
-- Registra separadamente o último **redirecionamento real**, para que as solicitações posteriores de outros personagens não sobrescrevam `id/offset/old/new` de interesse.
-- Novo registro `RESOURCE MATCH`: `count`, `id`, `offset`, `old`, `new`, `path` (1 = resolver checado, 2 = não checado).
-- Não realiza I/O no interceptor; logs continuam vindo da thread principal.
-
-## Compilar e testar
-
-1. Faça backup do PRX V0.9.2. Use sua ISO atual contendo o CHR do Goku na entrada **1194**, e desative cheats antigos de expansão. Não substitua outros recursos.
-2. Atualize seu repositório GitHub com os arquivos do ZIP, faça commit e execute **Actions → Compilar PRX do menu**. Artifact esperado: `TTT-Expansion-PRX-V093`.
-3. Instale o PRX novo e reinicie completamente o PPSSPP.
-4. Teste rapidamente o Goku original `03` em batalha para garantir que os gráficos continuam normais.
-5. Abra o TTT Expansion por `L+R+Quadrado`; selecione `1P → Goku Early → Color 1`, confirme `X`. Feche com Círculo.
-6. Selecione a **segunda forma experimental da Videl** no menu original, entre em batalha, e depois confira `diagnostico.txt`.
-
-## Resultado esperado no log
+Na pasta do Memory Stick do PPSSPP (mostrada em Configuracoes > Sistema > Mostrar pasta Memory Stick):
 
 ```text
-[TTT V0.9.3] RESOURCE MATCH count=0x00000001 id=0x00000000 offset=0x00000000 old=0x00000593 new=0x000004A9 path=0x00000001
+PSP/PLUGINS/TTT_EXPANSION/
+  plugin.ini
+  ttt_expansion.prx
+  portraits/goku_early.rgba
+  portraits/goku_mid.rgba
+  characters/goku_early/color_1.pck1
 ```
 
-A linha acima é **exemplo**, não resultado real. `old` e `path` poderão variar. `RESOURCE STATUS` preserva o formato e os contadores anteriores. O `RESOURCE MATCH` informa a chamada em que ocorreu o redirecionamento; mesmo confirmando `new=0x4A9`, ainda não comprova, sozinho, a leitura final do arquivo ou o uso dos dados pelo renderizador. Como a entrada 1194 contém uma cópia visualmente idêntica, o modelo deve permanecer igual.
+O arquivo `color_1.pck1` precisa conter bytes de verdade do CHR extraido do jogo (por exemplo, Goku SSJ1 Color 1, item 1433), NAO PNG renomeado. Ele **nao foi distribuido** no ZIP. **Para a V1.0A, o tamanho esperado e 0x143000 (1310016 bytes)**; nao modifique os dados do CHR para atingir o tamanho.
 
-Se `count=0`, a condição do hook não foi atendida. Se houver travamentos, gráficos corrompidos ou erros, feche o PPSSPP e restaure a V0.9.2. Nunca desarme a ponte no meio da batalha.
+## Teste
 
-### Próxima etapa
+1. Faca backup do PRX V0.9.3 e da ISO. Atualize o GitHub com este projeto e execute a action `Compilar PRX do menu`. O artifact sera `TTT-Expansion-PRX-V100A`.
+2. Instale o PRX novo e as pastas do artifact no PPSSPP. Copie voce mesmo o CHR PCK1 real para `characters/goku_early/color_1.pck1`.
+3. Sem cheats antigos, na tela de selecao abra `L + R + Quadrado`, escolha `1P > Goku Early > Color 1` e confirme X; feche o menu.
+4. Confira `diagnostico.txt`. Procure `EXTERNAL PROBE`.
 
-Depois de validar `RESOURCE MATCH`, comprovar a leitura efetiva da entrada `0x4A9` e testar uma Color visivelmente diferente em um arquivo separado, antes de criar o carregamento de PCK1 por pasta externa.
+Exemplo esperado (hash e first4 variam):
+
+```text
+[TTT V1.0A] EXTERNAL PROBE rc=0x00000000 expected=0x00143000 size=0x00143000 read=0x00143000 first4=... fnv1a=... (SOMENTE LEITURA, SEM CHR EXTERNO EM BATALHA)
+```
+
+- `rc=0`: acesso externo completo e leitura de todos os bytes confirmados, MAS o jogo ainda usa a entrada 1194 da ISO.
+- `rc=0xFFFFFFFF`: arquivo externo ausente/sem acesso.
+- `rc=0xFFFFFFF4`: tamanho diferente do esperado (`-12`).
+- `rc=0xFFFFFFFC`: leitura incompleta (`-4`).
+- O teste de batalha continua identico a V0.9.3; nao use a aparencia SSJ para concluir que o externo ja foi injetado.
+
+O plugin nunca sobrescreve o arquivo externo, nem altera indice/tabela de PACKFILE alem dos hooks originais validado da V0.9.3. Para a proxima fase (injetar CHR externo na batalha), precisamos estudar o ponto de leitura, alocacao e descompressao do resource ID `0x4A9`, preservando o tamanho e depois suportando tamanho livre.

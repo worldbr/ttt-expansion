@@ -1,4 +1,2 @@
-TTT Expansion V0.9.3 -- diagnostico CHR sem mudar o redirecionamento.
-
-Requer sua ISO com CHR duplicado na entrada 1194 do Index Editor.
-Use backup e desative cheats conflitantes. Leia README.md.
+TTT Expansion V1.0A: diagnostico READ-ONLY de CHR externo, NAO substitui ainda o PACKFILE.
+Veja README.md para instrucoes e backup.

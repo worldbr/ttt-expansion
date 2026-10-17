@@ -1,0 +1,3 @@
+Coloque aqui color_1.pck1, copiado da sua extracao de CHR.
+Este teste APENAS le o arquivo externo; o jogo ainda carrega da ISO!
+Nao renomeie PNG para PCK1.
