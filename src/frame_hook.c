@@ -4,6 +4,7 @@
  * instructions (observed 0x6801AFE2 at 08A66A84). DO NOT PATCH THAT STUB.
  * Instead, redirect THREE verified JAL call sites in the EBOOT code.
  * Trial-only: GU commands within SetFrameBuf call path may glitch or hang.
+ * V0.5.3: stay active until user closes the menu; draw max once per vcount.
  * No IO, log writes or VBlank waits inside the hook itself.
  */
 #include <pspuser.h>
@@ -15,7 +16,6 @@
 #include "callsite_plan.h"
 #include "frame_hook.h"
 
-#define DRAW_LIMIT 180u
 #define SITE_COUNT 3
 static const uint32_t site_addresses[SITE_COUNT] = {
     UINT32_C(0x08A63A48), UINT32_C(0x08A63B10), UINT32_C(0x08A6408C)
@@ -30,14 +30,14 @@ static __attribute__((noinline)) int ttt_framebuf_intercept(void *fb,int stride,
     uint32_t vcount;
     ++call_count;
     last_buffer=(uint32_t)(uintptr_t)fb;
-    if (hooked && gpu_ready && draw_allowed && draw_count<DRAW_LIMIT
+    if (hooked && gpu_ready && draw_allowed
         && ttt_vram_check((uintptr_t)fb,stride,fmt)==0) {
         vcount=(uint32_t)sceDisplayGetVcount();
         if(vcount!=last_vcount) {
             last_vcount=vcount;
             ++draw_count;
             last_draw_rc=ttt_gpu_frame(fb,stride,fmt);
-            if(last_draw_rc<0 || draw_count>=DRAW_LIMIT) draw_allowed=0;
+            if(last_draw_rc<0) draw_allowed=0; /* GPU errors still stop drawing. */
         }
     }
     /* The PRX has an independent import; none of the game import stubs change. */

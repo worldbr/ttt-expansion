@@ -1,53 +1,47 @@
-# TTT Expansion PRX V0.5.2 — interceptação das chamadas diretas
+# TTT Expansion PRX V0.5.3 — teste de interface persistente
 
-Esta versão é EXPERIMENTAL e destinada somente a **Dragon Ball Z: Tenkaichi Tag Team americano, ULUS10537**, em PPSSPP. Não altera a ISO nem o PACKFILE.
+**Versão experimental para PPSSPP / Dragon Ball Z: Tenkaichi Tag Team ULUS10537.**
 
-## O que mudou
+## Correção
 
-A V0.5/V0.5.1 tentou modificar `08A66A84`, onde o EBOOT em disco contém `jr ra` (`03E00008`). O log V0.5.1 mostrou nesse local **`6801AFE2`**, aparentemente já reescrito pelo ambiente de execução, causando o erro `0xFFFFFFF4` (-12). Por segurança, **a V0.5.2 não escreve em `08A66A84`**.
+Os testes anteriores comprovaram que o hook por três `jal` funciona:
 
-Em vez disso, a V0.5.2 procura e valida três chamadas MIPS diretas que apontam para essa função:
+- `08A63A48`, `08A63B10`, `08A6408C` mudaram para JAL do interceptor.
+- `calls` aumentou até `0x223`, `draws` até `0xB4` (180).
+- A V0.5.2 parava de desenhar automaticamente ao chegar a 180 desenhos, ainda que `installed=1`.
+- Fechar o menu com **L + R + Quadrado** restaurou todos os JALs originais.
 
-- `08A63A48` — `0E299AA1` (JAL `08A66A84`)
-- `08A63B10` — `0E299AA1`
-- `08A6408C` — `0E299AA1`
+**Nesta V0.5.3 removemos apenas o limite de 180 desenhos.** Ela ainda desenha no máximo **uma vez por `sceDisplayGetVcount()`**, apenas com o menu aberto e hook instalado. Erros da GPU (`gpu_rc<0`) continuam desativando o desenho. Não adicionamos os personagens extras nem a interface V0.2 nesta atualização para isolar o efeito da sincronização.
 
-Se TODAS as três instruções corresponderem ao código esperado, troca somente esses três JALs por chamadas ao nosso interceptor, que executa a operação normal `sceDisplaySetFrameBuf` via import próprio do plugin, além do teste gráfico. Ao desligar com **L + R + Quadrado**, restaura as instruções originais. Não substitui nem modifica a importação do jogo. O painel gráfico ainda pode ser invisível ou causar glitches: a ordem dos comandos GE ainda precisa ser validada.
+## Instalação via GitHub
 
-## Instalação
+1. Use o pacote *ATUALIZACAO* para substituir `src/main.c`, `src/frame_hook.c` e `.github/workflows/compilar-prx.yml`, mantendo os caminhos.
+2. Faça commit, abra **Actions > Compilar PRX de diagnostico > Run workflow**.
+3. Baixe `TTT-Expansion-PRX-V053`, descompacte e copie `TTT_EXPANSION/` para `PSP/PLUGINS/`.
+4. Feche e reabra o PPSSPP, inicie ULUS10537 normalmente (sem savestate).
+5. Na tela de seleção pressione **L + R + Quadrado** e espere **10 a 15 segundos**. Pressione novamente para fechar.
 
-1. Substitua/adicione os arquivos desta versão nos mesmos caminhos do seu repositório GitHub. Mantenha os diretórios `src/` e `.github/workflows/`.
-2. Faça commit e execute **Actions → Compilar PRX de diagnostico → Run workflow**.
-3. Baixe o artifact **`TTT-Expansion-PRX-V052`**. Ele contém a pasta `TTT_EXPANSION` com `ttt_expansion.prx` e `plugin.ini`.
-4. Feche o PPSSPP. Coloque a pasta em `PSP/PLUGINS/TTT_EXPANSION`, substituindo o plugin anterior. Habilite plugins nas configurações.
-5. Abra o jogo desde o início, **sem savestate**. Na seleção de personagens, pressione **L + R + Quadrado** UMA VEZ.
+## Resultado esperado
 
-O ideal é testar sem progresso não salvo. Se houver travamento ou glitches, feche o PPSSPP e restaure a versão anterior ou desative este plugin.
+No `PSP/PLUGINS/TTT_EXPANSION/diagnostico.txt` procure as linhas `[TTT V0.5.3] HOOK`:
 
-## O que registrar
+```
+HOOK installed=0x00000001 calls=... draws=0x00000100 ... enabled=0x00000001
+```
 
-Abra `PSP/PLUGINS/TTT_EXPANSION/diagnostico.txt` e localize as linhas com `[TTT V0.5.2]`:
+`draws` deverá ultrapassar `0xB4` (180) e `enabled` deverá permanecer 1 até você fechar. Quando fechar, o código original das três chamadas deverá ser restaurado.
 
-- `CALLS APOS_START 08A63A48=... 08A63B10=... 08A6408C=... interceptor=...`
-- `CALLS INSTALADO ...` ou `HOOK INSTALAR ERRO=...`.
-- `HOOK installed=... calls=... draws=... buffer=... gpu_rc=...`
-- Se o hook funcionar, aguarde poucos segundos para que `calls` e `draws` aumentem.
+**Observação:** Isso confirma a continuidade da execução, não garante que os retângulos permaneçam visíveis no menu normal do jogo. Envie uma captura na seleção com o painel aberto e o registro de `draws` após 10 segundos.
 
-### Interpretação rápida
+## Riscos
 
-- `HOOK INSTALAR ERRO=0xFFFFFFF4` = primeira chamada direta não é o JAL esperado.
-- `HOOK INSTALAR ERRO=0xFFFFFF90` = segunda chamada não corresponde (erro -112).
-- `HOOK INSTALAR ERRO=0xFFFFFF2C` = terceira chamada não corresponde (erro -212).
-- `installed=1` e `calls=0`: o jogo não percorreu essas três chamadas durante a cena; será necessário achar a chamada indireta ou outro caminho.
-- `installed=1`, `calls>0`, `draws=0`: o interceptor está sendo chamado mas não encontra condição válida para desenhar.
-- `draws>0`, imagem ausente: a GE desenhou, mas ainda está fora do momento de apresentação ou foi sobrescrita.
+Esta versão modifica três instruções na RAM do jogo e envia uma lista GU repetidamente dentro da rotina de apresentação. Pode provocar instabilidade, perda de desempenho ou travamento. Não use com progresso não salvo. Se ocorrer problema, feche o PPSSPP e remova o plugin V0.5.3. Não altera a ISO/PACKFILE.
 
-**Importante:** `0x6801AFE2` não é uma instrução de função comum que devamos sobrescrever às cegas. A V0.5.2 deliberadamente deixa esse word como está.
+## Testes locais
 
-## Verificações locais
+```bash
+cc -std=c11 -Wall -Wextra -Isrc tests/test_callsite_plan.c src/callsite_plan.c -o test_callsite && ./test_callsite
+cc -std=gnu11 -Wall -Wextra -Isrc tests/test_native.c src/toggle.c src/overlay.c src/framecheck.c -o test_native && ./test_native
+```
 
-`cc -std=c11 -Wall -Wextra -Isrc tests/test_callsite_plan.c src/callsite_plan.c -o test_callsite && ./test_callsite`
-
-`cc -std=gnu11 -Wall -Wextra -Isrc tests/test_native.c src/toggle.c src/overlay.c src/framecheck.c -o test_native && ./test_native`
-
-Os testes locais verificam a geração do JAL e a recusa de instruções incompatíveis, além dos controles e buffers. A compilação real PSP e a execução dentro do PPSSPP ainda devem ser feitas no GitHub Actions e no emulador.
+O ambiente do assistente não possui PSPSDK; a compilação PSP deve ocorrer pelo GitHub Actions.
