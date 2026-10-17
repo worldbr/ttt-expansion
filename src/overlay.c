@@ -71,7 +71,11 @@ static void text(void *pixels,int stride,int fmt,int x,int y,const char *s,int s
 }
 void ttt_draw_overlay(void *pixels,int stride,int fmt,int open) {
  if(!pixels||stride<480||stride>2048||fmt<0||fmt>3)return;
- /* Visible loading signal even without activating the hotkey. */
+ /* Larger bright marker in the top left (diagnostic only). */
+ rect(pixels,stride,fmt,8,9,180,24,10,53,127);
+ rect(pixels,stride,fmt,8,9,180,4,255,204,0);
+ text(pixels,stride,fmt,14,18,"TTT V033 LOADED",1,255,255,255);
+ /* Keep existing bottom-left marker. */
  rect(pixels,stride,fmt,8,250,147,17,8,54,127);
  rect(pixels,stride,fmt,8,250,147,2,255,215,42);
  text(pixels,stride,fmt,14,254,"TTT EXP PRX V03",1,255,255,255);

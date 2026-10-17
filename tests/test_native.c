@@ -5,6 +5,7 @@
 #include <string.h>
 #include "toggle.h"
 #include "overlay.h"
+#include "framecheck.h"
 
 static void test_toggle(void) {
     TTTToggle t;
@@ -36,4 +37,14 @@ static void test_framebuffer(void) {
        free(buf);
     }
 }
-int main(void) {test_toggle();test_framebuffer();puts("OK: controles e overlay (4 formatos) testados no PC");return 0;}
+static void test_validation(void) {
+    assert(ttt_vram_check(0,512,3)==1);
+    assert(ttt_vram_check(0x04000000u,512,3)==0);
+    assert(ttt_vram_check(0x44000000u,512,3)==0);
+    assert(ttt_vram_check(0x08900000u,512,3)==4);
+    assert(ttt_vram_check(0x04180000u,512,3)==5);
+    assert(ttt_vram_check(0x04000000u,511,3)==0);
+    assert(ttt_vram_check(0x04000000u,450,3)==3);
+    assert(ttt_vram_check(0x04000000u,512,8)==2);
+}
+int main(void) {test_toggle();test_framebuffer();test_validation();puts("OK: controles e overlay (4 formatos) testados no PC");return 0;}
