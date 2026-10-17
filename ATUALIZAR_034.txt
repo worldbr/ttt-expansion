@@ -1,0 +1,13 @@
+TTT EXPANSION PRX V0.3.4 - ATUALIZACAO
+
+1. Extraia este ZIP.
+2. Envie os arquivos para os mesmos caminhos do seu repositorio GitHub, substituindo os antigos.
+3. Faça Commit changes.
+4. Actions > Compilar PRX de diagnostico > Run workflow.
+5. Baixe o artifact TTT-Expansion-PRX-V034.
+6. Atualize PSP/PLUGINS/TTT_EXPANSION/ttt_expansion.prx no PPSSPP.
+7. Reinicie o jogo inteiramente (nao por savestate).
+8. Verifique se aparece a tarja TTT V034 LOADED e o painel L+R+Quadrado.
+9. Se ainda estiver invisivel, envie 2 linhas do diagnostico (CUR e NEXT) com before/after.
+
+O TESTE NAO ALTERA O EBOOT, PERSONAGENS NEM O PACKFILE.

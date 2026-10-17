@@ -14,3 +14,11 @@ int ttt_vram_check(uintptr_t addr, int stride, int fmt) {
     if(last>UINT32_C(0x00200000)) return 5;
     return 0;
 }
+
+uintptr_t ttt_vram_uncached(uintptr_t addr) {
+    /* PSP 0x04000000 and 0x44000000 map the same video RAM.
+     * Uncached alias is essential for CPU-generated pixels to reach VRAM. */
+    uint32_t a = (uint32_t)addr;
+    if ((a & UINT32_C(0x1fe00000)) != UINT32_C(0x04000000)) return 0;
+    return (uintptr_t)(UINT32_C(0x44000000) | (a & UINT32_C(0x001fffff)));
+}

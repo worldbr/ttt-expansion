@@ -40,6 +40,10 @@ static void test_framebuffer(void) {
 static void test_validation(void) {
     assert(ttt_vram_check(0,512,3)==1);
     assert(ttt_vram_check(0x04000000u,512,3)==0);
+    assert(ttt_vram_uncached(0x04000000u)==0x44000000u);
+    assert(ttt_vram_uncached(0x04088000u)==0x44088000u);
+    assert(ttt_vram_uncached(0x44088000u)==0x44088000u);
+    assert(ttt_vram_uncached(0x08800000u)==0u);
     assert(ttt_vram_check(0x44000000u,512,3)==0);
     assert(ttt_vram_check(0x08900000u,512,3)==4);
     assert(ttt_vram_check(0x04180000u,512,3)==5);
@@ -47,4 +51,4 @@ static void test_validation(void) {
     assert(ttt_vram_check(0x04000000u,450,3)==3);
     assert(ttt_vram_check(0x04000000u,512,8)==2);
 }
-int main(void) {test_toggle();test_framebuffer();test_validation();puts("OK: controles e overlay (4 formatos) testados no PC");return 0;}
+int main(void) {test_toggle();test_framebuffer();test_validation();puts("OK: controles, desenho e alias uncached testados no PC");return 0;}

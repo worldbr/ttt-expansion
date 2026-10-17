@@ -74,11 +74,11 @@ void ttt_draw_overlay(void *pixels,int stride,int fmt,int open) {
  /* Larger bright marker in the top left (diagnostic only). */
  rect(pixels,stride,fmt,8,9,180,24,10,53,127);
  rect(pixels,stride,fmt,8,9,180,4,255,204,0);
- text(pixels,stride,fmt,14,18,"TTT V033 LOADED",1,255,255,255);
+ text(pixels,stride,fmt,14,18,"TTT V034 LOADED",1,255,255,255);
  /* Keep existing bottom-left marker. */
  rect(pixels,stride,fmt,8,250,147,17,8,54,127);
  rect(pixels,stride,fmt,8,250,147,2,255,215,42);
- text(pixels,stride,fmt,14,254,"TTT EXP PRX V03",1,255,255,255);
+ text(pixels,stride,fmt,14,254,"TTT EXP PRX V034",1,255,255,255);
  if(!open)return;
  /* Intentionally small diagnostic overlay, not the full V0.2 UI yet. */
  rect(pixels,stride,fmt,95,70,292,126,12,31,76);
@@ -87,5 +87,5 @@ void ttt_draw_overlay(void *pixels,int stride,int fmt,int open) {
  text(pixels,stride,fmt,112,96,"TTT EXPANSION",2,255,255,255);
  text(pixels,stride,fmt,111,125,"PLUGIN PRX RUNNING",1,255,222,65);
  text(pixels,stride,fmt,111,143,"L+R+SQUARE TO CLOSE",1,255,255,255);
- text(pixels,stride,fmt,111,164,"DIAGNOSTIC MODE V03",1,173,213,255);
+ text(pixels,stride,fmt,111,164,"DIAGNOSTIC MODE V034",1,173,213,255);
 }
