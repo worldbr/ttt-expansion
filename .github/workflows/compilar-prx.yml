@@ -41,14 +41,14 @@ jobs:
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: TTT-Expansion-Build-Log-V100A
+          name: TTT-Expansion-Build-Log-V100B
           path: build.log
           if-no-files-found: warn
       - name: Disponibilizar plugin para instalar
         if: success()
         uses: actions/upload-artifact@v4
         with:
-          name: TTT-Expansion-PRX-V100A
+          name: TTT-Expansion-PRX-V100B
           path: dist/
           if-no-files-found: error
           compression-level: 6
