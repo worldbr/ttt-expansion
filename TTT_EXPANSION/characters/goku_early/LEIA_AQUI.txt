@@ -1,3 +1,1 @@
-Coloque aqui color_1.pck1, copiado da sua extracao de CHR.
-Este teste APENAS le o arquivo externo; o jogo ainda carrega da ISO!
-Nao renomeie PNG para PCK1.
+Coloque color_1.pck1 nesta pasta. V1.0C le o arquivo inteiro e preserva em RAM do plugin. O jogo ainda usa ISO 1194.

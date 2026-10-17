@@ -1,3 +1,4 @@
-TTT Expansion V1.0B: CHR externo de tamanho variavel (somente leitura).
-O arquivo color_1.pck1 deve ser colocado manualmente em PSP/PLUGINS/TTT_EXPANSION/characters/goku_early/.
-O jogo AINDA usa CHR1194 da ISO. Leia README.md.
+TTT Expansion V1.0C: CHR externo completo mantido em RAM privada do plugin.
+O jogo AINDA usa PACKFILE 1194 da ISO; nao existe injecao no loader.
+O arquivo externo continua em PSP/PLUGINS/TTT_EXPANSION/characters/goku_early/color_1.pck1
+Consulte README.md e EXTERNAL STAGE no diagnostico.txt.
