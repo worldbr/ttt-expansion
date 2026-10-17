@@ -47,6 +47,14 @@ static void flush_stub(void) {
     sceKernelIcacheInvalidateRange(p,8);
 }
 
+TTTStubProbe ttt_frame_hook_probe(void) {
+    /* Read only the four adjacent opcodes in the known ULUS10537 EBOOT stub. */
+    volatile const uint32_t *base = (volatile const uint32_t *)(uintptr_t)UINT32_C(0x08A66A80);
+    TTTStubProbe p;
+    p.at_80=base[0]; p.at_84=base[1]; p.at_88=base[2]; p.at_8c=base[3];
+    return p;
+}
+
 int ttt_frame_hook_install(void) {
     volatile uint32_t *stub=(volatile uint32_t *)(uintptr_t)HOOK_ADDRESS;
     uintptr_t target=(uintptr_t)&ttt_framebuf_intercept;
