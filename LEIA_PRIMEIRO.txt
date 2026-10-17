@@ -1,9 +1,6 @@
-TTT EXPANSION V0.7 — GOKU EARLY + GOKU MID
+TTT EXPANSION V0.8 — MENU 1P–4P / GOKU EARLY ID 00 / GOKU MID ID 01
 
-- Dois personagens extras na interface, retratos ilustrativos substituíveis.
-- Ainda NÃO são duas identidades jogáveis. Nomes e Colors são prévia.
-- Atalho L+R+QUADRADO, bloqueio de controles da V0.6.1 mantido.
-- Instale pasta TTT_EXPANSION inteira: .prx, plugin.ini e portraits/*.rgba.
-- Verifique diagnostico.txt: PORTRAITS bits=0x00000003.
-- Mantenha backup da V0.6.1.
-Veja README.md para instruções de compilação e de troca de imagens.
+Nao modifica o ID de batalha (apenas previa). IDs 00/01/02 estao FF no EBOOT original.
+CIMA/BAIXO muda personagem, ESQUERDA/DIREITA muda Color, L/R sozinho muda jogador.
+Atalho L+R+QUADRADO mantido. Retratos 128x128 raw RGBA ou 64x64.
+Para detalhes, veja README.md.
