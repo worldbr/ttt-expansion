@@ -1,38 +1,27 @@
-# TTT Expansion Plugin V0.3.3 — Diagnóstico de framebuffer
+# TTT Expansion - V0.4 (EXPERIMENTO GE/GU)
 
-O usuário confirmou que o PRX V0.3.2 **carregou no jogo**, detectou L+R+Quadrado e registrou abertura/fechamento do menu, mas nada apareceu na tela. Esta versão investiga somente o desenho.
+## O que os logs anteriores provam
+- PRX carrega e o atalho **L + R + Quadrado** funciona.
+- `drawn=1 after=1` prova gravação na VRAM, **não apresentação na tela**.
+- `before=0` frequentemente sugere que a imagem foi sobrescrita ou lida de outro render target.
 
-## Mudanças
+## Esta versão
+Faz uma **tentativa experimental de desenhar retângulos azuis e amarelos pela GE/GU** do PSP. Nenhum arquivo do PACKFILE ou dado de personagem é alterado.
 
-- Indicador de diagnóstico maior no canto superior esquerdo (`TTT V033 LOADED`), além do rodapé original.
-- Consulta **dois framebuffers** com `sceDisplayGetFrameBuf`, parâmetros `PSP_DISPLAY_SETBUF_NEXTHSYNC` (CUR) e `PSP_DISPLAY_SETBUF_NEXTVSYNC` (NEXT).
-- Quando seguros, tenta desenhar em ambos; se forem iguais, desenha uma só vez.
-- Em `diagnostico.txt`, grava `CUR` e `NEXT` com retorno da API, endereço, stride, formato, código de validação, tentativa de desenho e se o menu está aberto.
-- Logs iniciais, ao alternar o menu e periodicamente a cada 240 frames (cerca de 4 segundos).
-- Nenhum patch no jogo, no ID A0, cheats ou PACKFILE.
+**Atenção:** a GU é compartilhada com o jogo. Esta versão é apenas um teste de diagnóstico: pode gerar glitches, travamento ou queda de desempenho. Salve seu progresso antes. Se ocorrer problema, desabilite o plugin no PPSSPP e restaure a V0.3.4.
 
-## Instalando
+## Compilar
+Substitua os arquivos do repositório pelo conteúdo deste ZIP, preservando a pasta `.github`. Execute GitHub Actions `Compilar PRX de diagnostico`. O artifact esperado é `TTT-Expansion-PRX-V040`. Não há um PRX já compilado neste pacote.
 
-1. Atualize o repositório GitHub com o **pacote de arquivos alterados** desta V0.3.3 (preserve os caminhos).
-2. GitHub Actions → **Compilar PRX de diagnostico** → Run workflow.
-3. Baixe o artifact `TTT-Expansion-PRX-V033` e extraia a pasta `TTT_EXPANSION` em `PSP/PLUGINS`, substituindo o `.prx` antigo.
-4. Reinicie completamente o PPSSPP (não use savestate).
-5. Procure `TTT V033 LOADED` no canto superior esquerdo. Pressione **L + R + Quadrado** duas vezes.
-6. Abra `PSP/PLUGINS/TTT_EXPANSION/diagnostico.txt`. Envie **as linhas V0.3.3 `CUR` e `NEXT`** e informe se o indicador apareceu.
+## Testar no PPSSPP
+1. Coloque `ttt_expansion.prx` e `plugin.ini` em `PSP/PLUGINS/TTT_EXPANSION/`.
+2. Habilite plugins, reinicie inteiramente o jogo e vá ao menu de personagens.
+3. Pressione L + R + Quadrado. Aguarde até 5 segundos. **Esperado:** retângulos azuis e amarelos, sem texto por enquanto.
+4. Consulte `diagnostico.txt` para `GPU INIT rc=0` e `GPU DRAW rc=0`. Mesmo com rc=0, o desenho pode ainda ser invisível.
+5. Se congelar, reinicie sem o plugin e relate o que ocorreu.
 
-## Interpretando o log
+## Primeiro teste recomendado, sem trocar plugin
+Antes de instalar esta versão, experimente no PPSSPP **Graphics > Software rendering**, se disponível (isso reduzirá bastante o desempenho). Com a V0.3.4, veja se as barras aparecem. Isso pode discriminar a renderização por GPU do acesso à RAM. Depois volte ao backend normal.
 
-Exemplo (fictício): `CUR rc=0x00000000 fb=0x04000000 stride=512 fmt=3 check=0 drawn=1 open=1`
-
-- `rc != 0`: chamada falhou.
-- `check=0` e `drawn=1`: escrita ao framebuffer foi *tentada*, não significa que saiu na tela. O caminho de renderização do PPSSPP pode ignorar/cobrir escrita da CPU.
-- `check=1`: ponteiro nulo. `2`: formato não reconhecido. `3`: stride fora do limite. `4`: endereço fora da VRAM esperada. `5`: retângulo ultrapassaria VRAM.
-- Se `drawn=1` em CUR/NEXT, mas nada aparece, o próximo passo é pesquisar/hookar o ponto correto no pipeline de apresentação da GE, em vez de insistir em escrita direta da CPU.
-
-**Não use como plugin final**: o desenho simultâneo nos buffers pode causar artefatos visuais ou piscar. É um experimento temporário. Se travar, remova a pasta do plugin e reinicie.
-
-## Compilação local opcional
-
-`gcc -std=c11 -Wall -Wextra -Werror -Isrc src/overlay.c src/toggle.c src/framecheck.c tests/test_native.c -o test_native && ./test_native`
-
-Não há PSPSDK neste ambiente; compilação do PRX e comportamento visual no PPSSPP não puderam ser validados aqui.
+## Limitações
+Ainda não há gancho na etapa de composição/presentação. Este é um teste GE/GU, não uma interface pronta nem garantia de compatibilidade com todos os backends.
