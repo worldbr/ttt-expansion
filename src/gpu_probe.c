@@ -1,4 +1,4 @@
-/* TTT Expansion V0.8 -- Goku Early and Goku Mid with replaceable portraits.
+/* TTT Expansion V0.8.1 -- Goku Early and Goku Mid with replaceable portraits.
  * Draw via established V0.5.3 verified three-callsite framebuffer hook.
  * This is UI ONLY: X confirms to a log; no game IDs are modified.
  * PSP uses ABGR8888; all text is simple 5x7 all-caps font rendered via GE.
@@ -167,83 +167,135 @@ static const char *foot_hints[3]={
     "X MARCA   TRIANG ABA   SELECT IDIOMA   O SALE"
 };
 
-static void card(int slot,int x,int y,int selected,const char *name,const char *detail) {
-    box(x,y,169,42,selected?C_GOLD:C_OUTER);
-    box(x+2,y+2,165,38,selected?C_BLUE:C_DARK);
-    box(x+5,y+5,35,32,selected?C_GOLD:C_LIGHT);
-    box(x+7,y+7,31,28,C_BLACK);
-    if(portrait_present[slot]) portrait(slot,x+7,y+7,31,28);
-    else txt(x+18,y+16,slot==0?"E":"M",1,C_WHITE);
-    txt(x+46,y+6,name,1,C_WHITE);
-    txt(x+46,y+23,detail,1,selected?C_GOLD:C_SOFT);
+
+/* V0.8.1: visual inspired by the original TTT Expansion V0.2 HTML
+ * six-card layout (two active + four reserved), detail panel, bright tabs,
+ * gold selected frames. Only 480x272 PSP screen coordinates are used.
+ * IMPORTANT: no IDs are written to the game; X only marks a preview choice.
+ */
+static void panel(int x,int y,int w,int h,uint32_t border,uint32_t inside) {
+    box(x,y,w,h,border);
+    box(x+2,y+2,w-4,h-4,inside);
 }
+static void card_grid(int idx,int x,int y,int selected) {
+    int active = idx<2;
+    const char *label=idx==0?"EARLY":idx==1?"MID":"FUTURO";
+    panel(x,y,70,52,selected?C_GOLD:active?C_LIGHT:C_BLUE,selected?C_BLUE:C_DARK);
+    if(active) {
+        box(x+14,y+4,42,35,selected?C_GOLD:C_LIGHT);
+        box(x+16,y+6,38,31,C_BLACK);
+        if(portrait_present[idx])portrait(idx,x+16,y+6,38,31);
+        else txt(x+29,y+16,idx==0?"E":"M",1,C_WHITE);
+        box(x+3,y+4,16,11,C_DARK);
+        txt(x+5,y+6,idx==0?"00":"01",1,C_GOLD);
+        txt(x+19,y+42,label,1,selected?C_GOLD:C_WHITE);
+    } else {
+        box(x+14,y+4,42,35,C_DARK);
+        txt(x+29,y+16,"+",2,C_LIGHT);
+        txt(x+13,y+42,label,1,C_SOFT);
+    }
+    /* Tiny inset stripe, echoes the original V0.2 active card. */
+    if(selected) box(x+4,y+49,62,1,C_GOLD);
+}
+static void player_chip(int idx,int x,int selected,int marked) {
+    char nm[3]="1P";
+    nm[0]=(char)('1'+idx);
+    panel(x,29,35,20,selected?C_GOLD:C_BLUE,selected?C_DARK:C_LIGHT);
+    txt(x+11,35,nm,1,selected?C_GOLD:C_WHITE);
+    if(marked) box(x+29,32,3,3,C_GOLD);
+}
+static const char *const map_subtitle[3]={
+    "MAPAS EXTRAS - EM BREVE", "EXTRA MAPS - COMING SOON", "MAPAS EXTRA - PROXIMAMENTE"
+};
+static const char *const settings_subtitle[3]={
+    "SELECT PARA TROCAR IDIOMA", "PRESS SELECT TO CHANGE LANGUAGE", "SELECT PARA CAMBIAR IDIOMA"
+};
+static const char *const selected_title[3]={
+    "FORMA SELECIONADA", "SELECTED CHARACTER", "FORMA SELECCIONADA"
+};
+static const char *const nav_v2[3]={
+    "CIMA/BAIXO: PERS   ESQ/DIR: COLOR   L/R: JOG",
+    "UP/DOWN: CHAR   LEFT/RIGHT: COLOR   L/R: PLAYER",
+    "ARR/ABA: PERS   IZQ/DER: TRAJE   L/R: JUG"
+};
+static const char *const footer_v2[3]={
+    "TRIANG: ABA   SELECT: IDIOMA   O: FECHAR",
+    "TRIANGLE: TAB   SELECT: LANG   O: CLOSE",
+    "TRIANG: PEST   SELECT: IDIOMA   O: CERRAR"
+};
 static void render_menu(uint32_t data) {
     int character=(int)(data&1u),color=(int)((data>>1)&3u);
     int tab=(int)((data>>3)&3u),lang=(int)((data>>5)&3u);
-    int player=(int)((data>>7)&3u),i;
-    char active[3]="1P", idtext[6]="ID 00", curcolor[2]="1";
+    int player=(int)((data>>7)&3u),marked=(int)((data>>(9+player))&1u),i;
+    char idtext[6]="ID 00",active[3]="1P";
     if(tab>2)tab=0;
     if(lang>2)lang=0;
-    active[0]=(char)('1'+player);
     idtext[4]=(char)('0'+character);
-    curcolor[0]=(char)('1'+color);
-    box(28,10,424,252,C_OUTER);
-    box(32,14,416,244,C_DARK);
-    box(37,16,406,6,C_GOLD);
-    box(37,251,406,4,C_GOLD);
-    box(41,27,398,29,C_BLUE);
-    txt(52,36,"TTT EXPANSION",2,C_WHITE);
-    txt(369,37,"V0.8",1,C_GOLD);
+    active[0]=(char)('1'+player);
+    /* Outer blue edge and thin cyan/gold highlights: close to HTML preview. */
+    box(16,7,448,259,C_OUTER);
+    panel(19,9,442,255,C_LIGHT,C_DARK);
+    box(24,13,432,3,C_GOLD);
+    box(24,16,432,1,C_LIGHT);
+    box(26,19,428,39,C_BLUE);
+    box(26,56,428,2,C_LIGHT);
+    txt(34,27,"TTT EXPANSION",2,C_WHITE);
+    txt(224,30,"V0.8.1",1,C_GOLD);
+    for(i=0;i<4;i++)player_chip(i,302+i*37,player==i,(int)((data>>(9+i))&1u));
+    /* Styled navigation tabs as in the V0.2 HTML prototype. */
     for(i=0;i<3;i++) {
-        int xx=48+130*i;
-        box(xx,61,126,21,tab==i?C_GOLD:C_BLUE);
-        box(xx+2,63,122,17,tab==i?C_DARK:C_LIGHT);
-        txt(xx+9,68,titles[lang][i],1,tab==i?C_GOLD:C_WHITE);
+        int x=30+i*141;
+        panel(x,62,136,24,tab==i?C_GOLD:C_LIGHT,tab==i?C_BLUE:C_DARK);
+        if(tab==i)box(x+4,66,3,16,C_GOLD);
+        txt(x+11,70,titles[lang][i],1,tab==i?C_GOLD:C_WHITE);
     }
-    box(47,87,385,155,C_BLUE);
+    panel(29,90,229,135,C_LIGHT,C_DARK);
+    panel(262,90,188,135,C_LIGHT,C_DARK);
     if(tab==0) {
-        txt(55,93,lang==0?"JOGADOR":lang==1?"PLAYER":"JUGADOR",1,C_WHITE);
-        for(i=0;i<4;i++) {
-            char ptxt[]="1P";
-            int xx=131+72*i;
-            ptxt[0]=(char)('1'+i);
-            box(xx,90,62,18,player==i?C_GOLD:C_DARK);
-            box(xx+2,92,58,14,player==i?C_DARK:C_LIGHT);
-            txt(xx+22,96,ptxt,1,player==i?C_GOLD:C_WHITE);
-            /* Selected assignments are preview only; they cannot spawn IDs 00/01 yet. */
-            if(data & (1u<<(9+i)))box(xx+52,95,4,4,C_GOLD);
+        txt(37,96,"PERSONAGENS EXTRAS",1,C_SOFT);
+        txt(210,96,"02/06",1,C_GOLD);
+        /* Vertical progression: Early above Mid, future slots at right. */
+        for(i=0;i<6;i++) {
+            int x=35+(i/2)*74,y=107+(i%2)*57;
+            card_grid(i,x,y,i==character);
         }
-        card(0,55,113,character==0,"GOKU EARLY","SAGA SAIYAN");
-        card(1,55,160,character==1,"GOKU MID","SAGA NAMEK");
-        box(231,113,193,90,C_DARK);
-        box(236,117,183,4,C_GOLD);
-        box(236,126,74,73,C_GOLD);
-        box(238,128,70,69,C_BLACK);
-        if(portrait_present[character])portrait(character,238,128,70,69);
-        else txt(248,157,character==0?"EARLY":"MID",1,C_WHITE);
-        txt(316,130,character==0?"EARLY":"MID",1,C_GOLD);
-        txt(316,146,idtext,1,C_WHITE);
-        txt(316,161,active,1,C_WHITE);
-        txt(316,178,"EXTRA",1,C_SOFT);
-        txt(57,210,colors[lang],1,C_WHITE);
+        box(270,95,174,2,C_GOLD);
+        txt(271,101,selected_title[lang],1,C_WHITE);
+        box(273,112,72,69,C_GOLD);
+        box(275,114,68,65,C_BLACK);
+        if(portrait_present[character])portrait(character,275,114,68,65);
+        else txt(283,139,character==0?"EARLY":"MID",1,C_WHITE);
+        txt(351,114,"GOKU",1,C_WHITE);
+        txt(351,127,character==0?"EARLY":"MID",1,C_GOLD);
+        txt(351,141,idtext,1,C_WHITE);
+        txt(351,153,active,1,C_SOFT);
+        txt(351,166,marked?"MARCADO":"PREVIA",1,marked?C_GOLD:C_SOFT);
+        box(271,184,172,1,C_LIGHT);
+        txt(271,187,lang==1?"COLOR":"TRAJE",1,C_WHITE);
         for(i=0;i<4;i++){
-            char digit[]="1";
-            int xx=148+i*47;
-            digit[0]=(char)('1'+i);
-            box(xx,206,40,19,color==i?C_GOLD:C_DARK);
-            box(xx+2,208,36,15,color==i?C_DARK:C_LIGHT);
-            txt(xx+17,212,digit,1,color==i?C_GOLD:C_WHITE);
+            char c[3]="C1";
+            int xx=271+i*43;
+            c[1]=(char)('1'+i);
+            panel(xx,197,38,13,color==i?C_GOLD:C_LIGHT,color==i?C_BLUE:C_DARK);
+            txt(xx+12,200,c,1,color==i?C_GOLD:C_WHITE);
         }
-        txt(57,229,nav_hints[lang],1,C_WHITE);
+        txt(271,214,"PREVIA",1,C_SOFT);
+        panel(338,212,104,11,C_GOLD,C_BLUE);
+        txt(354,214,lang==0?"X MARCAR":lang==1?"X MARK":"X MARCAR",1,C_GOLD);
     } else if(tab==1) {
-        txt(72,123,"TTT EXTRA MAPS",2,C_GOLD);
-        txt(72,163,maps_pending[lang],1,C_WHITE);
+        txt(44,115,"TTT EXPANSION - MAPAS",1,C_GOLD);
+        txt(44,147,map_subtitle[lang],1,C_WHITE);
+        txt(281,115,"MAPS",2,C_WHITE);
     } else {
-        txt(72,120,"IDIOMA / LANGUAGE",2,C_GOLD);
-        txt(72,158,settings_hint[lang],1,C_WHITE);
-        txt(72,179,lang==0?"PORTUGUES":lang==1?"ENGLISH":"ESPANOL",1,C_GOLD);
+        txt(44,115,"TTT EXPANSION - AJUSTES",1,C_GOLD);
+        txt(44,147,settings_subtitle[lang],1,C_WHITE);
+        txt(280,118,lang==0?"PORTUGUES":lang==1?"ENGLISH":"ESPANOL",1,C_GOLD);
     }
-    txt(52,242,foot_hints[lang],1,C_WHITE);
+    /* Keep all help text inside the 480x272 visible PSP screen. */
+    panel(28,229,424,26,C_BLUE,C_OUTER);
+    txt(35,232,nav_v2[lang],1,C_WHITE);
+    txt(35,244,footer_v2[lang],1,C_SOFT);
+    box(25,258,430,3,C_GOLD);
 }
 
 int ttt_gpu_init(void) {

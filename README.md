@@ -1,57 +1,46 @@
-# TTT Expansion PRX V0.8 — Seletor para 1P–4P e retratos maiores
+# TTT Expansion V0.8.1 — Menu com visual inspirado na prévia V0.2
 
-Baseado diretamente na **V0.7 que o usuário confirmou funcionando no PPSSPP**. Preserva a captura gráfica GE, o hook de entrada e a combinação L+R+Quadrado.
+**Objetivo:** aproximar o menu PRX (resolução PSP 480 × 272) da prévia HTML V0.2,
+sem alterar os testes de personagens já existentes. Parte da V0.8 confirmada pelo
+usuário no PPSSPP (controles funcionaram).
 
-## IDs externos planejados — referência Tenkaichi 3
+## Mudanças visuais
+- Moldura azul/ciano, filetes amarelos, título grande e abas de navegação.
+- Grade de seis cartões à esquerda, com Goku Early ID `00` e Goku Mid ID `01`,
+  e quatro vagas `FUTURO` desabilitadas.
+- Painel de detalhes à direita: retrato ampliado, personagem, ID, jogador,
+  status de prévia e Colors 1–4 em linha horizontal.
+- Abas Mapas e Ajustes mantidas; textos e atalhos enquadrados no rodapé.
+- Retratos externos originais preservados: arquivos `.rgba` 128×128 ou 64×64.
 
-| Entrada | ID hexadecimal | Situação em Tenkaichi Tag Team (ULUS10537) |
-|---|---|---|
-| Goku Early (Saiyajin) | `00` | `FF` nas tabelas originais de recursos A/B |
-| Goku Mid Base (Namek) | `01` | `FF` nas tabelas originais de recursos A/B |
-| Goku Mid SSJ | `02` | `FF` nas tabelas originais de recursos A/B |
-| Goku presente no TTT | `03` | Índice de recursos `00` nas tabelas A/B |
+## Controles
+- **L+R+Quadrado:** abrir/fechar menu.
+- **Cima/baixo:** Goku Early / Mid (cartões na mesma coluna).
+- **Esquerda/direita:** Color 1–4.
+- **L/R isolados:** trocar 1P–4P com seleção preservada por jogador.
+- **X:** marcar a seleção em prévia e registrar em `diagnostico.txt`.
+- **Triângulo:** trocar aba; **SELECT:** idioma PT/EN/ES; **Círculo:** fechar.
 
-Os IDs 00 e 01 agora aparecem no menu da V0.8. O ID 02 está reservado para futura forma SSJ do Goku Mid. **O plugin NÃO cria personagens jogáveis nem escreve IDs na batalha.** Confirmar com X marca a escolha para o jogador no menu e no log, sem modificar o jogo. Antes de tornar os novos IDs jogáveis, precisaremos preencher os mapeamentos, arquivos CHR/SFX e tratar estruturas limitadas a 70 formas.
+O hook gráfico e o bloqueio de entrada da V0.8 foram mantidos intactos.
 
-## Navegação intuitiva
+**NÃO implementa a seleção jogável de IDs 00/01.** Esses IDs continuam
+sem mapeamento válido no TTT original; X não altera dados da batalha.
+**NÃO implementa Mod Loader de CHR/SFX.** Os retratos são carregados pela pasta
+`PSP/PLUGINS/TTT_EXPANSION/portraits/`, distinta de `PSP/TEXTURES/ULUS10537`.
 
-- `L + R + Quadrado`: abre/fecha o seletor.
-- **↑/↓: escolhe Goku Early ou Mid** (mesma direção da lista vertical).
-- **←/→: escolhe Color 1–4** (cores em fila horizontal).
-- **L/R isolados: muda 1P–4P**; a escolha de personagem e traje é guardada em cada slot.
-- `X`: confirma em modo de prévia (não aplica ao jogo).
-- `Triângulo`: muda Personagens/Mapas/Ajustes.
-- `Select`: idioma PT/EN/ES.
-- `Círculo`: fecha.
+## Compilação no GitHub Actions
+1. Atualize os arquivos com o pacote completo ou aplique apenas o conteúdo
+   da atualização na raiz do repositório.
+2. Faça commit e execute **Actions → Compilar PRX do menu → Run workflow**.
+3. Baixe **TTT-Expansion-PRX-V081** e copie `TTT_EXPANSION` para
+   `PSP/PLUGINS/` no Memory Stick do PPSSPP.
+4. Reinicie completamente o emulador.
 
-O bloqueio do controle no jogo base permanece ativo enquanto o menu do PRX estiver aberto. Como o código original só intercepta a chamada de controle identificada em 0881A158, essa proteção deve continuar sendo validada em todas as telas.
+O pacote da atualização substitui apenas `src/gpu_probe.c`, `src/main.c`
+e `.github/workflows/compilar-prx.yml`, além deste README.
 
-## Retratos e a pasta TEXTURES do PPSSPP
-
-O plugin carrega arquivos externos em `PSP/PLUGINS/TTT_EXPANSION/portraits/`, **não** na pasta de substituição de texturas do PPSSPP.
-
-Aceita `.rgba` crus (RGBA8888 sem cabeçalho):
-- **128×128 = 65.536 bytes**, preferido para retratos.
-- **64×64 = 16.384 bytes**, compatibilidade V0.7.
-
-O plugin identifica o tamanho pelo comprimento exato do arquivo. Para converter PNG/JPG:
-
-```cmd
-py -m pip install pillow
-py tools\converter_retratos.py goku_early.png TTT_EXPANSION\portraits\goku_early.rgba 128
-py tools\converter_retratos.py goku_mid.png TTT_EXPANSION\portraits\goku_mid.rgba 128
-```
-
-Basta substituir os `.rgba` e reiniciar o PPSSPP, sem recompilar o PRX. O PNG por si só não é lido pelo plugin.
-
-A **pasta `PSP/TEXTURES/ULUS10537`** é destinada ao recurso separado de substituição de texturas do PPSSPP para recursos do *jogo*. Ela não substitui automaticamente os `.rgba` do PRX. As duas técnicas podem coexistir: texturas do jogo com maior resolução na pasta TEXTURES; retratos personalizados do plugin na pasta portraits.
-
-## Compilar e instalar
-
-1. Substitua os arquivos do GitHub pelos do pacote V0.8, preservando os caminhos e a pasta `.github`.
-2. Rode `Actions -> Compilar PRX do menu`.
-3. Baixe o artifact **TTT-Expansion-PRX-V080**.
-4. Copie a pasta `TTT_EXPANSION` gerada para `PSP/PLUGINS/` e reinicie o PPSSPP.
-5. Confira `diagnostico.txt` após abrir o menu: registro `TTT V0.8` e `PORTRAITS bits=0x00000003`.
-
-**Atenção:** ainda não executamos esta versão no PSPSDK/GitHub Actions nem no PPSSPP. Testes locais validam o estado do menu, mas desenho/GPU e hooks requerem validação em jogo. Faça backup da V0.7.
+## Testes
+O código de estado/navegação passou os testes C nativos neste ambiente;
+**não há PSPSDK instalado aqui**, portanto compile pelo workflow e teste no PPSSPP.
+O estilo é uma adaptação da V0.2, não uma cópia pixel a pixel do HTML.
+Faça backup do PRX V0.8 antes de testar.

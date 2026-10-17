@@ -1,6 +1,13 @@
-TTT EXPANSION V0.8 — MENU 1P–4P / GOKU EARLY ID 00 / GOKU MID ID 01
+TTT EXPANSION V0.8.1 - MENU ESTILO V0.2
 
-Nao modifica o ID de batalha (apenas previa). IDs 00/01/02 estao FF no EBOOT original.
-CIMA/BAIXO muda personagem, ESQUERDA/DIREITA muda Color, L/R sozinho muda jogador.
-Atalho L+R+QUADRADO mantido. Retratos 128x128 raw RGBA ou 64x64.
-Para detalhes, veja README.md.
+Atualiza apenas a aparencia da V0.8 que voce ja testou.
+1. Envie os arquivos ao GitHub preservando os caminhos (inclusive .github).
+2. Actions > Compilar PRX do menu > Run workflow.
+3. Baixe o artifact TTT-Expansion-PRX-V081.
+4. Copie a pasta TTT_EXPANSION para PSP/PLUGINS e reinicie PPSSPP.
+5. Abra com L+R+Quadrado.
+
+O menu e somente uma previa: X nao grava os IDs 00/01 no jogo.
+A V0.9 com personagens jogaveis e o Mod Loader externo ficarao para depois.
+
+Faca backup do plugin V0.8 antes de instalar.
