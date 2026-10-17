@@ -1,3 +1,18 @@
-TTT Expansion PRX V0.5.2 — corrigir o erro de hook -12 sem modificar o stub HLE do PPSSPP.
-Atualize o GitHub, compile o artifact TTT-Expansion-PRX-V052 e siga o README.md.
-Atalho: L + R + Quadrado. Teste experimental: pode haver glitches/travamento.
+TTT EXPANSION MENU V0.6.1 — BLOQUEIO DE CONTROLES
+
+1. Faca backup do PRX V0.6 que funcionou.
+2. Extraia ATUALIZACAO.zip na raiz de worldbr/ttt-expansion, preservando subpastas.
+3. Commit no GitHub; Actions > Compilar PRX do menu > Run workflow.
+4. Baixe o artifact TTT-Expansion-PRX-V061.
+5. Instale ttt_expansion.prx e plugin.ini na pasta PSP/PLUGINS/TTT_EXPANSION do PPSSPP.
+6. Reinicie o PPSSPP, abra ULUS10537 e pressione L+R+QUADRADO.
+7. Com nosso menu aberto, teste esquerda/direita/X: o jogo original nao deve reagir.
+8. Feche com CIRCULO ou L+R+QUADRADO, solte TODOS os botoes e confira se o jogo voltou a receber entradas.
+9. Confira PSP/PLUGINS/TTT_EXPANSION/diagnostico.txt. Esperado:
+   INPUT HOOK INSTALADO
+   INPUT STATUS installed=0x00000001 ... calls=... muted=... raw=... forwarded=0x00000000 ...
+
+O menu de personagens continua apenas de previa: X nao altera IDs, nem o PACKFILE.
+Este PRX modifica temporariamente instrucoes na memoria; pode falhar/travar.
+Se ocorrer algo inesperado, feche o PPSSPP e restaure o PRX V0.6.
+Nao substitua o EBOOT original. Mais detalhes no README.md.

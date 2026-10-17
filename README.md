@@ -1,39 +1,38 @@
-# TTT Expansion Menu V0.6 — primeiro menu gráfico navegável
+# TTT Expansion Menu V0.6.1 — Bloqueio de controles do jogo
 
-**Protótipo para PPSSPP / ULUS10537.** Desenvolvido a partir do hook V0.5.3 que o usuário confirmou ficar visível. Mantém os três `jal` verificados (`08A63A48`, `08A63B10`, `08A6408C`) e o atalho **L + R + Quadrado**.
+**PPSSPP / ULUS10537 (EBOOT.OLD testado pelo usuário).** Evolução da V0.6, preservando o menu azul/amarelo e o hook de apresentação de quadros da V0.5.3. **L + R + Quadrado** permanece o atalho.
 
-## Novidade
+## Implementação
 
-A V0.6 substitui os retângulos de teste por um seletor azul e amarelo renderizado no jogo, com fonte própria 5×7 desenhada pela GE. Inclui dois cartões para **Goku Base** (`recurso 00`) e **Goku SSJ1** (`recurso 01`) sob ID externo de teste **A0**; escolha de Color 1–4; abas Personagens, Mapas (reservada) e Ajustes; textos em português/inglês/espanhol.
+- O `EBOOT.OLD` foi analisado: há um `jal 0x08A66A6C` em **`0x0881A158`**, opcode original **`0x0E299A9B`**, na rotina que chama `sceCtrlReadBufferPositive` e grava na região do pad `0x08AF31A0`.
+- Na inicialização, o plugin valida essa instrução; se coincidir, troca **somente o JAL desse endereço** para um interceptador na memória do PRX. Não modifica o stub HLE do PPSSPP e preserva a chamada original pela importação independente do plugin.
+- Com o menu aberto, o jogo recebe `Buttons=0`, `Lx=128`, `Ly=128`; o plugin continua usando `sceCtrlPeekBufferPositive` para os comandos REAIS.
+- O atalho e o botão que fecha o menu são consumidos até **todos** os botões serem liberados; isso evita que o quadrado, círculo ou X vaze para o menu original ao fechar.
+- Ao fechar o menu, o controle é restaurado. Ao encerrar a sessão do plugin, o JAL original é restaurado (desde que ainda seja nosso opcode).
+- Caso a assinatura seja diferente (ou o JAL não possa alcançar o plugin), **não instala o bloqueio** e registra `INPUT INSTALAR ERRO` (sem forçar alteração indevida).
+- **Nenhuma alteração ao EBOOT/ISO em disco, ao PACKFILE ou aos IDs de personagens.** A confirmação por X continua sendo somente um teste registrado no log.
 
-**Segurança:** este é um protótipo de INTERFACE. Confirmar com X escreve apenas uma linha `CONFIRMACAO PREVIA` em `diagnostico.txt` com os valores selecionados. **Não modifica o ID A0, não carrega recursos novos e não altera o PACKFILE ou EBOOT no disco.** Para isso precisaremos integrar a confirmação às rotinas de seleção de personagem numa próxima versão.
+## Instalação
 
-## Controles
+1. Faça backup da V0.6 que já funcionou.
+2. Extraia o `ATUALIZACAO.zip` para a raiz do repositório GitHub, preservando `src/`, `tests/`, `Makefile` e `.github/workflows/`.
+3. Commit, Actions > Compilar PRX do menu > Run workflow. Artifact esperado: `TTT-Expansion-PRX-V061`.
+4. Copie `TTT_EXPANSION` para `PSP/PLUGINS/` do PPSSPP substituindo o `ttt_expansion.prx` anterior.
+5. Reinicie o PPSSPP e o jogo completamente. Na seleção de personagens pressione L+R+Quadrado; tente mover esquerda/direita e X enquanto nosso menu está aberto.
+6. Verifique `diagnostico.txt`: linhas `INPUT HOOK INSTALADO` e `INPUT STATUS` com `muted` aumentando. Ao fechar, navegação do jogo deve voltar ao normal.
 
-- **L + R + Quadrado**: abre/fecha menu extra;
-- **Esquerda / Direita**: seleciona Goku Base ou Goku SSJ1;
-- **Cima / Baixo**: seleciona Color 1 a 4;
-- **Triângulo**: alterna entre Personagens / Mapas / Ajustes;
-- **Select**: alterna entre português / inglês / espanhol;
-- **X**: testa confirmação, registrada no log, sem alterar o jogo;
-- **Círculo**: fecha o menu e restaura as chamadas JAL originais.
+## Limitações e segurança
 
-## Instalar pelo GitHub
+- **Primeiro teste:** interceptamos a única chamada direta `sceCtrlReadBufferPositive` encontrada no EBOOT principal. Outras rotinas, módulos carregáveis e caminhos de entrada podem existir e não foram confirmados. Se o menu original continuar se mexendo, envie logs para localizar o caminho efetivamente utilizado. Não é bloqueio universal garantido.
+- O jogo pode manter uma ação já iniciada no quadro em que o atalho foi reconhecido. Há um filtro preventivo do próprio atalho, mas a sincronização de threads ainda pode gerar um quadro de diferença.
+- O código altera **uma instrução MIPS na memória em execução**, podendo provocar glitches/travamento. Mantenha backup, teste com progresso salvo e remova o plugin se houver problema.
+- Não sabemos se todas as revisões do ULUS10537 têm as mesmas instruções. A validação faz o plugin recusar patches incompatíveis.
+- Compilação PSPSDK e comportamento PPSSPP a validar no GitHub e no emulador do usuário; aqui foram feitos apenas testes nativos e inspeção do ELF.
 
-1. Faça backup da V0.5.3, que está funcionando.
-2. Extraia o ZIP *ATUALIZACAO* e substitua os arquivos na mesma estrutura de pastas do repositório. Não envie a pasta principal inteira como subpasta.
-3. Commit e **Actions > Compilar PRX do menu > Run workflow**. Artifact esperado: `TTT-Expansion-PRX-V060`.
-4. Extraia `TTT_EXPANSION/` para `PSP/PLUGINS/` do PPSSPP substituindo o PRX anterior.
-5. Reinicie PPSSPP inteiramente e abra ULUS10537. Na tela de seleção pressione L+R+Quadrado.
-6. Navegue, aperte X e procure `CONFIRMACAO PREVIA` no arquivo `PSP/PLUGINS/TTT_EXPANSION/diagnostico.txt`.
-
-## Nota técnica e riscos
-
-Faz um hook experimental em três JALs na RAM e usa GE/GU durante o evento de troca do framebuffer, como a V0.5.3. Fonte e UI usam sprites do GE, com lista alinhada e 128 KiB de comandos. O menu não injeta entradas no seletor normal do jogo. Pode ainda causar artefatos gráficos, lentidão ou travamento. Salve o progresso e teste sem savestates; remova o PRX se ocorrer problema. O ambiente do assistente **não possui PSPSDK**; a compilação do PRX e o comportamento em emulador ainda precisam ser validados pelo GitHub/PPSSPP.
-
-## Testes nativos disponíveis
+## Testes em PC (sem PSPSDK)
 
 ```bash
+cc -std=gnu11 -Wall -Wextra -Isrc tests/test_input_guard.c src/input_guard.c src/input_plan.c -o /tmp/test_input && /tmp/test_input
 cc -std=gnu11 -Wall -Wextra -Isrc tests/test_menu_state.c src/menu_state.c -o /tmp/test_menu && /tmp/test_menu
 cc -std=gnu11 -Wall -Wextra -Isrc tests/test_callsite_plan.c src/callsite_plan.c -o /tmp/test_calls && /tmp/test_calls
 cc -std=gnu11 -Wall -Wextra -Isrc tests/test_native.c src/toggle.c src/overlay.c src/framecheck.c -o /tmp/test_fb && /tmp/test_fb
