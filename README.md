@@ -1,39 +1,48 @@
-# TTT Expansion V1.0A - Mod Loader: primeiro teste de leitura externa
+# TTT Expansion V1.0B — Mod Loader: teste de leitura com CHR de tamanho variável
 
-**A V0.9.3 ja comprovou o CHR separado do Goku Early (ID 00):** voce trocou o arquivo 1194 pelo CHR SSJ1 e o personagem apareceu SSJ, mantendo ID 00. **Esta V1.0A NAO carrega CHR externo na batalha**. E uma etapa intermediaria necessaria para diagnosticar a leitura externa, preservando o comportamento e o GPU Guard da V0.9.3.
+**Motivo da atualização:** o usuário forneceu `EXTERNAL PROBE rc=0xFFFFFFF4 expected=0x00143000 size=0x00141680 read=0`. Na V1.0A, `-12` era gerado pela função de validação porque `size != expected`. O plugin **já tinha encontrado o arquivo**; a leitura era interrompida antes do primeiro byte.
 
-## Arquivos esperados
+## O que mudou
 
-Na pasta do Memory Stick do PPSSPP (mostrada em Configuracoes > Sistema > Mostrar pasta Memory Stick):
+- O valor `expected=0x143000` agora é **somente uma referência**, não uma exigência. O arquivo `0x141680` informado pelo usuário é aceito, desde que realmente possa ser lido.
+- O tamanho real é medido por `sceIoLseek`, limitado a **4 KiB até 32 MiB** por segurança. Arquivos vazios, minúsculos ou grandes demais continuam bloqueados.
+- O plugin lê os bytes em blocos de 4096, registra `read`, os primeiros quatro bytes (`first4`) e o hash FNV-1a (`fnv1a`).
+- `size_match=0` informa que o tamanho difere do original. Não é erro.
+- A ponte ID 00, a entrada ISO 1194, o menu e o GPU Guard permanecem iguais aos da versão anterior.
+
+**IMPORTANTE: esta versão NÃO substitui o CHR na batalha pelo arquivo externo.** O teste é apenas de leitura. O Goku Early continua usando a entrada 1194 da ISO, como na V0.9.3.
+
+## Como instalar e testar
+
+1. Faça backup do PRX V1.0A e mantenha a ISO modificada que já funciona.
+2. Atualize os arquivos do repositório usando o ZIP e execute a ação `Compilar PRX do menu` no GitHub.
+3. Baixe o artifact `TTT-Expansion-PRX-V100B` e coloque os arquivos no Memory Stick do PPSSPP.
+4. Preserve seu CHR extraído **sem editar o tamanho nem adicionar bytes** neste caminho:
 
 ```text
 PSP/PLUGINS/TTT_EXPANSION/
-  plugin.ini
-  ttt_expansion.prx
-  portraits/goku_early.rgba
-  portraits/goku_mid.rgba
-  characters/goku_early/color_1.pck1
+  characters/
+    goku_early/
+      color_1.pck1
 ```
 
-O arquivo `color_1.pck1` precisa conter bytes de verdade do CHR extraido do jogo (por exemplo, Goku SSJ1 Color 1, item 1433), NAO PNG renomeado. Ele **nao foi distribuido** no ZIP. **Para a V1.0A, o tamanho esperado e 0x143000 (1310016 bytes)**; nao modifique os dados do CHR para atingir o tamanho.
+5. Reinicie completamente o PPSSPP. Abra o menu `L + R + Quadrado`, selecione **1P > Goku Early > Color 1** e confirme com X.
+6. Procure `EXTERNAL PROBE` em `PSP/PLUGINS/TTT_EXPANSION/diagnostico.txt`.
 
-## Teste
-
-1. Faca backup do PRX V0.9.3 e da ISO. Atualize o GitHub com este projeto e execute a action `Compilar PRX do menu`. O artifact sera `TTT-Expansion-PRX-V100A`.
-2. Instale o PRX novo e as pastas do artifact no PPSSPP. Copie voce mesmo o CHR PCK1 real para `characters/goku_early/color_1.pck1`.
-3. Sem cheats antigos, na tela de selecao abra `L + R + Quadrado`, escolha `1P > Goku Early > Color 1` e confirme X; feche o menu.
-4. Confira `diagnostico.txt`. Procure `EXTERNAL PROBE`.
-
-Exemplo esperado (hash e first4 variam):
+**Exemplo esperado com o arquivo reportado (o hash e os primeiros bytes não são previamente conhecidos):**
 
 ```text
-[TTT V1.0A] EXTERNAL PROBE rc=0x00000000 expected=0x00143000 size=0x00143000 read=0x00143000 first4=... fnv1a=... (SOMENTE LEITURA, SEM CHR EXTERNO EM BATALHA)
+[TTT V1.0B] EXTERNAL PROBE rc=0x00000000 expected=0x00143000 size=0x00141680 read=0x00141680 first4=... fnv1a=... size_match=0x00000000 (SOMENTE LEITURA, SEM CHR EXTERNO EM BATALHA)
 ```
 
-- `rc=0`: acesso externo completo e leitura de todos os bytes confirmados, MAS o jogo ainda usa a entrada 1194 da ISO.
-- `rc=0xFFFFFFFF`: arquivo externo ausente/sem acesso.
-- `rc=0xFFFFFFF4`: tamanho diferente do esperado (`-12`).
-- `rc=0xFFFFFFFC`: leitura incompleta (`-4`).
-- O teste de batalha continua identico a V0.9.3; nao use a aparencia SSJ para concluir que o externo ja foi injetado.
+`rc=0` e `read=size` comprovam que o PRX conseguiu ler o arquivo externo completamente. Isso **ainda não prova a validade integral do formato PCK1**, nem a injeção dos dados no jogo.
 
-O plugin nunca sobrescreve o arquivo externo, nem altera indice/tabela de PACKFILE alem dos hooks originais validado da V0.9.3. Para a proxima fase (injetar CHR externo na batalha), precisamos estudar o ponto de leitura, alocacao e descompressao do resource ID `0x4A9`, preservando o tamanho e depois suportando tamanho livre.
+### Códigos de erro
+
+- `rc=0xFFFFFFFF` (`-1`): `sceIoOpen` não abriu o arquivo; confira pasta, nome e permissões.
+- `rc=0xFFFFFFFE` (`-2`): falha em obter tamanho utilizável.
+- `rc=0xFFFFFFF5` (`-11`): tamanho fora do intervalo permitido (4 KiB–32 MiB).
+- `rc=0xFFFFFFFD` (`-3`): não foi possível voltar ao início.
+- `rc=0xFFFFFFFC` (`-4`): leitura não retornou a quantidade solicitada.
+
+O teste é READ-ONLY: nada é escrito no CHR, e não é necessário reconstruir a ISO.

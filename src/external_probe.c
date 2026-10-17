@@ -1,4 +1,4 @@
-/* V1.0A: establish that an actual external CHR PCK1 can be read from ms0.
+/* V1.0B: accept different real PCK1 sizes, preserving bounded read-only probe.
  * This does NOT replace the game's PACKFILE loader (a separate later task).
  * Run only in plugin worker thread when user explicitly confirms ID00.
  */
@@ -13,10 +13,14 @@ uint32_t ttt_probe_hash_update(uint32_t v,const unsigned char *data,uint32_t n) 
     for(i=0;i<n;i++){v^=(uint32_t)data[i];v*=UINT32_C(16777619);}
     return v;
 }
-int ttt_probe_validate_size(uint32_t expected,uint32_t actual) {
-    if(!expected || expected>UINT32_C(0x02000000))return -10;
-    if(!actual || actual>UINT32_C(0x02000000))return -11;
-    if(expected!=actual)return -12;
+int ttt_probe_validate_size(uint32_t reference,uint32_t actual) {
+    /* 'reference' is informational: a real CHR PCK1 may have a different
+     * length depending on the model, outfit, or asset compression. Never
+     * pad, truncate or write the file just to force the original size. */
+    if(reference>UINT32_C(0x02000000))return -10;
+    /* Prevent empty/tiny impostors and prohibit unusually large reads.
+     * This is a size guard, not a complete PCK1 structural validator. */
+    if(actual<UINT32_C(0x1000) || actual>UINT32_C(0x02000000))return -11;
     return 0;
 }
 int ttt_external_probe_file(const char *path,uint32_t expected,TTTExternalProbe *out){

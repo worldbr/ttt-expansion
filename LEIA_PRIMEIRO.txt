@@ -1,2 +1,3 @@
-TTT Expansion V1.0A: diagnostico READ-ONLY de CHR externo, NAO substitui ainda o PACKFILE.
-Veja README.md para instrucoes e backup.
+TTT Expansion V1.0B: CHR externo de tamanho variavel (somente leitura).
+O arquivo color_1.pck1 deve ser colocado manualmente em PSP/PLUGINS/TTT_EXPANSION/characters/goku_early/.
+O jogo AINDA usa CHR1194 da ISO. Leia README.md.
