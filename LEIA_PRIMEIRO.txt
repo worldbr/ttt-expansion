@@ -1,3 +1,2 @@
-TTT EXPANSION V0.9: Teste EXTERNO ID 00 usando o slot experimental da Videl.
-IMPORTANTE: nao e um modloader CHR; teste com ID 00, P1 e Goku Base provisoriamente.
-Leia o README.md para instrucoes de seguranca, ativacao por X e desativacao por Quadrado sozinho.
+TTT Expansion V0.9.1
+Leia README.md antes de instalar. Primeiro teste a GPU sem pressionar X; depois teste a ponte ID 00.

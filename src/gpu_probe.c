@@ -1,6 +1,6 @@
-/* TTT Expansion V0.8.2 -- isolated GE context test / Goku Early and Mid portraits.
+/* TTT Expansion V0.9.1 -- isolated GE context protection / Goku Early and Mid portraits.
  * Draw via established V0.5.3 verified three-callsite framebuffer hook.
- * This is UI ONLY: X confirms to a log; no game IDs are modified.
+ * X may arm the separate ID00 battle bridge; graphics stay isolated.
  * PSP uses ABGR8888; all text is simple 5x7 all-caps font rendered via GE.
  */
 #include <pspgu.h>
@@ -189,10 +189,10 @@ static const char *foot_hints[3]={
 };
 
 
-/* V0.8.1: visual inspired by the original TTT Expansion V0.2 HTML
+/* V0.9.1: visual inspired by the original TTT Expansion V0.2 HTML
  * six-card layout (two active + four reserved), detail panel, bright tabs,
  * gold selected frames. Only 480x272 PSP screen coordinates are used.
- * IMPORTANT: no IDs are written to the game; X only marks a preview choice.
+ * ID00 bridge is optional and managed separately; the renderer never patches IDs.
  */
 static void panel(int x,int y,int w,int h,uint32_t border,uint32_t inside) {
     box(x,y,w,h,border);
@@ -247,7 +247,7 @@ static const char *const footer_v2[3]={
 static void render_menu(uint32_t data) {
     int character=(int)(data&1u),color=(int)((data>>1)&3u);
     int tab=(int)((data>>3)&3u),lang=(int)((data>>5)&3u);
-    int player=(int)((data>>7)&3u),marked=(int)((data>>(9+player))&1u),i;
+    int player=(int)((data>>7)&3u),marked=(int)((data>>(9+player))&1u),bridge=(int)((data>>25)&1u),i;
     char idtext[6]="ID 00",active[3]="1P";
     if(tab>2)tab=0;
     if(lang>2)lang=0;
@@ -261,7 +261,7 @@ static void render_menu(uint32_t data) {
     box(26,19,428,39,C_BLUE);
     box(26,56,428,2,C_LIGHT);
     txt(34,27,"TTT EXPANSION",2,C_WHITE);
-    txt(224,30,"V0.8.2",1,C_GOLD);
+    txt(224,30,"V0.9.1",1,C_GOLD);
     for(i=0;i<4;i++)player_chip(i,302+i*37,player==i,(int)((data>>(9+i))&1u));
     /* Styled navigation tabs as in the V0.2 HTML prototype. */
     for(i=0;i<3;i++) {
@@ -290,7 +290,7 @@ static void render_menu(uint32_t data) {
         txt(351,127,character==0?"EARLY":"MID",1,C_GOLD);
         txt(351,141,idtext,1,C_WHITE);
         txt(351,153,active,1,C_SOFT);
-        txt(351,166,marked?"MARCADO":"PREVIA",1,marked?C_GOLD:C_SOFT);
+        txt(351,166,bridge?"ID00 ARMADO":marked?"MARCADO":"PREVIA",1,bridge?C_GOLD:marked?C_GOLD:C_SOFT);
         box(271,184,172,1,C_LIGHT);
         txt(271,187,lang==1?"COLOR":"TRAJE",1,C_WHITE);
         for(i=0;i<4;i++){
@@ -302,7 +302,7 @@ static void render_menu(uint32_t data) {
         }
         txt(271,214,"PREVIA",1,C_SOFT);
         panel(338,212,104,11,C_GOLD,C_BLUE);
-        txt(354,214,lang==0?"X MARCAR":lang==1?"X MARK":"X MARCAR",1,C_GOLD);
+        txt(354,214,lang==0?"X ATIVAR":lang==1?"X ARM":"X ACTIVAR",1,C_GOLD);
     } else if(tab==1) {
         txt(44,115,"TTT EXPANSION - MAPAS",1,C_GOLD);
         txt(44,147,map_subtitle[lang],1,C_WHITE);
@@ -315,7 +315,8 @@ static void render_menu(uint32_t data) {
     /* Keep all help text inside the 480x272 visible PSP screen. */
     panel(28,229,424,26,C_BLUE,C_OUTER);
     txt(35,232,nav_v2[lang],1,C_WHITE);
-    txt(35,244,footer_v2[lang],1,C_SOFT);
+    if(bridge && tab==0) txt(35,244,lang==0?"ID00 ATIVO - VIDEL 2 / QUADRADO DESARMA":lang==1?"ID00 ACTIVE - VIDEL 2 / SQUARE RESETS":"ID00 ACTIVO - VIDEL 2 / CUADRADO DESARMA",1,C_GOLD);
+    else txt(35,244,footer_v2[lang],1,C_SOFT);
     box(25,258,430,3,C_GOLD);
 }
 

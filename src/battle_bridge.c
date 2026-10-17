@@ -1,4 +1,4 @@
-/* Experimental Battle Bridge V0.9. First test ONLY: ID 00, 1P, Goku resources.
+/* Experimental Battle Bridge V0.9.1. First test ONLY: ID 00, 1P, Goku resources.
  *  The game has no internal character data for IDs 0..2. We borrow one menu
  *  internal form index (0x47) to preserve external ID 00, while resource map A
  *  points to existing Goku Base index 0. Real Early CHR/SFX are future work.

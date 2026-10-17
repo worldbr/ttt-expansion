@@ -29,7 +29,12 @@ int main(void) {
     release(&m);ttt_menu_buttons(&m,TTT_BTN_SELECT);assert(m.lang==1);
     release(&m);ttt_menu_buttons(&m,TTT_BTN_TRIANGLE);assert(m.tab==1);
     release(&m);assert(ttt_menu_buttons(&m,TTT_BTN_CIRCLE)==TTT_EVENT_CLOSE);
+    /* Square alone requests removal, but never as part of L+R+Square. */
+    ttt_menu_init(&m);
+    assert(ttt_menu_buttons(&m,TTT_BTN_SQUARE)==TTT_EVENT_BRIDGE_RESET);
+    release(&m);
+    assert(ttt_menu_buttons(&m,TTT_BTN_L|TTT_BTN_R|TTT_BTN_SQUARE)!=TTT_EVENT_BRIDGE_RESET);
     assert(TTT_ID_GOKU_EARLY==0 && TTT_ID_GOKU_MID==1 && TTT_ID_GOKU_MID_SSJ==2 && TTT_ID_GOKU_TTT==3);
-    puts("OK V0.8: ID 0/1, navegacao vertical, colors horizontal, 4 jogadores, idiomas");
+    puts("OK V0.9.1: ID 0/1, navegacao vertical, colors horizontal, 4 jogadores, idiomas");
     return 0;
 }
