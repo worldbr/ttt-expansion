@@ -6,7 +6,7 @@ on:
       - 'src/**'
       - 'Makefile'
       - 'exports.exp'
-      - 'TTT_EXPANSION/plugin.ini'
+      - 'TTT_EXPANSION/**'
       - '.github/workflows/compilar-prx.yml'
 
 jobs:
@@ -29,6 +29,8 @@ jobs:
           mkdir -p dist/TTT_EXPANSION
           cp ttt_expansion.prx dist/TTT_EXPANSION/ttt_expansion.prx
           cp TTT_EXPANSION/plugin.ini dist/TTT_EXPANSION/plugin.ini
+          mkdir -p dist/TTT_EXPANSION/portraits
+          cp TTT_EXPANSION/portraits/*.rgba dist/TTT_EXPANSION/portraits/
           test -s dist/TTT_EXPANSION/ttt_expansion.prx
           test -s dist/TTT_EXPANSION/plugin.ini
           echo "--- Conteudo pronto para o PPSSPP ---"
@@ -37,14 +39,14 @@ jobs:
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: TTT-Expansion-Build-Log-V061
+          name: TTT-Expansion-Build-Log-V070
           path: build.log
           if-no-files-found: warn
       - name: Disponibilizar plugin para instalar
         if: success()
         uses: actions/upload-artifact@v4
         with:
-          name: TTT-Expansion-PRX-V061
+          name: TTT-Expansion-PRX-V070
           path: dist/
           if-no-files-found: error
           compression-level: 6
