@@ -79,6 +79,12 @@ def make_header(base,asset_location=None,require_full=False):
             asset=Path(asset_location)/row['asset']
             if asset.is_file():
                 if not asset.stat().st_size:raise ValueError(f'Asset vazio: {asset}')
+                if row['kind']!='SFX':
+                    with asset.open('rb') as check:
+                        if check.read(4)!=bytes.fromhex('000001f1'):
+                            raise ValueError(f'CHR sem assinatura reconhecida: {asset}')
+                if row['index']==FIRST and asset.stat().st_size != 0x12F220:
+                    raise ValueError(f'C1 Goku Inicio tamanho inesperado: {asset.stat().st_size:#x} (esperado 0x12F220)')
                 row.update(mode='NOVO',reference='ARQUIVO_EXTERNO',asset_abs=str(asset))
             elif require_full:raise FileNotFoundError(f'Asset faltando: {asset}')
         info.append(row)

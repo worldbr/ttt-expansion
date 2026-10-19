@@ -1,7 +1,9 @@
-/* TTT Expansion V0.9.8.4G -- experimental CHR redirect to NEW PACKFILE
- * index 0x3711 (file 14098) on ULUS10537 ONLY. Requires expanded
- * header 0x3712 or 0x3734, valid alias, matching EBOOT count patch.
- * New record MUST alias original Goku Base file, to limit the first test.
+/* TTT Expansion V0.9.8.5 -- first physical CHR at index 0x3711
+ * Supports tested aliases on 0x3712/0x3734, AND one distinct physical
+ * CHR, when the 0x3734 PACKFILE's record size == 0x12F220 and its native
+ * offset is strictly greater than the original CHR record offset.
+ * Requires matching EBOOT count patch and a rebuilt ISO with updated
+ * ISO9660 size metadata. DO NOT use header-only replacement for new CHR.
  * The original game's loader still performs all file reads/decompression.
  * CPU hooks change only the returned numeric resource index.
  * No logs/filesystem I/O/allocations inside resolver interception.
@@ -73,17 +75,22 @@ int ttt_res_validate_pack(uint32_t magic,uint32_t count,uint32_t id,uint32_t siz
     if(size<UINT32_C(0x10000) || size>UINT32_C(0x02000000))return -13;
     return 0;
 }
-int ttt_res_validate_alias(uint32_t new_offset,uint32_t original_offset,
-                           uint32_t new_size,uint32_t original_size){
-    /* Ensure new record aliases the verified original Goku Base CHR.
-     * Stop before enabling hooks if the newly appended record is malformed. */
-    /* The RAM index stores the offset in the loader's native units, NOT as
-     * a byte offset. The observed Goku CHR record is 0x0002258C, which
-     * is a valid reference but is not 0x800-aligned as a numeric value.
-     * Verify exact equality with the already validated original record.
-     * Do NOT apply byte alignment tests to this RAM representation. */
-    if(new_offset==0u || original_offset==0u || new_offset!=original_offset)return -14;
-    if(new_size!=original_size)return -15;
+int ttt_res_validate_entry(uint32_t new_offset,uint32_t original_offset,
+                           uint32_t new_size,uint32_t original_size,
+                           uint32_t count){
+    /* The RAM index offset uses loader-native units, NOT byte addresses.
+     * Do not impose 0x800 alignment on this native field.
+     * Allow the known verified alias (old stable behavior).
+     * Independently allow ONE physical CHR when its exact known byte length
+     * matches this user's C1 asset. Reject any other new file/size. */
+    if(new_offset==0u || original_offset==0u)return -14;
+    if(new_offset==original_offset){
+        return (new_size==original_size)?0:-15;
+    }
+    /* Physically appended CHR requires all 35 slots and count patch. */
+    if(count!=UINT32_C(0x3734))return -16;
+    if(new_size!=TTT_PHYSICAL_GOKU_EARLY_C1_SIZE)return -17;
+    if(new_offset<=original_offset)return -18;
     return 0;
 }
 int ttt_res_should_redirect(int bridge_active,int id,int offset){
@@ -154,7 +161,7 @@ int ttt_res_hook_install(void){
     original_data_offset=*r32(TTT_PACK_RESOURCE_GOKU_RECORD);
     original_size=*r32(TTT_PACK_RESOURCE_GOKU_RECORD+4u);
     rc=ttt_res_validate_pack(pack_magic,pack_count,resource_id,resource_size);
-    if(!rc)rc=ttt_res_validate_alias(resource_data_offset,original_data_offset,resource_size,original_size);
+    if(!rc)rc=ttt_res_validate_entry(resource_data_offset,original_data_offset,resource_size,original_size,pack_count);
     if(rc){last_error=rc;return rc;}
     for(i=0;i<SITE_N;i++){
         old[i]=*r32(callsites[i]);

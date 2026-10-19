@@ -1,11 +1,11 @@
 #ifndef TTT_RESOURCE_HOOK_H
 #define TTT_RESOURCE_HOOK_H
 #include <stdint.h>
-/* ULUS10537 only: experimental PACKFILE has 0x3712 or 0x3734 entries.
- * Last zero-based entry 0x3711 (displayed as file 14098) is an encoded
- * ALIAS of the ORIGINAL Goku Base CHR (index 0x593), no file appended.
- * Does NOT load external data; game's PACKFILE loader remains in control.
- * STRICT initial validation: count==0x3712/0x3734 AND alias matches Goku Base. */
+/* ULUS10537 only. First physical Goku Early (ID00 Color1) CHR
+ * index 0x3711 (entry 14098), in the 0x3734-count experimental PACKFILE.
+ * Other 34 reserved entries are still aliases, not separate resources.
+ * Stable alias behavior on 0x3712 and 0x3734 is preserved. */
+#define TTT_PHYSICAL_GOKU_EARLY_C1_SIZE UINT32_C(0x0012F220)
 #define TTT_PACK_HEADER UINT32_C(0x08AF3240)
 #define TTT_PACK_RECORD_BASE UINT32_C(0x08AF3250)
 #define TTT_PACK_RESOURCE_GOKU UINT32_C(0x593)
@@ -44,11 +44,10 @@ int ttt_res_make_jal(uint32_t site,uint32_t dest,uint32_t observed,
 int ttt_res_validate_pack(uint32_t magic,uint32_t count,uint32_t resource_id,
                           uint32_t size);
 /* Pure predicate shared by both resolver interceptors and host tests. */
-/* Prototype safety check for a new last record pointing to existing Goku Base
- * bytes, using the RAM index representation (not byte-address alignment).
- * No arbitrary new data is permitted in this first smoke test. */
-int ttt_res_validate_alias(uint32_t new_offset,uint32_t original_offset,
-                           uint32_t new_size,uint32_t original_size);
+/* RAM-native offset units: alias or known physical file only. */
+int ttt_res_validate_entry(uint32_t new_offset,uint32_t original_offset,
+                           uint32_t new_size,uint32_t original_size,
+                           uint32_t count);
 int ttt_res_should_redirect(int bridge_active,int id,int offset);
 int ttt_res_hook_install(void);
 void ttt_res_hook_remove(void);

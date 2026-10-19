@@ -22,7 +22,7 @@ with tempfile.TemporaryDirectory() as td:
     fake[x.entry_idx(x.ORIGINAL_SFX):x.entry_idx(x.ORIGINAL_SFX)+16]=x.encode_record(x.ORIGINAL_SFX,x.DATA+0x1000,2048,template)
     orig=temp/'orig.bin'; orig.write_bytes(fake+b'\xab'*0x8000)
     item=temp/'assets'/'GOKU_EARLY';item.mkdir(parents=True)
-    (item/'C1.PCK1').write_bytes(b'PCK1'+b'x'*0x12A11)
+    (item/'C1.PCK1').write_bytes(bytes.fromhex('000001f1')+b'x'*(0x12F220-4))
     out=temp/'expanded.bin'
     cmd=[sys.executable,str(root/'tools'/'expandir_packfile_7_gokus.py'),
          '--input',str(orig),'--output',str(out),'--asset-dir',str(temp/'assets')]
@@ -31,6 +31,6 @@ with tempfile.TemporaryDirectory() as td:
     assert result[:x.entry_idx(x.FIRST)]==orig.read_bytes()[:x.entry_idx(x.FIRST)].replace(
         bytes.fromhex('12 37 00 00'),bytes.fromhex('34 37 00 00'),1)
     off,size=x.decode_record(result[:x.DATA],x.FIRST)
-    assert size==0x12A15 and result[off:off+4]==b'PCK1'
+    assert size==0x12F220 and result[off:off+4]==bytes.fromhex('000001f1')
     assert x.decode_record(result[:x.DATA],x.FIRST+1)==(x.DATA,4096)
 print('PASS: 7 forms, 35 entries, codec, alias, physical append, original entries preserved')

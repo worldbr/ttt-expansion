@@ -14,16 +14,16 @@ int main(void){
     assert(ttt_res_validate_pack(0x4B636150u,0,0x3711u,0x143000u)==-11);
     assert(ttt_res_validate_pack(0x4B636150u,0x3712u,0x4A9u,0x143000u)==-12);
     assert(ttt_res_validate_pack(0x4B636150u,0x3712u,0x3711u,100)==-13);
-    assert(ttt_res_validate_alias(0x10ED6000u,0x10ED6000u,0x143000u,0x143000u)==0);
-    /* Actual PPSSPP log: both RAM records hold 0x2258C (sector/index
-     * units), although the value is not numerically 0x800-aligned. */
-    assert(ttt_res_validate_alias(0x0002258Cu,0x0002258Cu,0x143000u,0x143000u)==0);
-    assert(ttt_res_validate_alias(0x0002258Cu,0x0002258Du,0x143000u,0x143000u)==-14);
-    assert(ttt_res_validate_alias(0x0002258Cu,0x0002258Cu,0x141680u,0x143000u)==-15);
-
-    assert(ttt_res_validate_alias(0x0u,0x10ED6000u,0x143000u,0x143000u)==-14);
-    assert(ttt_res_validate_alias(0x10ED6800u,0x10ED6000u,0x143000u,0x143000u)==-14);
-    assert(ttt_res_validate_alias(0x10ED6000u,0x10ED6000u,0x141680u,0x143000u)==-15);
+    /* Unmodified alias still accepted for backward compatibility. */
+    assert(ttt_res_validate_entry(0x2258Cu,0x2258Cu,0x143000u,0x143000u,0x3712u)==0);
+    assert(ttt_res_validate_entry(0x2258Cu,0x2258Cu,0x143000u,0x143000u,0x3734u)==0);
+    assert(ttt_res_validate_entry(0x2258Cu,0x2258Cu,0x12F220u,0x143000u,0x3734u)==-15);
+    /* New actual physical record; RAM native offset must be later. */
+    assert(ttt_res_validate_entry(0x80000u,0x2258Cu,0x12F220u,0x143000u,0x3734u)==0);
+    assert(ttt_res_validate_entry(0x80000u,0x2258Cu,0x12F220u,0x143000u,0x3712u)==-16);
+    assert(ttt_res_validate_entry(0x80000u,0x2258Cu,0x143000u,0x143000u,0x3734u)==-17);
+    assert(ttt_res_validate_entry(0x10000u,0x2258Cu,0x12F220u,0x143000u,0x3734u)==-18);
+    assert(ttt_res_validate_entry(0u,0x2258Cu,0x12F220u,0x143000u,0x3734u)==-14);
     assert(ttt_res_make_jal(0x0885520Cu,0x08B69000u,TTT_RES_CHECKED_JAL,TTT_RES_CHECKED_JAL,&word)==0);
     assert(word==(0x0C000000u|(0x08B69000u>>2)));
     assert(ttt_res_make_jal(0x0885520Cu,0x08B69000u,0,TTT_RES_CHECKED_JAL,&word)==-4);
@@ -32,6 +32,6 @@ int main(void){
     assert(ttt_res_should_redirect(0,0,0)==0);
     assert(ttt_res_should_redirect(1,3,0)==0);
     assert(ttt_res_should_redirect(1,0,1)==0);
-    puts("OK V0.9.8.3 resource JAL, new index 0x3711, PACKFILE 0x3712 alias");
+    puts("OK V0.9.8.5 JAL, alias antigo e CHR fisico Goku Inicio no indice 0x3711");
     return 0;
 }

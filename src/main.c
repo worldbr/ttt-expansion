@@ -432,7 +432,7 @@ static int diagnostic_thread(SceSize args,void *argp) {
 }
 int module_start(SceSize args,void *argp) {
     (void)args;(void)argp;
-    log_line("\n[TTT V0.9.8.4G] module_start OK - ULUS10537 | TESTE BASE V0983 SEM MODOS PARCIAIS\n");
+    log_line("\n[TTT V0.9.8.5] module_start OK - ULUS10537 | CHR FISICO GOKU INICIO C1\n");
     g_running=1;
     g_worker=sceKernelCreateThread("TTTExpMenuWorker",diagnostic_thread,0x20,0x4000,0,NULL);
     if(g_worker<0){g_running=0;log_line("[TTT V0.9.8.3] ERROR: thread create\n");return 0;}
