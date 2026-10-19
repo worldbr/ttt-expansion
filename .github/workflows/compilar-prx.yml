@@ -29,8 +29,6 @@ jobs:
           mkdir -p dist/TTT_EXPANSION
           cp ttt_expansion.prx dist/TTT_EXPANSION/ttt_expansion.prx
           cp TTT_EXPANSION/plugin.ini dist/TTT_EXPANSION/plugin.ini
-          mkdir -p dist/TTT_EXPANSION/characters/goku_early
-          cp TTT_EXPANSION/characters/goku_early/LEIA_AQUI.txt dist/TTT_EXPANSION/characters/goku_early/
           mkdir -p dist/TTT_EXPANSION/portraits
           cp TTT_EXPANSION/portraits/*.rgba dist/TTT_EXPANSION/portraits/
           test -s dist/TTT_EXPANSION/ttt_expansion.prx
@@ -41,14 +39,14 @@ jobs:
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: TTT-Expansion-Build-Log-V100D
+          name: TTT-Expansion-Build-Log-V095
           path: build.log
           if-no-files-found: warn
       - name: Disponibilizar plugin para instalar
         if: success()
         uses: actions/upload-artifact@v4
         with:
-          name: TTT-Expansion-PRX-V100D
+          name: TTT-Expansion-PRX-V095
           path: dist/
           if-no-files-found: error
           compression-level: 6
