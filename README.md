@@ -1,36 +1,55 @@
-# TTT Expansion PRX V0.9.5 — Pré-carregamento (diagnóstico por jogador)
+# TTT Expansion V0.9.6 — rastreamento do pré-carregamento
 
-## Ideia adotada
+**Jogo:** Dragon Ball Z: Tenkaichi Tag Team, PSP ULUS10537 (EBOOT.OLD original usado nos testes).
+**Status:** implementação de diagnóstico, **NÃO faz substituição automática de qualquer slot original pelo personagem configurado no Expansion**.
 
-O usuário escolhe **qualquer** personagem em qualquer posição do menu ORIGINAL apenas para chegar à batalha. O menu **TTT Expansion** armazena a escolha independente dos slots 1P–4P. A substituição de ID, Color e recursos deverá acontecer **ANTES** do carregamento da batalha, não depois de ela estar pronta.
+## Objetivo
 
-**IMPORTANTE: V0.9.5 É UMA ETAPA DE INSTRUMENTAÇÃO, NÃO IMPLEMENTA A TROCA AUTOMÁTICA AINDA.** O mapeamento 'recurso solicitado → jogador' ainda é desconhecido; alterar o ID nos hooks atuais pode trocar o adversário por engano. A V0.9.5 coleta informações para encontrar o ponto correto, com segurança.
+Nosso plano é que, independentemente do personagem escolhido na seleção ORIGINAL, o **TTT Expansion** possa fornecer ID e Color separados para 1P, 2P, 3P e 4P **ANTES** de o jogo carregar a batalha. A V0.9.5 confirmou leituras dos quatro campos `ACTOR RAW` durante combate, mas não capturou chamadas no hook de resolução de recursos naquela batalha (`checked=0`). Por isso ainda precisamos localizar **qual instrução copia/prepara a seleção para a batalha**.
 
-## Recursos que continuam funcionando
+A V0.9.6 continua a observação sem sobrescrever os quatro endereços e sem inventar um vínculo entre `LOAD TRACE site` e jogador.
 
-- GPU Guard da V0.8.2 (fix do cenário preto)
-- Interface visual V0.8.1, retratos RGBA e controles L+R+Quadrado
-- Escolhas separadas 1P,2P,3P,4P no menu, Color1–4
-- ID00 + CHR da entrada PACKFILE 1194 para Goku Early Color1 (experimental)
-- Quinta forma do Goku original como portador temporário; Videl não modificada, herdado da V0.9.4 (ainda não confirmado no PPSSPP)
+## Novidades da V0.9.6
 
-## Melhorias V0.9.5
+- **`ACTOR CHANGE`**: amostra os quatro pares ID+Color a cada quadro de VBlank e registra **somente mudanças**, incluindo `old_id`, `id`, `old_color`, `color`, `player`, `frame`, `plan` e `menu`. O primeiro evento por jogador é uma **amostra inicial** (`initial=1`), não comprova que houve alteração.
+- Buffer circular de 128 eventos, sem I/O na amostragem; o worker descarrega até 32 entradas a cada 30 quadros. Se houver transbordamento, registra `ACTOR GAP`.
+- `PLAN CONFIRMAR ... frame=...`: correlaciona as preferências do Expansion com a linha do tempo dos jogadores.
+- `tools/analisar_timeline.py`: leitura opcional do `diagnostico.txt` e resumo da linha do tempo, sem dependências adicionais.
+- `docs/BREAKPOINT_PPSSPP.md`: guia para encontrar o PC da escrita real nos campos dos jogadores.
+- Mantém GPU Guard, menu, retratos, seleção 1P–4P e ponte do ID00/CHR1194, **com o mesmo caráter experimental da V0.9.5**.
 
-1. Módulo `slot_plan`: grava a escolha do usuário separadamente em 1P,2P,3P,4P, com validação e número de confirmação. Goku Mid aparece no plano, mas sua identidade interna ainda não foi integrada.
-2. **Cinco interceptores distintos**, um por callsite conhecido de cálculo de recursos. `LOAD TRACE` mostra `site=0..4`, ID externo solicitado e recurso devolvido. Atenção: `site` **NÃO é jogador**; representa a função que pediu recurso.
-3. Histórico circular de até 64 eventos, sem I/O nem alocação dentro do hook; worker registra amostras durante a execução.
-4. `ACTOR RAW`: observação em quatro endereços de jogador em memória de batalha fornecidos pelo usuário (IDs e Colors brutos de 32 bits); **nenhuma gravação nesses endereços**. Os dados podem conter lixo ANTES da batalha. Usá-los com os eventos `LOAD TRACE` para investigar as fases de carregamento.
-5. `PLAN CONFIRMAR` e `PLAN RESET` registram todas as intenções selecionadas. `applied=0` até descobrirmos o hook confiável.
-6. Verificação adicional de Videl: os campos `Videl2` e `VidelEnd` continuam no diagnóstico como leitura de segurança; **o código não modifica a Videl**.
+## Passo a passo do teste seguro
 
-## Passo a passo (para quando voltar)
+1. Faça backup do PRX anterior (V0.9.3 comprovada para CHR; V0.9.5 para diagnóstico). Mantenha seu PACKFILE modificado com CHR na entrada 1194.
+2. Substitua os arquivos do projeto e compile no GitHub Actions (**Compilar PRX do menu**). Artifact esperado: `TTT-Expansion-PRX-V096`.
+3. Instale o PRX, **reinicie o PPSSPP** e confirme no `diagnostico.txt` a linha `module_start OK` da V0.9.6.
+4. Na seleção, abra nosso menu com **L+R+Quadrado**, marque **1P Goku Early, Color 1** e confirme com **X**.
+5. Feche com **Círculo**, selecione **qualquer personagem original** (por exemplo Piccolo, e não necessariamente a quinta forma do Goku) e entre em batalha.
+6. Copie as primeiras e últimas linhas `ACTOR CHANGE` do teste e também `PLAN CONFIRMAR`, `BRIDGE CONFIRMAR`, `LOAD TRACE` se existirem e `ACTOR RAW`. Diga qual personagem o seletor ORIGINAL escolheu para cada jogador.
+7. Para a investigação que identifica o **código que escreve o ID**, siga o procedimento em `docs/BREAKPOINT_PPSSPP.md` e registre o endereço PC da primeira escrita relevante em `0x08B48AE8`.
 
-1. Faça backup do PRX V0.9.3/0.9.4. Compile V0.9.5 no workflow do GitHub e instale o PRX.
-2. Reinicie PPSSPP. No TTT Expansion, selecione **Goku Early Color 1 em 1P** e aperte X. Para 2P, 3P, 4P, use L/R e confirme as escolhas (elas serão **registradas**, não impostas na batalha).
-3. Feche o menu e escolha **qualquer personagem original** para 1P, como você propôs. Execute uma batalha; para o ID00 testado, se quiser carregá-lo NESTA versão, use a quinta forma do Goku em vez de um slot arbitrário.
-4. Envie `PLAN CONFIRMAR`, `LOAD TRACE`, `ACTOR RAW`, `RESOURCE MATCH`, e diga quem você escolheu no jogo original em 1P e 2P.
-5. Não tente usar os endereços ACTOR RAW como endereço pré-batalha. O objetivo do log é encontrar a relação entre seleção e carregamento.
+### Como ler o registro
 
-## Limitações
+```text
+[TTT V0.9.6] ACTOR CHANGE seq=0x00000005 frame=0x00000340 player=0x00000001 initial=0x00000000 old_id=0x00000023 id=0x00000000 old_color=0x00000000 color=0x00000000 plan=0x00000001 menu=0x00000000
+```
 
-A V0.9.5 **não** garante que quinto Goku aparecerá, nem substitui diretamente o ID de 1P–4P. Só será seguro implementar essa ação depois de rastrear o estado pré-carregamento e saber distinguir cada jogador. Não há suporte de CHR externo nesta linha: o recurso 1194 ainda vem da ISO. Se houver travamento, retorne à V0.9.3 e reinicie o PPSSPP.
+**EXEMPLO, não é um teste real.** `frame` é o contador relativo desde o início da thread. `plan=1` indica que o plano do 1P estava confirmado; **não significa `applied=1`**. `menu=0` indica que o menu do plugin estava fechado. Uma mudança durante a batalha pode corresponder a transformação/respawn, não necessariamente ao primeiro carregamento.
+
+Para resumir um log no Windows (com Python disponível):
+
+```bat
+python tools\analisar_timeline.py diagnostico.txt
+```
+
+## Limitações e cuidados
+
+- Este plugin **não substitui** o ID de jogadores na preparação da batalha. A seleção original ainda é a que define os jogadores, exceto pelo caminho experimental da quinta forma já existente na V0.9.5.
+- Não confunda endereço observado em **combate** com endereço de pré-carregamento. O detector por quadro pode perder transições rápidas entre dois VBlanks; por isso recomendamos breakpoint de escrita no emulador.
+- `LOAD TRACE site` é um **local de chamada de função**, e **não um identificador de jogador**.
+- Não modifique manualmente os endereços de jogadores durante o carregamento. Se ocorrer travamento, reinicie o PPSSPP e restaure o PRX da V0.9.3.
+- Compilação nativa dos módulos/testes foi feita no PC; build PSPSDK + execução em PPSSPP precisam de confirmação do usuário.
+
+## Próxima fase
+
+Após identificar a instrução/rotina que escreve ID+Color e sua associação com 1P–4P, poderemos estudar um **hook no instante anterior ao carregamento**, com validação de opcode e restaurabilidade, começando por **apenas 1P**. O processamento de CHR 1194 deverá continuar restrito ao ID00 Color1 até comprovar suporte a outros trajes e personagens.

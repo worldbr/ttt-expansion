@@ -12,6 +12,7 @@ run_test test_native src/overlay.c src/toggle.c src/framecheck.c
 run_test test_menu_state src/menu_state.c
 run_test test_bridge src/battle_bridge.c
 run_test test_resource src/resource_hook.c
+run_test test_actor_watch src/actor_watch.c
 run_test test_slot_plan src/slot_plan.c
 run_test test_callsite_plan src/callsite_plan.c
 run_test test_input_guard src/input_guard.c src/input_plan.c

@@ -1,3 +1,4 @@
-TTT EXPANSION V0.9.5: preferencias 1P-4P + rastreamento da fase de carregamento.
-NAO altera automaticamente o slot original escolhido.
-Compile pelo GitHub Actions e leia README.md.
+TTT Expansion V0.9.6 | ULUS10537
+Leia README.md antes de compilar. Release de diagnostico: nao substitui automaticamente os 4 jogadores.
+Compilar pelo GitHub Actions; instalar TTT_EXPANSION na pasta PSP/PLUGINS.
+Teste com backup do PRX anterior. Ver docs/BREAKPOINT_PPSSPP.md.
