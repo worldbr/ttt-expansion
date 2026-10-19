@@ -315,7 +315,7 @@ static void render_menu(uint32_t data) {
     /* Keep all help text inside the 480x272 visible PSP screen. */
     panel(28,229,424,26,C_BLUE,C_OUTER);
     txt(35,232,nav_v2[lang],1,C_WHITE);
-    if(bridge && tab==0) txt(35,244,lang==0?"ID00 ATIVO - VIDEL 2 / QUADRADO DESARMA":lang==1?"ID00 ACTIVE - VIDEL 2 / SQUARE RESETS":"ID00 ACTIVO - VIDEL 2 / CUADRADO DESARMA",1,C_GOLD);
+    if(bridge && tab==0) txt(35,244,lang==0?"ID00 ATIVO - GOKU 5 / QUADRADO DESARMA":lang==1?"ID00 ACTIVE - GOKU 5 / SQUARE RESETS":"ID00 ACTIVO - GOKU 5 / CUADRADO DESARMA",1,C_GOLD);
     else txt(35,244,footer_v2[lang],1,C_SOFT);
     box(25,258,430,3,C_GOLD);
 }

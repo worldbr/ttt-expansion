@@ -12,6 +12,16 @@
 #define TTT_RES_CHECKED_JAL UINT32_C(0x0E271B28)
 #define TTT_RES_UNCHECKED_JAL UINT32_C(0x0E271B58)
 
+/* Read-only call sequence trace: JAL index 0..4 is the known resolver site,
+ * NOT a player number. It is unsafe to infer P1..P4 from these calls alone. */
+#define TTT_RES_TRACE_DEPTH 64u
+typedef struct {
+    uint32_t seq,site,id,offset,original,result,redirected;
+} TTTResourceTrace;
+uint32_t ttt_res_trace_count(void);
+/* Returns 0 for a complete consistent event, -1 for missing/overwritten. */
+int ttt_res_trace_get(uint32_t seq,TTTResourceTrace *out);
+
 /* Match snapshot is updated ONLY by a request actually mapped to the
  * independent CHR. Subsequent ordinary calls cannot overwrite this data. */
 typedef struct {

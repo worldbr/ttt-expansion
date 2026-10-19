@@ -1,4 +1,4 @@
-/* V0.9.3 -- independent CHR resource diagnostics without changing redirect behavior.
+/* V0.9.5 -- independent CHR resource diagnostics without changing redirect behavior.
  * The ID00 battle bridge preserves external ID00 and borrows Goku data.
  * We redirect ONLY requests to ID00, resource offset zero (Color 1)
  * from the game's verified CHR/SFX number resolver call sites to PACKFILE
@@ -34,6 +34,28 @@ static volatile uint32_t calls_checked,calls_unchecked,redirects;
 static volatile uint32_t last_id,last_variant,last_original,last_result;
 static volatile uint32_t match_count,match_id,match_offset,match_original,match_redirected,match_path;
 static volatile uint32_t pack_magic,pack_count,resource_id,resource_size,original_size;
+static volatile TTTResourceTrace traces[TTT_RES_TRACE_DEPTH];
+static volatile uint32_t trace_count;
+uint32_t ttt_res_trace_count(void){return trace_count;}
+int ttt_res_trace_get(uint32_t seq,TTTResourceTrace *out){
+    const volatile TTTResourceTrace *v;
+    uint32_t count=trace_count;
+    if(!out||seq==0||seq>count||(count-seq)>=TTT_RES_TRACE_DEPTH)return -1;
+    v=&traces[(seq-1u)&(TTT_RES_TRACE_DEPTH-1u)];
+    if(v->seq!=seq)return -1;
+    out->seq=v->seq;out->site=v->site;out->id=v->id;out->offset=v->offset;
+    out->original=v->original;out->result=v->result;out->redirected=v->redirected;
+    return (v->seq==seq)?0:-1;
+}
+#ifdef TTT_BRIDGE_PSP
+static void trace_event(uint32_t site,int id,int offset,int old,int result,int matched){
+    uint32_t seq=trace_count+1u;
+    volatile TTTResourceTrace *v=&traces[(seq-1u)&(TTT_RES_TRACE_DEPTH-1u)];
+    v->seq=0;v->site=site;v->id=(uint32_t)id;v->offset=(uint32_t)offset;
+    v->original=(uint32_t)old;v->result=(uint32_t)result;
+    v->redirected=(uint32_t)matched;v->seq=seq;trace_count=seq;
+}
+#endif
 
 int ttt_res_make_jal(uint32_t site,uint32_t dest,uint32_t observed,
                       uint32_t want,uint32_t *patched){
@@ -73,32 +95,31 @@ static volatile const uint32_t *r32(uint32_t addr){return (volatile const uint32
 /* Match game's two resource resolvers; no recursion because direct calls
  * jump into originals rather than the patched call sites. */
 typedef int (*Resolver)(int external_id,int resource_offset);
-static __attribute__((noinline)) int check_intercept(int id,int offset){
-    int result=((Resolver)(uintptr_t)UINT32_C(0x089C6CA0))(id,offset);
-    ++calls_checked;
+static int intercept_common(int id,int offset,uint32_t site,int unchecked){
+    int old,result,matched;
+    result=((Resolver)(uintptr_t)(unchecked?UINT32_C(0x089C6D60):UINT32_C(0x089C6CA0)))(id,offset);
+    old=result;
+    if(unchecked)++calls_unchecked;else ++calls_checked;
     last_id=(uint32_t)id;last_variant=(uint32_t)offset;
-    last_original=(uint32_t)result;
-    if(installed && ttt_res_should_redirect(ttt_bridge_is_active(),id,offset)) {
+    last_original=(uint32_t)old;
+    matched=installed && ttt_res_should_redirect(ttt_bridge_is_active(),id,offset);
+    if(matched){
         result=(int)TTT_PACK_RESOURCE_EXTRA;
-        capture_match(id,offset,(int)last_original,result,1u);
+        capture_match(id,offset,old,result,unchecked?2u:1u);
         ++redirects;
     }
     last_result=(uint32_t)result;
+    trace_event(site,id,offset,old,result,matched);
     return result;
 }
-static __attribute__((noinline)) int uncheck_intercept(int id,int offset){
-    int result=((Resolver)(uintptr_t)UINT32_C(0x089C6D60))(id,offset);
-    ++calls_unchecked;
-    last_id=(uint32_t)id;last_variant=(uint32_t)offset;
-    last_original=(uint32_t)result;
-    if(installed && ttt_res_should_redirect(ttt_bridge_is_active(),id,offset)){
-        result=(int)TTT_PACK_RESOURCE_EXTRA;
-        capture_match(id,offset,(int)last_original,result,2u);
-        ++redirects;
-    }
-    last_result=(uint32_t)result;
-    return result;
-}
+/* Separate wrappers preserve the exact call site for each lookup. The site
+ * indicates which GAME FUNCTION asked, not which player owns the request. */
+static __attribute__((noinline)) int check0(int id,int offset){return intercept_common(id,offset,0u,0);}
+static __attribute__((noinline)) int check1(int id,int offset){return intercept_common(id,offset,1u,0);}
+static __attribute__((noinline)) int check2(int id,int offset){return intercept_common(id,offset,2u,0);}
+static __attribute__((noinline)) int uncheck3(int id,int offset){return intercept_common(id,offset,3u,1);}
+static __attribute__((noinline)) int uncheck4(int id,int offset){return intercept_common(id,offset,4u,1);}
+
 #endif
 int ttt_res_hook_install(void){
 #ifdef TTT_BRIDGE_PSP
@@ -114,13 +135,21 @@ int ttt_res_hook_install(void){
     if(rc){last_error=rc;return rc;}
     for(i=0;i<SITE_N;i++){
         old[i]=*r32(callsites[i]);
-        target=(uint32_t)(uintptr_t)(i<3?&check_intercept:&uncheck_intercept);
+        switch(i){
+            case 0:target=(uint32_t)(uintptr_t)&check0;break;
+            case 1:target=(uint32_t)(uintptr_t)&check1;break;
+            case 2:target=(uint32_t)(uintptr_t)&check2;break;
+            case 3:target=(uint32_t)(uintptr_t)&uncheck3;break;
+            default:target=(uint32_t)(uintptr_t)&uncheck4;break;
+        }
         rc=ttt_res_make_jal(callsites[i],target,old[i],expected[i],&patch[i]);
         if(rc){last_error=rc-100*(i+1);return last_error;}
     }
     calls_checked=calls_unchecked=redirects=0;
     last_id=last_variant=last_original=last_result=0;
     match_count=match_id=match_offset=match_original=match_redirected=match_path=0;
+    trace_count=0;
+    for(i=0;i<(int)TTT_RES_TRACE_DEPTH;i++)traces[i].seq=0;
     for(i=0;i<SITE_N;i++){
         saved[i]=old[i];replacement[i]=patch[i];
         *(volatile uint32_t*)(uintptr_t)callsites[i]=patch[i];
