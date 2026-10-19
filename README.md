@@ -1,71 +1,87 @@
-# TTT Expansion V0.9.8 — Injeção independente 1P–4P (EXPERIMENTAL)
+# TTT Expansion V0.9.8.2 — Teste da NOVA entrada 14098 do PACKFILE
 
-**Jogo:** Dragon Ball Z: Tenkaichi Tag Team — `ULUS10537`, mesmo EBOOT.OLD e PACKFILE da pesquisa.
+**Alvo:** Dragon Ball Z: Tenkaichi Tag Team (ULUS10537), o mesmo EBOOT da pesquisa. **Experimental; teste só com backup da ISO e do PRX.**
 
-## O que já foi confirmado pelo usuário (V0.9.7)
+## Objetivo específico
 
-O usuário configurou Goku Early ID `00`, Color 1, para 1P; escolheu um personagem diferente no seletor original; entrou em batalha com Goku, jogou, usou golpes e finalizou a luta normalmente. O diagnóstico confirmou `ACTOR INJECT STATUS hits=1`, ID `00` no 1P e `RESOURCE MATCH ... new=0x4A9` (arquivo 1194 do PACKFILE).
-
-A V0.9.8 **não foi compilada pelo PSPSDK nem executada no PPSSPP neste momento**. A ampliação 2P/3P/4P é experimental. Faça backup da V0.9.7.
-
-## Novidade V0.9.8
-
-O hook em `0x088576C8` foi estendido para reconhecer a estrutura de cada jogador:
-
-| Jogador | ID na RAM | Color na RAM | Máscara |
-| --- | --- | --- | --- |
-| 1P | `0x08B48AE8` | `0x08B48AF0` | `0x1` |
-| 2P | `0x08B48BC0` | `0x08B48BC8` | `0x2` |
-| 3P | `0x08B48CB8` | `0x08B48CC0` | `0x4` |
-| 4P | `0x08B48D90` | `0x08B48D98` | `0x8` |
-
-Cada jogador é habilitado e desabilitado de forma independente. Uma confirmação de Goku Mid ou uma Color diferente desativa **somente aquele slot**, preservando os outros. **Por enquanto, apenas Goku Early ID 00 / Color 1 é injetável; outros nomes no menu são prévias**. Os CHRs continuam vindo do PACKFILE modificado da ISO, entrada 1194/índice `0x4A9`; não há Mod Loader externo.
-
-A rotina Assembly (`src/actor_inject.S`) compara o registrador `fp` aos quatro endereços exatos, verifica o bit daquele jogador e só substitui quando o ID original é válido (intervalo `0x01..0xA0`). Se o slot estiver vazio (`0`) ou inválido, o código original continua. O hook salva/restaura `$t0`, `$t1`, `$t2` e o stack pointer; preserva a instrução no *delay slot* e altera `$a1` apenas para o slot habilitado. A validação dos dois opcodes originais do EBOOT ocorre antes de instalar o patch.
-
-## Procedimento recomendado — testar uma etapa por vez
-
-1. Faça backup do PRX V0.9.7 e, de preferência, do save. Não use cheats de outros patches de expansão. Mantenha a mesma ISO modificada com um CHR válido na entrada 1194.
-2. Atualize o repositório com o projeto completo V0.9.8 ou a atualização e compile por **Actions → Compilar PRX do menu**. Baixe `TTT-Expansion-PRX-V098`.
-3. Teste o **1P sozinho**, como na V0.9.7, confirmando Goku Early Color 1, escolhendo outro personagem no seletor original e entrando em batalha. O resultado deve continuar normal.
-4. Reinicie o PPSSPP e teste **somente 2P**: abra o Expansion com L+R+Quadrado, mude para 2P, escolha Goku Early / Color 1, confirme X e feche com Círculo. No menu original selecione uma **batalha com 2P ativo**, idealmente 2x2, e escolha um personagem diferente para 2P. Observe o resultado.
-5. Apenas se 2P funcionar sem erros, repita com **3P**, depois **4P**, individualmente, sempre reiniciando o emulador para separar os testes. Por fim, poderá testar múltiplos slots ao mesmo tempo.
-6. Envie `ACTOR INJECT STATUS`, `ACTOR INJECT SLOT player=...`, `RESOURCE MATCH`, `LOAD TRACE` e `ACTOR RAW` após entrar em batalha.
-
-**Importante:** dependendo do modo de batalha, o 2P/4P pode não estar ocupado. O hook não deve criar um personagem em slot vazio; `hits=0` num slot não utilizado é esperado. Uma batalha 2x2 é melhor para avaliar os quatro jogadores.
-
-## Diagnóstico esperado (exemplo, não é resultado testado)
+Esta versão mantém o **GPU Guard**, a interface, a ponte de Goku Early `ID 00`, a injeção dos quatro jogadores da V0.9.8 e os logs. Sua alteração principal, baseada na V0.9.8.1, é redirecionar `Goku Early ID 00, Color 1` para o **índice zero-based `0x3711` (14098 no Index Editor)**, em lugar da entrada 1194 (`0x4A9`).
 
 ```
-[TTT V0.9.8] ACTOR INJECT STATUS installed=0x00000001 enabled=0x00000001 mask=0x00000002 error=0x00000000 hits=0x00000001 player=0x00000002 ...
-[TTT V0.9.8] ACTOR INJECT SLOT player=0x00000002 enabled=0x00000001 hits=0x00000001 original_id=0x00000019 ... want_id=0x00000000 want_color=0x00000000
-[TTT V0.9.8] RESOURCE MATCH count=0x00000001 id=0x00000000 offset=0x00000000 old=0x00000593 new=0x000004A9 ...
+Goku Early (ID 00), Color 1
+       | hook dos recursos (resolvers)
+       v
+resource index = 0x3711 (14098), SOMENTE com PACKFILE count=0x3712
+       | carregador de arquivos original do jogo
+       v
+registro 0x3711 -> ALIAS do CHR Goku Base original (indice 0x593)
 ```
 
-O 2P deve exibir ID 00 em `ACTOR RAW`. O valor `original_id=0x19` é só exemplo, dependerá da seleção feita. `mask=0x2` significa apenas 2P, `mask=0xF` significa todos os jogadores.
+**Primeiro teste: o registro 14098 é um alias do arquivo Goku Base original, sem inserir dados físicos extras.** Portanto a aparência é igual à do Goku Base; o foco é verificar se o carregador aceita **o índice 0x3711**, sem acessar a entrada 1194. O teste **não prova ainda** a carga de um novo arquivo físico, nem a expansão completa de limites do motor.
+
+## Pré-requisitos obrigatórios
+
+- **ISO/CÓPIA** em que o PACKFILE tem `PacK`, contagem **`0x3712`**, e o registro novo no offset `0x37120` do PACKFILE é o alias anteriormente preparado:
+  ```
+  6C 7C 61 4B 11 07 14 00 50 61 63 4B 00 00 00 00
+  ```
+  O registro aponta para o mesmo offset `0x10ED6000` e tamanho `0x143000` do CHR Goku Base (neste arquivo específico).
+- **EBOOT já corrigido** para aceitar `0x3712` em vez de `0x3711` (conforme o teste anterior que permitiu iniciar a luta). **O PRX deste pacote NÃO altera essa checagem do EBOOT; ele é instalado depois que o jogo já iniciou.**
+- Se ainda estiver usando PACKFILE `0x3711`, a V0.9.8.2 deverá **recusar o redirecionamento** com `error=0xFFFFFFF5` (`-11`). Use a V0.9.8/V0.9.8.1 em vez dela com a ISO original.
+- Recomenda-se desativar outros cheats que alterem tabelas de personagens ou offsets de PACKFILE.
+
+## Como testar com segurança
+
+1. Guarde backups da V0.9.8 funcional e da ISO antes de iniciar.
+2. Atualize o projeto do GitHub com os arquivos deste pacote e execute **Actions → Compilar PRX do menu**. O artifact se chama `TTT-Expansion-PRX-V0982`.
+3. Instale o PRX no PPSSPP e **reinicie completamente o emulador**. Verifique primeiro que uma batalha normal funciona **sem abrir o Expansion**.
+4. Reinicie, abra com **L + R + Quadrado** e confirme **1P → Goku Early → Color 1 → X**.
+5. Feche com Círculo, escolha outro personagem no menu original, por exemplo Piccolo, e inicie a batalha.
+6. Veja se entrou com Goku Base, consegue atacar e terminar a luta sem falhas. Depois confira `diagnostico.txt`.
+7. Se funcionar para 1P, opcionalmente teste os outros slots; eles usam a mesma nova entrada. Para isolar problemas, não comece ativando os quatro ao mesmo tempo.
+
+## Diagnóstico esperado
+
+Exemplos, **não são saídas já verificadas no PPSSPP**:
+
+```
+[TTT V0.9.8.2] RESOURCE CONFIRMAR installed=0x00000001 error=0x00000000 ...
+  size_14098=0x00143000 size_goku=0x00143000
+  record_id=0x00003711 off_14098=0x10ED6000 off_goku=0x10ED6000
+  pack_magic=0x4B636150 count=0x00003712
+
+[TTT V0.9.8.2] RESOURCE MATCH count=0x00000001
+  id=0x00000000 offset=0x00000000 old=0x00000593 new=0x00003711 path=0x00000001
+
+[TTT V0.9.8.2] ACTOR INJECT STATUS ... hits=0x00000001 ...
+```
+
+Se `RESOURCE CONFIRMAR` mostrar `installed=0`, confira `error` e as colunas `record_id`, `off_14098`, `size_14098` e `count`:
+
+| Erro decimal | Motivo do teste | Ação |
+| --- | --- | --- |
+| `-10` | assinatura `PacK` não reconhecida na RAM | Checar ISO correta e reiniciar |
+| `-11` | contador RAM diferente de `0x3712` | Conferir cabeçalho e EBOOT modificado |
+| `-12` | identificador do registro RAM diferente de `0x3711` | Compartilhar log para estudar formato do índice carregado |
+| `-13` | tamanho inválido do novo registro | Conferir registro codificado |
+| `-14` | offset da nova entrada não coincide com o CHR Goku Base | Usar o registro alias exato do teste |
+| `-15` | tamanho do novo registro não coincide com Goku Base | Usar o registro alias exato do teste |
+
+**Importante:** `RESOURCE MATCH new=0x3711` demonstra que nosso hook devolveu a nova posição. Se Goku aparece e a batalha roda, temos boa evidência do uso do índice adicional. Para provar fisicamente a leitura de um CHR diferente por essa posição precisaremos, num passo posterior, apontá-la para um modelo visualmente distinto e remover a validação de alias específico.
 
 ## Limitações
 
-- Ainda não há cadastro universal para todos os personagens. Goku Mid ID 01 e outras Colors não devem ser injetados nesta versão.
-- Um Goku SSJ na entrada 1194 produzirá essa aparência mesmo com o ID Goku Early 00.
-- A criação de personagens completamente independentes (golpes, SFX, atributos, transformações) ainda exige pesquisar novas estruturas do jogo.
-- Repetir o ID 00 em vários jogadores ainda não foi testado; recomendamos começar com um só.
-- Não tente desarmar a ponte durante uma batalha; reinicie o PPSSPP e restaure a V0.9.7 se houver problemas.
-- A quinta forma do Goku segue como fallback da ponte (mantida de versões anteriores), mas você já não precisa escolhê-la manualmente para testar a injeção.
-- O programa não foi executado em console PSP real e pode depender do comportamento do PPSSPP.
+- O plugin não cria o registro do PACKFILE nem corrige o EBOOT; ambos devem estar previamente aplicados na **ISO de teste**.
+- O registro novo alias não implica arquivo extra real gravado no fim do PACKFILE.
+- Só **Goku Early ID 00 / Color 1** está associado a recurso experimental; Goku Mid `01` ainda é prévia.
+- Mantenha backup e pare o teste se houver corrupção gráfica/travamento; restaure a V0.9.8 e a ISO original.
+- A compilação completa com o PSPSDK e o teste real do PPSSPP **ainda precisam de validação do usuário**.
 
-## Arquivos principais
+## Fontes principais
 
-- `src/actor_inject.S`: interceptação Assembly MIPS com seleção 1P–4P e proteção de slots vazios.
-- `src/actor_inject.c/.h`: configuração e máscaras por jogador, diagnóstico e salvaguardas.
-- `src/main.c`: integração com menu e log `ACTOR INJECT SLOT`.
-- `src/slot_plan.c`: preferências independentes de cada jogador.
-- `src/battle_bridge.c`: tabela A/B do ID 00.
-- `src/resource_hook.c`: CHR da entrada 1194.
-- `tests/test_actor_inject.c`: teste nativo do mapeamento exato 1P–4P.
+- `src/resource_hook.h`: define o novo índice `0x3711`.
+- `src/resource_hook.c`: checa contagem, índice e alias; altera apenas o retorno dos cinco JALs de resolução.
+- `src/main.c`: mantém injeção de 1P–4P e imprime `RESOURCE MATCH`, `off_14098` etc.
+- `src/actor_inject.S`: mesmo hook MIPS de inicialização aprovado na V0.9.8.
+- `tests/test_resource.c`: verificações nativas de limites e da posição `0x08B2A360`.
 
-## Compilação / validação realizada
-
-- `bash tests/run_native_tests.sh`: passou.
-- `clang -target mipsel-unknown-elf -c src/actor_inject.S`: montou sem erros (objeto MIPS32).
-- Verificação PSP SDK completa / execução em PPSSPP: **pendentes**.
+O conteúdo de `docs/TESTE_PACKFILE_3712_V0981.md` é preservado **como histórico da versão anterior**, que ainda usava a entrada 1194. Para esta versão, siga este README ou `docs/TESTE_NOVA_ENTRADA_14098_V0982.md`.

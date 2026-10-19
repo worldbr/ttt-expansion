@@ -1,13 +1,14 @@
-TTT Expansion V0.9.8 - PREVIEW EXPERIMENTAL
+TTT EXPANSION V0.9.8.2 - EXPERIMENTO DA NOVA POSICAO 14098
 
-O teste 1P da V0.9.7 foi confirmado pelo usuario. Esta versao amplia o mesmo hook para 2P, 3P e 4P; ainda precisa de compilacao PSPSDK e testes PPSSPP.
+ABRA README.md ANTES DE COMPILAR / INSTALAR.
 
-COMPILAR: copie o conteudo do ZIP para a raiz do seu repositorio GitHub e rode Actions > Compilar PRX do menu. Baixe o artifact TTT-Expansion-PRX-V098.
+Atenção: somente para ISO de teste com PACKFILE count=0x3712,
+registro 14098 válido alias do Goku Base e EBOOT previamente corrigido.
 
-TESTAR: use somente Goku Early ID00 Color1, comece com 1P, depois com 2P numa luta 2x2. Mantenha o CHR valido na entrada 1194 da ISO. Reinicie PPSSPP a cada caso.
+Redirecionamento: Goku Early ID00 Color1 -> indice interno 0x3711.
+Mantidos: menu, GPU Guard, slot 1P-4P e controles da V0.9.8.
 
-LOG: ACTOR INJECT SLOT player=... enabled=... hits=...; ACTOR RAW; RESOURCE MATCH.
+O PRX nao altera o cabeçalho do PACKFILE nem o contador no EBOOT.
+Compilar no GitHub Actions; artifact esperado TTT-Expansion-PRX-V0982.
 
-NAO tente o ID01/Goku Mid automaticamente: ainda e apenas preview. Nao desarme o plugin durante batalha. Guarde PRX V0.9.7 para restauracao.
-
-Detalhes completos no README.md.
+Se tiver problemas, restaure a V0.9.8 e os backups da ISO.

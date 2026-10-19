@@ -1,13 +1,10 @@
-/* V0.9.5 -- independent CHR resource diagnostics without changing redirect behavior.
- * The ID00 battle bridge preserves external ID00 and borrows Goku data.
- * We redirect ONLY requests to ID00, resource offset zero (Color 1)
- * from the game's verified CHR/SFX number resolver call sites to PACKFILE
- * entry 1194 (0x4A9, index starts at zero). The original resource loader
- * continues performing allocation, decompression, and file reads.
- *
- * Modifies 5 verified JALs ONLY after validating all 5 original opcodes and
- * the PACKFILE metadata. No logs/I/O/allocations in hooks. No external CHR.
- * Test on ULUS10537 original EBOOT.OLD, with user-modified PACKFILE ONLY.
+/* TTT Expansion V0.9.8.2 -- experimental CHR redirect to NEW PACKFILE
+ * index 0x3711 (file 14098) on ULUS10537 ONLY. Requires expanded
+ * header 0x3712 + correct encoded record + EBOOT 0x3712 count patch.
+ * New record MUST alias original Goku Base file, to limit the first test.
+ * The original game's loader still performs all file reads/decompression.
+ * CPU hooks change only the returned numeric resource index.
+ * No logs/filesystem I/O/allocations inside resolver interception.
  */
 #include "resource_hook.h"
 #include "battle_bridge.h"
@@ -34,6 +31,7 @@ static volatile uint32_t calls_checked,calls_unchecked,redirects;
 static volatile uint32_t last_id,last_variant,last_original,last_result;
 static volatile uint32_t match_count,match_id,match_offset,match_original,match_redirected,match_path;
 static volatile uint32_t pack_magic,pack_count,resource_id,resource_size,original_size;
+static volatile uint32_t resource_data_offset,original_data_offset;
 static volatile TTTResourceTrace traces[TTT_RES_TRACE_DEPTH];
 static volatile uint32_t trace_count;
 uint32_t ttt_res_trace_count(void){return trace_count;}
@@ -68,9 +66,19 @@ int ttt_res_make_jal(uint32_t site,uint32_t dest,uint32_t observed,
 }
 int ttt_res_validate_pack(uint32_t magic,uint32_t count,uint32_t id,uint32_t size){
     if(magic!=UINT32_C(0x4B636150))return -10; /* PacK little endian */
-    if(count!=UINT32_C(0x3711))return -11;
+    /* This release tests ONLY the new LAST entry, not the old 1194 slot.
+     * NEVER return index 0x3711 on an original 0x3711-entry PACKFILE. */
+    if(count!=UINT32_C(0x3712))return -11;
     if(id!=TTT_PACK_RESOURCE_EXTRA)return -12;
     if(size<UINT32_C(0x10000) || size>UINT32_C(0x02000000))return -13;
+    return 0;
+}
+int ttt_res_validate_alias(uint32_t new_offset,uint32_t original_offset,
+                           uint32_t new_size,uint32_t original_size){
+    /* Ensure new record aliases the verified original Goku Base CHR.
+     * Stop before enabling hooks if the newly appended record is malformed. */
+    if(new_offset!=original_offset || (new_offset & UINT32_C(0x7FF))!=0u || new_offset==0u)return -14;
+    if(new_size!=original_size)return -15;
     return 0;
 }
 int ttt_res_should_redirect(int bridge_active,int id,int offset){
@@ -128,10 +136,20 @@ int ttt_res_hook_install(void){
     if(installed){last_error=0;return 0;}
     pack_magic=*r32(TTT_PACK_HEADER);
     pack_count=*r32(TTT_PACK_HEADER+4u);
+    /* Reject wrong header before reading beyond the original index table. */
+    if(pack_magic!=UINT32_C(0x4B636150) || pack_count!=UINT32_C(0x3712)){
+        resource_id=resource_size=original_size=0;
+        resource_data_offset=original_data_offset=0;
+        last_error=(pack_magic!=UINT32_C(0x4B636150))?-10:-11;
+        return last_error;
+    }
     resource_id=*r32(TTT_PACK_RESOURCE_EXTRA_RECORD+12u);
+    resource_data_offset=*r32(TTT_PACK_RESOURCE_EXTRA_RECORD);
     resource_size=*r32(TTT_PACK_RESOURCE_EXTRA_RECORD+4u);
+    original_data_offset=*r32(TTT_PACK_RESOURCE_GOKU_RECORD);
     original_size=*r32(TTT_PACK_RESOURCE_GOKU_RECORD+4u);
     rc=ttt_res_validate_pack(pack_magic,pack_count,resource_id,resource_size);
+    if(!rc)rc=ttt_res_validate_alias(resource_data_offset,original_data_offset,resource_size,original_size);
     if(rc){last_error=rc;return rc;}
     for(i=0;i<SITE_N;i++){
         old[i]=*r32(callsites[i]);
@@ -183,5 +201,6 @@ TTTResourceHookStats ttt_res_hook_stats(void){
     s.match_path=match_path;
     s.pack_magic=pack_magic;s.pack_count=pack_count;
     s.resource_id=resource_id;s.resource_size=resource_size;s.original_size=original_size;
+    s.resource_data_offset=resource_data_offset;s.original_data_offset=original_data_offset;
     return s;
 }
