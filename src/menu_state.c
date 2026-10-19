@@ -30,8 +30,8 @@ int ttt_menu_buttons(TTTMenuState *m,uint32_t buttons) {
         /* L/R selecionam 1P..4P; apertar ambos nao muda jogador. */
         if((pressed & TTT_BTN_L) && !(buttons & TTT_BTN_R))change_player(m,-1);
         if((pressed & TTT_BTN_R) && !(buttons & TTT_BTN_L))change_player(m,1);
-        if(pressed & TTT_BTN_UP) m->character=0;
-        if(pressed & TTT_BTN_DOWN) m->character=1;
+        if(pressed & TTT_BTN_UP) m->character=(uint8_t)((m->character+TTT_ROSTER_COUNT-1u)%TTT_ROSTER_COUNT);
+        if(pressed & TTT_BTN_DOWN) m->character=(uint8_t)((m->character+1u)%TTT_ROSTER_COUNT);
         if(pressed & TTT_BTN_LEFT) m->color=(uint8_t)((m->color+3u)%4u);
         if(pressed & TTT_BTN_RIGHT) m->color=(uint8_t)((m->color+1u)%4u);
         save_active(m);
@@ -39,19 +39,24 @@ int ttt_menu_buttons(TTTMenuState *m,uint32_t buttons) {
     }
     return 0;
 }
+static const char *const names[TTT_ROSTER_COUNT]={
+    "GOKU_EARLY","GOKU_MID","GOKU_MID_SSJ","GOKU_GT",
+    "GOKU_GT_SSJ","GOKU_GT_SSJ3","GOKU_GT_SSJ4"
+};
+const char *ttt_menu_character_name(uint8_t character){
+    return character<TTT_ROSTER_COUNT?names[character]:"INVALID";
+}
+int ttt_menu_character_playable(uint8_t character,uint8_t color){return character==0u&&color==0u;}
 uint8_t ttt_menu_external_id(const TTTMenuState *m) {
-    return (uint8_t)(m->character?TTT_ID_GOKU_MID:TTT_ID_GOKU_EARLY);
+    return m->character<=2u?(uint8_t)m->character:0xFFu; /* GT IDs ainda desconhecidos */
 }
 uint32_t ttt_menu_snapshot(const TTTMenuState *m) {
-    /* 0..0 char, 1..2 color, 3..4 tab, 5..6 lang, 7..8 player,
-       9..12 confirm bits, 13..24 stored char(1)+color(2) each player. */
-    uint32_t bits=(uint32_t)(m->character & 1u) | ((uint32_t)(m->color & 3u)<<1)
-        | ((uint32_t)(m->tab & 3u)<<3) | ((uint32_t)(m->lang & 3u)<<5)
-        | ((uint32_t)(m->player & 3u)<<7);
+    /* Novo layout GPU: 0..2 character, 3..4 color, 5..6 tab, 7..8 lang,
+       9..10 player, 11..14 marcacoes 1P..4P, 25 bridge ativo. */
+    uint32_t bits=(uint32_t)(m->character&7u) | ((uint32_t)(m->color&3u)<<3)
+        | ((uint32_t)(m->tab&3u)<<5) | ((uint32_t)(m->lang&3u)<<7)
+        | ((uint32_t)(m->player&3u)<<9);
     int i;
-    for(i=0;i<4;i++) {
-        bits|=((uint32_t)(m->confirmed[i]&1u))<<(9+i);
-        bits|=((uint32_t)(m->picked_character[i]&1u) | ((uint32_t)(m->picked_color[i]&3u)<<1)) << (13+i*3);
-    }
+    for(i=0;i<4;i++)bits|=((uint32_t)(m->confirmed[i]&1u))<<(11+i);
     return bits;
 }

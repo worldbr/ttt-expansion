@@ -245,13 +245,14 @@ static const char *const footer_v2[3]={
     "TRIANG: PEST   SELECT: IDIOMA   O: CERRAR"
 };
 static void render_menu(uint32_t data) {
-    int character=(int)(data&1u),color=(int)((data>>1)&3u);
-    int tab=(int)((data>>3)&3u),lang=(int)((data>>5)&3u);
-    int player=(int)((data>>7)&3u),marked=(int)((data>>(9+player))&1u),bridge=(int)((data>>25)&1u),i;
+    int character=(int)(data&7u),color=(int)((data>>3)&3u);
+    int tab=(int)((data>>5)&3u),lang=(int)((data>>7)&3u);
+    int player=(int)((data>>9)&3u),marked=(int)((data>>(11+player))&1u),bridge=(int)((data>>25)&1u),i;
     char idtext[6]="ID 00",active[3]="1P";
     if(tab>2)tab=0;
     if(lang>2)lang=0;
-    idtext[4]=(char)('0'+character);
+    idtext[3]=(character<=2)?'0':'-';
+    idtext[4]=(character<=2)?(char)('0'+character):'-';
     active[0]=(char)('1'+player);
     /* Outer blue edge and thin cyan/gold highlights: close to HTML preview. */
     box(16,7,448,259,C_OUTER);
@@ -261,8 +262,8 @@ static void render_menu(uint32_t data) {
     box(26,19,428,39,C_BLUE);
     box(26,56,428,2,C_LIGHT);
     txt(34,27,"TTT EXPANSION",2,C_WHITE);
-    txt(224,30,"V0.9.1",1,C_GOLD);
-    for(i=0;i<4;i++)player_chip(i,302+i*37,player==i,(int)((data>>(9+i))&1u));
+    txt(224,30,"V0.9.8.4",1,C_GOLD);
+    for(i=0;i<4;i++)player_chip(i,302+i*37,player==i,(int)((data>>(11+i))&1u));
     /* Styled navigation tabs as in the V0.2 HTML prototype. */
     for(i=0;i<3;i++) {
         int x=30+i*141;
@@ -274,23 +275,33 @@ static void render_menu(uint32_t data) {
     panel(262,90,188,135,C_LIGHT,C_DARK);
     if(tab==0) {
         txt(37,96,"PERSONAGENS EXTRAS",1,C_SOFT);
-        txt(210,96,"02/06",1,C_GOLD);
-        /* Vertical progression: Early above Mid, future slots at right. */
-        for(i=0;i<6;i++) {
-            int x=35+(i/2)*74,y=107+(i%2)*57;
-            card_grid(i,x,y,i==character);
+        txt(210,96,"07/07",1,C_GOLD);
+        /* Seven independent slot selectors; non-Early forms remain PREVIEW. */
+        {
+            static const char *const labels[7]={
+                "GOKU EARLY","GOKU MID","MID SSJ","GOKU GT",
+                "GT SSJ","GT SSJ3","GT SSJ4"
+            };
+            for(i=0;i<7;i++){
+                int x=35+(i%2)*108,y=108+(i/2)*28;
+                panel(x,y,103,25,i==character?C_GOLD:C_LIGHT,i==character?C_BLUE:C_DARK);
+                txt(x+6,y+9,labels[i],1,i==character?C_GOLD:C_WHITE);
+            }
         }
         box(270,95,174,2,C_GOLD);
         txt(271,101,selected_title[lang],1,C_WHITE);
         box(273,112,72,69,C_GOLD);
         box(275,114,68,65,C_BLACK);
-        if(portrait_present[character])portrait(character,275,114,68,65);
-        else txt(283,139,character==0?"EARLY":"MID",1,C_WHITE);
+        if(character<2 && portrait_present[character])portrait(character,275,114,68,65);
+        else txt(282,139,"GOKU",1,C_WHITE);
         txt(351,114,"GOKU",1,C_WHITE);
-        txt(351,127,character==0?"EARLY":"MID",1,C_GOLD);
+        {
+            static const char *const forms[7]={"EARLY","MID","MID SSJ","GT","GT SSJ","GT SSJ3","GT SSJ4"};
+            txt(351,127,character<7?forms[character]:"?",1,C_GOLD);
+        }
         txt(351,141,idtext,1,C_WHITE);
         txt(351,153,active,1,C_SOFT);
-        txt(351,166,bridge?"ID00 ARMADO":marked?"MARCADO":"PREVIA",1,bridge?C_GOLD:marked?C_GOLD:C_SOFT);
+        txt(351,166,character==0 && color==0 && bridge?"ID00 ARMADO":marked?"PREVIA":"RESERVADO",1,marked?C_GOLD:C_SOFT);
         box(271,184,172,1,C_LIGHT);
         txt(271,187,lang==1?"COLOR":"TRAJE",1,C_WHITE);
         for(i=0;i<4;i++){

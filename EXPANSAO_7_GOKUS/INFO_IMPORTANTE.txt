@@ -1,0 +1,1 @@
+A contagem 0x3734 ainda NAO foi testada no PPSSPP. Este CABECALHO tem 35 ALIASES validos e NAO contem CHRs ou SFX novos. Consulte LEIA_PRIMEIRO_PTBR.md. Mantenha ISO original intacta.
