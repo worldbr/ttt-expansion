@@ -1,6 +1,6 @@
-/* TTT Expansion V0.9.8.4D -- experimental CHR redirect to NEW PACKFILE
+/* TTT Expansion V0.9.8.4F -- experimental CHR redirect to NEW PACKFILE
  * index 0x3711 (file 14098) on ULUS10537 ONLY. Requires expanded
- * header 0x3734 + correct encoded record + EBOOT 0x3734 count patch.
+ * header 0x3712 OR 0x3734 + correct encoded entry + matching EBOOT patch.
  * New record MUST alias original Goku Base file, to limit the first test.
  * The original game's loader still performs all file reads/decompression.
  * CPU hooks change only the returned numeric resource index.
@@ -68,7 +68,7 @@ int ttt_res_validate_pack(uint32_t magic,uint32_t count,uint32_t id,uint32_t siz
     if(magic!=UINT32_C(0x4B636150))return -10; /* PacK little endian */
     /* This release tests ONLY the new LAST entry, not the old 1194 slot.
      * NEVER return index 0x3711 on an original 0x3711-entry PACKFILE. */
-    if(count!=UINT32_C(0x3734))return -11;
+    if(count!=UINT32_C(0x3712) && count!=UINT32_C(0x3734))return -11;
     if(id!=TTT_PACK_RESOURCE_EXTRA)return -12;
     if(size<UINT32_C(0x10000) || size>UINT32_C(0x02000000))return -13;
     return 0;
@@ -142,7 +142,7 @@ int ttt_res_hook_install(void){
     pack_magic=*r32(TTT_PACK_HEADER);
     pack_count=*r32(TTT_PACK_HEADER+4u);
     /* Reject wrong header before reading beyond the original index table. */
-    if(pack_magic!=UINT32_C(0x4B636150) || pack_count!=UINT32_C(0x3734)){
+    if(pack_magic!=UINT32_C(0x4B636150) || (pack_count!=UINT32_C(0x3712) && pack_count!=UINT32_C(0x3734))){
         resource_id=resource_size=original_size=0;
         resource_data_offset=original_data_offset=0;
         last_error=(pack_magic!=UINT32_C(0x4B636150))?-10:-11;

@@ -8,7 +8,8 @@ int main(void){
     assert(TTT_PACK_RESOURCE_GOKU_RECORD==0x08AF8B80u);
     assert(ttt_res_validate_pack(0x4B636150u,0x3734u,0x3711u,0x143000u)==0);
     assert(ttt_res_validate_pack(0x4B636150u,0x3711u,0x3711u,0x143000u)==-11);
-    assert(ttt_res_validate_pack(0x4B636150u,0x3712u,0x3711u,0x143000u)==-11);
+    assert(ttt_res_validate_pack(0x4B636150u,0x3712u,0x3711u,0x143000u)==0);
+    assert(ttt_res_validate_pack(0x4B636150u,0x3735u,0x3711u,0x143000u)==-11);
     assert(ttt_res_validate_pack(0,0x3734u,0x3711u,0x143000u)==-10);
     assert(ttt_res_validate_pack(0x4B636150u,0,0x3711u,0x143000u)==-11);
     assert(ttt_res_validate_pack(0x4B636150u,0x3734u,0x4A9u,0x143000u)==-12);
@@ -31,6 +32,6 @@ int main(void){
     assert(ttt_res_should_redirect(0,0,0)==0);
     assert(ttt_res_should_redirect(1,3,0)==0);
     assert(ttt_res_should_redirect(1,0,1)==0);
-    puts("OK V0.9.8.3 resource JAL, new index 0x3711, PACKFILE 0x3712 alias");
+    puts("OK V0.9.8.4F resource JAL, index 0x3711, PACKFILE 0x3712 / 0x3734");
     return 0;
 }
