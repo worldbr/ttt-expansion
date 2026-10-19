@@ -1,4 +1,4 @@
-/* TTT Expansion V0.9.8.2 -- experimental CHR redirect to NEW PACKFILE
+/* TTT Expansion V0.9.8.3 -- experimental CHR redirect to NEW PACKFILE
  * index 0x3711 (file 14098) on ULUS10537 ONLY. Requires expanded
  * header 0x3712 + correct encoded record + EBOOT 0x3712 count patch.
  * New record MUST alias original Goku Base file, to limit the first test.
@@ -77,7 +77,12 @@ int ttt_res_validate_alias(uint32_t new_offset,uint32_t original_offset,
                            uint32_t new_size,uint32_t original_size){
     /* Ensure new record aliases the verified original Goku Base CHR.
      * Stop before enabling hooks if the newly appended record is malformed. */
-    if(new_offset!=original_offset || (new_offset & UINT32_C(0x7FF))!=0u || new_offset==0u)return -14;
+    /* The RAM index stores the offset in the loader's native units, NOT as
+     * a byte offset. The observed Goku CHR record is 0x0002258C, which
+     * is a valid reference but is not 0x800-aligned as a numeric value.
+     * Verify exact equality with the already validated original record.
+     * Do NOT apply byte alignment tests to this RAM representation. */
+    if(new_offset==0u || original_offset==0u || new_offset!=original_offset)return -14;
     if(new_size!=original_size)return -15;
     return 0;
 }

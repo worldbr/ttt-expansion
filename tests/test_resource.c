@@ -14,6 +14,12 @@ int main(void){
     assert(ttt_res_validate_pack(0x4B636150u,0x3712u,0x4A9u,0x143000u)==-12);
     assert(ttt_res_validate_pack(0x4B636150u,0x3712u,0x3711u,100)==-13);
     assert(ttt_res_validate_alias(0x10ED6000u,0x10ED6000u,0x143000u,0x143000u)==0);
+    /* Actual PPSSPP log: both RAM records hold 0x2258C (sector/index
+     * units), although the value is not numerically 0x800-aligned. */
+    assert(ttt_res_validate_alias(0x0002258Cu,0x0002258Cu,0x143000u,0x143000u)==0);
+    assert(ttt_res_validate_alias(0x0002258Cu,0x0002258Du,0x143000u,0x143000u)==-14);
+    assert(ttt_res_validate_alias(0x0002258Cu,0x0002258Cu,0x141680u,0x143000u)==-15);
+
     assert(ttt_res_validate_alias(0x0u,0x10ED6000u,0x143000u,0x143000u)==-14);
     assert(ttt_res_validate_alias(0x10ED6800u,0x10ED6000u,0x143000u,0x143000u)==-14);
     assert(ttt_res_validate_alias(0x10ED6000u,0x10ED6000u,0x141680u,0x143000u)==-15);
@@ -25,6 +31,6 @@ int main(void){
     assert(ttt_res_should_redirect(0,0,0)==0);
     assert(ttt_res_should_redirect(1,3,0)==0);
     assert(ttt_res_should_redirect(1,0,1)==0);
-    puts("OK V0.9.8.2 resource JAL, new index 0x3711, PACKFILE 0x3712 alias");
+    puts("OK V0.9.8.3 resource JAL, new index 0x3711, PACKFILE 0x3712 alias");
     return 0;
 }

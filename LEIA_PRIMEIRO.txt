@@ -1,14 +1,7 @@
-TTT EXPANSION V0.9.8.2 - EXPERIMENTO DA NOVA POSICAO 14098
+TTT EXPANSION V0.9.8.3 - CORRECAO DE ALINHAMENTO DO INDICE EM RAM
 
-ABRA README.md ANTES DE COMPILAR / INSTALAR.
+Leia README.md antes de compilar ou instalar.
 
-Atenção: somente para ISO de teste com PACKFILE count=0x3712,
-registro 14098 válido alias do Goku Base e EBOOT previamente corrigido.
-
-Redirecionamento: Goku Early ID00 Color1 -> indice interno 0x3711.
-Mantidos: menu, GPU Guard, slot 1P-4P e controles da V0.9.8.
-
-O PRX nao altera o cabeçalho do PACKFILE nem o contador no EBOOT.
-Compilar no GitHub Actions; artifact esperado TTT-Expansion-PRX-V0982.
-
-Se tiver problemas, restaure a V0.9.8 e os backups da ISO.
+Requer ISO experimental PACKFILE 0x3712 + EBOOT corrigido, com registro 14098 alias do Goku Base.
+Nao altera a ISO. Teste somente em copia e mantenha backups.
+GitHub Actions: TTT-Expansion-PRX-V0983.
