@@ -28,6 +28,18 @@ jobs:
           test -s ttt_expansion.prx
           mkdir -p dist/TTT_EXPANSION
           cp ttt_expansion.prx dist/TTT_EXPANSION/ttt_expansion.prx
+          # Arquivos de simbolos sao importantes para mapear PC=0x08B7xxxx no PPSSPP.
+          # Nao sao necessarios para rodar o plugin.
+          mkdir -p dist/debug
+          if test -s ttt_expansion.elf; then
+            cp ttt_expansion.elf dist/debug/ttt_expansion.elf
+            if command -v psp-nm >/dev/null 2>&1; then
+              psp-nm -n ttt_expansion.elf > dist/debug/symbols.txt || true
+            fi
+            if command -v psp-objdump >/dev/null 2>&1; then
+              psp-objdump -d ttt_expansion.elf > dist/debug/disassembly.txt || true
+            fi
+          fi
           cp TTT_EXPANSION/plugin.ini dist/TTT_EXPANSION/plugin.ini
           mkdir -p dist/TTT_EXPANSION/portraits
           cp TTT_EXPANSION/portraits/*.rgba dist/TTT_EXPANSION/portraits/
@@ -39,14 +51,14 @@ jobs:
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: TTT-Expansion-Build-Log-V0984F
+          name: TTT-Expansion-Build-Log-V0984G
           path: build.log
           if-no-files-found: warn
       - name: Disponibilizar plugin para instalar
         if: success()
         uses: actions/upload-artifact@v4
         with:
-          name: TTT-Expansion-PRX-V0984F
+          name: TTT-Expansion-PRX-V0984G
           path: dist/
           if-no-files-found: error
           compression-level: 6
