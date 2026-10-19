@@ -1,7 +1,7 @@
-/* TTT Expansion V0.9.8.4 -- experimental CHR redirect to NEW PACKFILE
- * index 0x3711 (first of 35 newly reserved slots) on ULUS10537 ONLY. Requires expanded
- * header 0x3734 + correct encoded record + EBOOT 0x3712 count patch.
- * Record 14098 may alias Goku Base or contain a new physically appended CHR.
+/* TTT Expansion V0.9.8.4D -- experimental CHR redirect to NEW PACKFILE
+ * index 0x3711 (file 14098) on ULUS10537 ONLY. Requires expanded
+ * header 0x3734 + correct encoded record + EBOOT 0x3734 count patch.
+ * New record MUST alias original Goku Base file, to limit the first test.
  * The original game's loader still performs all file reads/decompression.
  * CPU hooks change only the returned numeric resource index.
  * No logs/filesystem I/O/allocations inside resolver interception.
@@ -68,7 +68,7 @@ int ttt_res_validate_pack(uint32_t magic,uint32_t count,uint32_t id,uint32_t siz
     if(magic!=UINT32_C(0x4B636150))return -10; /* PacK little endian */
     /* This release tests ONLY the new LAST entry, not the old 1194 slot.
      * NEVER return index 0x3711 on an original 0x3711-entry PACKFILE. */
-    if(count!=TTT_PACK_COUNT_7_FORMS)return -11;
+    if(count!=UINT32_C(0x3734))return -11;
     if(id!=TTT_PACK_RESOURCE_EXTRA)return -12;
     if(size<UINT32_C(0x10000) || size>UINT32_C(0x02000000))return -13;
     return 0;
@@ -84,16 +84,6 @@ int ttt_res_validate_alias(uint32_t new_offset,uint32_t original_offset,
      * Do NOT apply byte alignment tests to this RAM representation. */
     if(new_offset==0u || original_offset==0u || new_offset!=original_offset)return -14;
     if(new_size!=original_size)return -15;
-    return 0;
-}
-int ttt_res_validate_appended(uint32_t extra_off,uint32_t extra_size,
-                               uint32_t last_off,uint32_t last_size){
-    uint32_t sectors;
-    /* Original last resource is not necessarily an ordinary character:
-       comparison is in the game's RAM index units (sectors). */
-    if(!extra_off||!last_off||!last_size||extra_size<0x10000u||extra_size>0x02000000u)return -16;
-    sectors=(last_size+0x7FFu)/0x800u;
-    if(last_off>UINT32_MAX-sectors || extra_off<last_off+sectors)return -16;
     return 0;
 }
 int ttt_res_should_redirect(int bridge_active,int id,int offset){
@@ -152,7 +142,7 @@ int ttt_res_hook_install(void){
     pack_magic=*r32(TTT_PACK_HEADER);
     pack_count=*r32(TTT_PACK_HEADER+4u);
     /* Reject wrong header before reading beyond the original index table. */
-    if(pack_magic!=UINT32_C(0x4B636150) || pack_count!=TTT_PACK_COUNT_7_FORMS){
+    if(pack_magic!=UINT32_C(0x4B636150) || pack_count!=UINT32_C(0x3734)){
         resource_id=resource_size=original_size=0;
         resource_data_offset=original_data_offset=0;
         last_error=(pack_magic!=UINT32_C(0x4B636150))?-10:-11;
@@ -164,13 +154,7 @@ int ttt_res_hook_install(void){
     original_data_offset=*r32(TTT_PACK_RESOURCE_GOKU_RECORD);
     original_size=*r32(TTT_PACK_RESOURCE_GOKU_RECORD+4u);
     rc=ttt_res_validate_pack(pack_magic,pack_count,resource_id,resource_size);
-    if(!rc){
-        if(resource_data_offset==original_data_offset)
-            rc=ttt_res_validate_alias(resource_data_offset,original_data_offset,resource_size,original_size);
-        else
-            rc=ttt_res_validate_appended(resource_data_offset,resource_size,
-                *r32(TTT_PACK_ORIGINAL_LAST_RECORD),*r32(TTT_PACK_ORIGINAL_LAST_RECORD+4u));
-    }
+    if(!rc)rc=ttt_res_validate_alias(resource_data_offset,original_data_offset,resource_size,original_size);
     if(rc){last_error=rc;return rc;}
     for(i=0;i<SITE_N;i++){
         old[i]=*r32(callsites[i]);

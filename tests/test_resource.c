@@ -20,8 +20,6 @@ int main(void){
     assert(ttt_res_validate_alias(0x0002258Cu,0x0002258Du,0x143000u,0x143000u)==-14);
     assert(ttt_res_validate_alias(0x0002258Cu,0x0002258Cu,0x141680u,0x143000u)==-15);
 
-    assert(ttt_res_validate_appended(0x70000u,0x143000u,0x60000u,0x10000u)==0);
-    assert(ttt_res_validate_appended(0x60001u,0x143000u,0x60000u,0x10000u)==-16);
     assert(ttt_res_validate_alias(0x0u,0x10ED6000u,0x143000u,0x143000u)==-14);
     assert(ttt_res_validate_alias(0x10ED6800u,0x10ED6000u,0x143000u,0x143000u)==-14);
     assert(ttt_res_validate_alias(0x10ED6000u,0x10ED6000u,0x141680u,0x143000u)==-15);
@@ -33,6 +31,6 @@ int main(void){
     assert(ttt_res_should_redirect(0,0,0)==0);
     assert(ttt_res_should_redirect(1,3,0)==0);
     assert(ttt_res_should_redirect(1,0,1)==0);
-    puts("OK V0.9.8.3 resource JAL, new index 0x3711, PACKFILE 0x3734 7 forms");
+    puts("OK V0.9.8.3 resource JAL, new index 0x3711, PACKFILE 0x3712 alias");
     return 0;
 }
