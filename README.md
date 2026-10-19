@@ -1,38 +1,41 @@
-# TTT Expansion V0.9.8.4F — isolamento específico da bridge
+# TTT Expansion V0.9.8.4G — Teste de compatibilidade estrito (base V0.9.8.3)
 
-O diagnóstico enviado mostra que 1P (sem hooks) e 2P (somente recurso) funcionaram,
-enquanto 3P (recurso + bridge) travou imediatamente após o registro `DIAG_APOS_GPU_MENU`.
-A bridge é binariamente a mesma implementação da V0.9.8.3; não é possível atribuir
-culpa exclusiva à bridge sem testar sua execução isolada.
+**Por que:** V0.9.8.4F também crashou com o PACKFILE `0x3712` em modo 3P (somente bridge).
+Isso significa que o teste de bridge isolada não permite responsabilizar as 35 entradas adicionais.
 
-## Controles de diagnóstico: personagem Goku Early, Color 1
+## O que o PRX faz
 
-- 1P = nenhum hook de personagem (controle)
-- 2P = somente hook de recursos (controle)
-- 3P = SOMENTE bridge, **sem hook de recursos** e sem injeção de personagem
-- 4P = recurso + bridge, sem injeção de personagem (reprodução do crash)
+- Usa o **mesmo fluxo da V0.9.8.3 comprovada**, em `src/main.c`:
+  1. `ttt_res_hook_install()`
+  2. `ttt_bridge_install()`
+  3. `ttt_actor_inject_install()`
+  4. `ttt_actor_inject_enable_slot()`
+- A única alteração funcional além dessa base está em `src/resource_hook.c`:
+  aceita `count==0x3712` **OU** `count==0x3734` com a entrada **14098** válida.
+- `ttt_res_validate_alias` continua rígida: registro 14098 deve apontar para os mesmos dados do Goku original; este teste **não** insere CHR novo.
+- As 35 entradas extras ficam na ISO. Os outros seis Gokus ainda **não** são jogáveis nesta versão de isolamento.
+- As mensagens antigas do log são majoritariamente `V0.9.8.3`, propositalmente, pois preservamos `main.c` quase integralmente; a primeira mensagem `module_start` identifica `V0.9.8.4G`.
 
-**Nunca tente entrar em batalha com os modos parciais.** Use somente o menu de
-seleção do plugin. **Reinicie por completo o PPSSPP entre os testes**, porque
-um hook instalado não é automaticamente removido ao trocar o jogador.
+## TESTE A (obrigatório primeiro)
 
-## Testes prioritários
+1. Faça backup da ISO e PRX.
+2. Use a ISO **anterior com `0x3712` + EBOOT que espera `0x3712`**, já comprovada.
+3. Compile o projeto **completo** pelo GitHub Actions. Instale o PRX novo, desligue o PPSSPP e inicie de novo. Não misture arquivos `.o` de builds anteriores.
+4. Selecione no nosso menu **1P / Goku Early / Color 1** e pressione X. Há seleção normal, **NÃO existem modos de diagnóstico por jogador** aqui.
+5. Feche o menu e inicie a batalha. No diagnóstico, procure `RESOURCE MATCH old=0x593 new=0x3711` e `ACTOR INJECT hits>=1`.
 
-1. Com ISO expandida `0x3734` e EBOOT correspondente, reinicie o PPSSPP,
-   escolha diretamente **3P** e confirme Goku Early Color 1 uma vez. Registre se trava.
-2. Reinicie, escolha diretamente **4P** e confirme Goku Early Color 1. Registre se trava.
-3. Se possível, use uma cópia comprovada do PACKFILE com `0x3712` e EBOOT
-   `0x3712` e repita o teste 3P depois de reiniciar. Este mesmo plugin aceita
-   ambos os contadores, de forma que comparamos a ISO mantendo o código constante.
+## TESTE B (somente se A funcionar)
 
-Os 35 registros não são removidos pelo plugin: a versão F não modifica PACKFILE ou
-EBOOT. Apenas identifica se o salto inválido é disparado pela bridge isoladamente
-ou pela combinação bridge + hook de recursos em `0x3734`.
+1. Reinicie completamente o PPSSPP.
+2. Use a ISO experimental com PACKFILE **`0x3734` + EBOOT que espera `0x3734`**, cabeçalho correto.
+3. Use **exatamente o mesmo PRX** da V0.9.8.4G.
+4. Repita Goku Early / 1P / Color 1; somente depois teste os outros jogadores.
 
-Os campos que precisamos no diagnóstico são `DIAG MODO`, `ETAPA`, `RESOURCE
-CONFIRMAR`, `BRIDGE CONFIRMAR` e os `DIAG_POS_X_FRAME`. Guarde captura de `PC`,
-`Destination`, `RA` em caso de crash.
+### Interpretação
+- A funciona + B funciona: expandir a quantidade para 35 registros parece compatível com a cadeia normal; próximo passo é inserir um CHR fisicamente novo.
+- A funciona + B trava: a diferença está ligada ao carregamento/cabeçalho/EBOOT `0x3734`, não à bridge isolada.
+- A trava: regressão independente do tamanho do PACKFILE, investigar PC via `dist/debug/ttt_expansion.elf` e diagnóstico; comparar com V0.9.8.3 comprovada.
 
-Esta versão **não instala a injeção dos jogadores** em nenhum modo, então o Goku
-não deverá substituir personagens originais. A função dela é diagnosticar,
-não substituir a V0.9.8.3 funcional.
+**Não confirme Goku usando 3P esperando que ele seja teste isolado**; aqui 1P-4P são jogadores de verdade.
+
+Não testado em hardware/PPSSPP neste ambiente; os testes locais são de compilação nativa e validação de fonte.

@@ -7,7 +7,7 @@ void ttt_slot_plan_init(TTTSlotPlan *p){int i;
 }
 int ttt_slot_plan_select(TTTSlotPlan *p,int player,int external_id,int color_index){
     TTTSlotChoice *s;
-    if(!p||player<0||player>=4||external_id<0||(external_id>0xA0&&external_id!=0xFF)||color_index<0||color_index>3)return -1;
+    if(!p||player<0||player>=4||external_id<0||external_id>0xA0||color_index<0||color_index>3)return -1;
     s=&p->slot[player];
     s->external_id=(uint8_t)external_id;
     s->color_index=(uint8_t)color_index;

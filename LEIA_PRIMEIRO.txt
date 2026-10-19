@@ -1,1 +1,7 @@
-TTT Expansion V0.9.8.4F: leia README.md; os modos 3P e 4P isolam bridge e recurso+bridge. Reinicie PPSSPP em cada teste.
+TTT EXPANSION V0.9.8.3 - CORRECAO DE ALINHAMENTO DO INDICE EM RAM
+
+Leia README.md antes de compilar ou instalar.
+
+Requer ISO experimental PACKFILE 0x3712 + EBOOT corrigido, com registro 14098 alias do Goku Base.
+Nao altera a ISO. Teste somente em copia e mantenha backups.
+GitHub Actions: TTT-Expansion-PRX-V0983.

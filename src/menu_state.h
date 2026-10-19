@@ -20,13 +20,10 @@
 #define TTT_ID_GOKU_MID   1u
 #define TTT_ID_GOKU_MID_SSJ 2u
 #define TTT_ID_GOKU_TTT 3u
-/* GT external IDs nao estao verificados: retornar 0xFF em previa. */
-#define TTT_ROSTER_COUNT 7u
-const char *ttt_menu_character_name(uint8_t char_index);
-int ttt_menu_character_playable(uint8_t char_index,uint8_t color);
+/* A escolha sera apenas uma previa ate termos os dados internos independentes. */
 typedef struct TTTMenuState {
     uint32_t previous;
-    uint8_t character;       /* sete formas, apenas Early C1 em batalha nesta release */
+    uint8_t character;       /* ativo: 0 Goku Early (ID 0), 1 Goku Mid (ID 1) */
     uint8_t color;           /* ativo: 0..3 */
     uint8_t tab,lang,player; /* 0..2, 0..2, 0..3 */
     uint8_t picked_character[4];

@@ -1,6 +1,6 @@
-/* TTT Expansion V0.9.8.4F -- experimental CHR redirect to NEW PACKFILE
+/* TTT Expansion V0.9.8.4G -- experimental CHR redirect to NEW PACKFILE
  * index 0x3711 (file 14098) on ULUS10537 ONLY. Requires expanded
- * header 0x3712 OR 0x3734 + correct encoded entry + matching EBOOT patch.
+ * header 0x3712 or 0x3734, valid alias, matching EBOOT count patch.
  * New record MUST alias original Goku Base file, to limit the first test.
  * The original game's loader still performs all file reads/decompression.
  * CPU hooks change only the returned numeric resource index.

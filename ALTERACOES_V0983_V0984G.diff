@@ -1,0 +1,104 @@
+--- V0983/src/main.c
++++ V0984G/src/main.c
+@@ -432,7 +432,7 @@
+ }
+ int module_start(SceSize args,void *argp) {
+     (void)args;(void)argp;
+-    log_line("\n[TTT V0.9.8.3] module_start OK - ULUS10537\n");
++    log_line("\n[TTT V0.9.8.4G] module_start OK - ULUS10537 | TESTE BASE V0983 SEM MODOS PARCIAIS\n");
+     g_running=1;
+     g_worker=sceKernelCreateThread("TTTExpMenuWorker",diagnostic_thread,0x20,0x4000,0,NULL);
+     if(g_worker<0){g_running=0;log_line("[TTT V0.9.8.3] ERROR: thread create\n");return 0;}
+--- V0983/src/resource_hook.c
++++ V0984G/src/resource_hook.c
+@@ -1,6 +1,6 @@
+-/* TTT Expansion V0.9.8.3 -- experimental CHR redirect to NEW PACKFILE
++/* TTT Expansion V0.9.8.4G -- experimental CHR redirect to NEW PACKFILE
+  * index 0x3711 (file 14098) on ULUS10537 ONLY. Requires expanded
+- * header 0x3712 + correct encoded record + EBOOT 0x3712 count patch.
++ * header 0x3712 or 0x3734, valid alias, matching EBOOT count patch.
+  * New record MUST alias original Goku Base file, to limit the first test.
+  * The original game's loader still performs all file reads/decompression.
+  * CPU hooks change only the returned numeric resource index.
+@@ -68,7 +68,7 @@
+     if(magic!=UINT32_C(0x4B636150))return -10; /* PacK little endian */
+     /* This release tests ONLY the new LAST entry, not the old 1194 slot.
+      * NEVER return index 0x3711 on an original 0x3711-entry PACKFILE. */
+-    if(count!=UINT32_C(0x3712))return -11;
++    if(count!=UINT32_C(0x3712) && count!=UINT32_C(0x3734))return -11;
+     if(id!=TTT_PACK_RESOURCE_EXTRA)return -12;
+     if(size<UINT32_C(0x10000) || size>UINT32_C(0x02000000))return -13;
+     return 0;
+@@ -142,7 +142,7 @@
+     pack_magic=*r32(TTT_PACK_HEADER);
+     pack_count=*r32(TTT_PACK_HEADER+4u);
+     /* Reject wrong header before reading beyond the original index table. */
+-    if(pack_magic!=UINT32_C(0x4B636150) || pack_count!=UINT32_C(0x3712)){
++    if(pack_magic!=UINT32_C(0x4B636150) || (pack_count!=UINT32_C(0x3712) && pack_count!=UINT32_C(0x3734))){
+         resource_id=resource_size=original_size=0;
+         resource_data_offset=original_data_offset=0;
+         last_error=(pack_magic!=UINT32_C(0x4B636150))?-10:-11;
+--- V0983/src/resource_hook.h
++++ V0984G/src/resource_hook.h
+@@ -1,11 +1,11 @@
+ #ifndef TTT_RESOURCE_HOOK_H
+ #define TTT_RESOURCE_HOOK_H
+ #include <stdint.h>
+-/* ULUS10537 only: experimental PACKFILE has 0x3712 entries.
++/* ULUS10537 only: experimental PACKFILE has 0x3712 or 0x3734 entries.
+  * Last zero-based entry 0x3711 (displayed as file 14098) is an encoded
+  * ALIAS of the ORIGINAL Goku Base CHR (index 0x593), no file appended.
+  * Does NOT load external data; game's PACKFILE loader remains in control.
+- * STRICT initial validation: count==0x3712 AND alias matches Goku Base. */
++ * STRICT initial validation: count==0x3712/0x3734 AND alias matches Goku Base. */
+ #define TTT_PACK_HEADER UINT32_C(0x08AF3240)
+ #define TTT_PACK_RECORD_BASE UINT32_C(0x08AF3250)
+ #define TTT_PACK_RESOURCE_GOKU UINT32_C(0x593)
+--- V0983/tests/test_resource.c
++++ V0984G/tests/test_resource.c
+@@ -7,6 +7,7 @@
+     assert(TTT_PACK_RESOURCE_EXTRA_RECORD==0x08B2A360u);
+     assert(TTT_PACK_RESOURCE_GOKU_RECORD==0x08AF8B80u);
+     assert(ttt_res_validate_pack(0x4B636150u,0x3712u,0x3711u,0x143000u)==0);
++    assert(ttt_res_validate_pack(0x4B636150u,0x3734u,0x3711u,0x143000u)==0);
+     assert(ttt_res_validate_pack(0x4B636150u,0x3711u,0x3711u,0x143000u)==-11);
+     assert(ttt_res_validate_pack(0x4B636150u,0x3713u,0x3711u,0x143000u)==-11);
+     assert(ttt_res_validate_pack(0,0x3712u,0x3711u,0x143000u)==-10);
+--- V0983/.github/workflows/compilar-prx.yml
++++ V0984G/.github/workflows/compilar-prx.yml
+@@ -28,6 +28,18 @@
+           test -s ttt_expansion.prx
+           mkdir -p dist/TTT_EXPANSION
+           cp ttt_expansion.prx dist/TTT_EXPANSION/ttt_expansion.prx
++          # Arquivos de simbolos sao importantes para mapear PC=0x08B7xxxx no PPSSPP.
++          # Nao sao necessarios para rodar o plugin.
++          mkdir -p dist/debug
++          if test -s ttt_expansion.elf; then
++            cp ttt_expansion.elf dist/debug/ttt_expansion.elf
++            if command -v psp-nm >/dev/null 2>&1; then
++              psp-nm -n ttt_expansion.elf > dist/debug/symbols.txt || true
++            fi
++            if command -v psp-objdump >/dev/null 2>&1; then
++              psp-objdump -d ttt_expansion.elf > dist/debug/disassembly.txt || true
++            fi
++          fi
+           cp TTT_EXPANSION/plugin.ini dist/TTT_EXPANSION/plugin.ini
+           mkdir -p dist/TTT_EXPANSION/portraits
+           cp TTT_EXPANSION/portraits/*.rgba dist/TTT_EXPANSION/portraits/
+@@ -39,14 +51,14 @@
+         if: always()
+         uses: actions/upload-artifact@v4
+         with:
+-          name: TTT-Expansion-Build-Log-V0983
++          name: TTT-Expansion-Build-Log-V0984G
+           path: build.log
+           if-no-files-found: warn
+       - name: Disponibilizar plugin para instalar
+         if: success()
+         uses: actions/upload-artifact@v4
+         with:
+-          name: TTT-Expansion-PRX-V0983
++          name: TTT-Expansion-PRX-V0984G
+           path: dist/
+           if-no-files-found: error
+           compression-level: 6
