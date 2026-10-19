@@ -1,12 +1,13 @@
-TTT Expansion V0.9.7 | ULUS10537 | TESTE EXPERIMENTAL 1P
+TTT Expansion V0.9.8 - PREVIEW EXPERIMENTAL
 
-1. Leia README.md e faca backup do PRX anterior.
-2. Use a ISO com CHR valido na entrada 1194 do PACKFILE.
-3. Compile o PRX no GitHub Actions: Compilar PRX do menu.
-4. Abrir menu: L+R+Quadrado. Escolher 1P/Goku Early/Color1, X.
-5. CIRCULO fecha. Menu original: selecione outro personagem para 1P.
-6. Na batalha, confira se 1P virou ID00 e os demais ficaram intactos.
-7. Envie ACTOR INJECT STATUS, ACTOR RAW, RESOURCE MATCH.
+O teste 1P da V0.9.7 foi confirmado pelo usuario. Esta versao amplia o mesmo hook para 2P, 3P e 4P; ainda precisa de compilacao PSPSDK e testes PPSSPP.
 
-Nao e um Mod Loader externo nem suporte geral a 4 jogadores.
-Se travar, reinicie PPSSPP e restaure V0.9.3 ou V0.9.6.
+COMPILAR: copie o conteudo do ZIP para a raiz do seu repositorio GitHub e rode Actions > Compilar PRX do menu. Baixe o artifact TTT-Expansion-PRX-V098.
+
+TESTAR: use somente Goku Early ID00 Color1, comece com 1P, depois com 2P numa luta 2x2. Mantenha o CHR valido na entrada 1194 da ISO. Reinicie PPSSPP a cada caso.
+
+LOG: ACTOR INJECT SLOT player=... enabled=... hits=...; ACTOR RAW; RESOURCE MATCH.
+
+NAO tente o ID01/Goku Mid automaticamente: ainda e apenas preview. Nao desarme o plugin durante batalha. Guarde PRX V0.9.7 para restauracao.
+
+Detalhes completos no README.md.
