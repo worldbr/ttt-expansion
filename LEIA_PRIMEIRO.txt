@@ -1,4 +1,12 @@
-TTT Expansion V0.9.6 | ULUS10537
-Leia README.md antes de compilar. Release de diagnostico: nao substitui automaticamente os 4 jogadores.
-Compilar pelo GitHub Actions; instalar TTT_EXPANSION na pasta PSP/PLUGINS.
-Teste com backup do PRX anterior. Ver docs/BREAKPOINT_PPSSPP.md.
+TTT Expansion V0.9.7 | ULUS10537 | TESTE EXPERIMENTAL 1P
+
+1. Leia README.md e faca backup do PRX anterior.
+2. Use a ISO com CHR valido na entrada 1194 do PACKFILE.
+3. Compile o PRX no GitHub Actions: Compilar PRX do menu.
+4. Abrir menu: L+R+Quadrado. Escolher 1P/Goku Early/Color1, X.
+5. CIRCULO fecha. Menu original: selecione outro personagem para 1P.
+6. Na batalha, confira se 1P virou ID00 e os demais ficaram intactos.
+7. Envie ACTOR INJECT STATUS, ACTOR RAW, RESOURCE MATCH.
+
+Nao e um Mod Loader externo nem suporte geral a 4 jogadores.
+Se travar, reinicie PPSSPP e restaure V0.9.3 ou V0.9.6.

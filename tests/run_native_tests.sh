@@ -16,3 +16,5 @@ run_test test_actor_watch src/actor_watch.c
 run_test test_slot_plan src/slot_plan.c
 run_test test_callsite_plan src/callsite_plan.c
 run_test test_input_guard src/input_guard.c src/input_plan.c
+
+run_test test_actor_inject src/actor_inject.c

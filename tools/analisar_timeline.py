@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""TTT Expansion V0.9.6 — resumo offline dos eventos ACTOR CHANGE.
+"""TTT Expansion V0.9.7 — resumo offline dos eventos ACTOR CHANGE.
 
 Uso: python tools/analisar_timeline.py diagnostico.txt
 Sem bibliotecas externas. Não altera arquivos, PSP nem ISO.
@@ -8,7 +8,7 @@ from pathlib import Path
 import re
 import sys
 
-TAG = "[TTT V0.9.6]"
+TAG = "[TTT V0.9.7]"
 FIELD = re.compile(r"(\w+)=0x([0-9A-Fa-f]{1,8})")
 
 
@@ -17,7 +17,7 @@ def run(path: Path) -> int:
         print(f"Arquivo nao encontrado: {path}", file=sys.stderr)
         return 2
     text = path.read_text(encoding="utf-8", errors="replace")
-    # O diagnostico e append-only. Analise somente a ultima sessao V0.9.6.
+    # O diagnostico e append-only. Analise somente a ultima sessao V0.9.7.
     anchor = f"{TAG} module_start"
     index = text.rfind(anchor)
     if index != -1:
@@ -26,7 +26,7 @@ def run(path: Path) -> int:
     for line in text.splitlines():
         if not line.startswith(TAG):
             continue
-        if any(flag in line for flag in ("PLAN CONFIRMAR", "BRIDGE CONFIRMAR", "RESOURCE MATCH")):
+        if any(flag in line for flag in ("PLAN CONFIRMAR", "BRIDGE CONFIRMAR", "RESOURCE MATCH", "ACTOR INJECT CONFIRMAR", "ACTOR INJECT STATUS")):
             print(line)
         if "ACTOR GAP" in line:
             print("AVISO:", line)
