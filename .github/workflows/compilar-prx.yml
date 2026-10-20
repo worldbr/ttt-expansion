@@ -1,4 +1,4 @@
-name: Compilar PRX do menu
+name: Compilar PRX menu V1.0.1
 on:
   workflow_dispatch:
   push:
@@ -49,20 +49,22 @@ jobs:
           test "$(stat -c%s dist/TTT_EXPANSION/ui/font_atlas.4444)" -eq 65536
           test -s dist/TTT_EXPANSION/ttt_expansion.prx
           test -s dist/TTT_EXPANSION/plugin.ini
+          test -s dist/TTT_EXPANSION/portraits/goku_mid_ssj.rgba
+          test "$(stat -c%s dist/TTT_EXPANSION/portraits/goku_mid_ssj.rgba)" -eq 16384
           echo "--- Conteudo pronto para o PPSSPP ---"
           ls -lh dist/TTT_EXPANSION/
       - name: Disponibilizar log mesmo em caso de falha
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: TTT-Expansion-Build-Log-V1000
+          name: TTT-Expansion-Build-Log-V1001
           path: build.log
           if-no-files-found: warn
       - name: Disponibilizar plugin para instalar
         if: success()
         uses: actions/upload-artifact@v4
         with:
-          name: TTT-Expansion-PRX-V1000
+          name: TTT-Expansion-PRX-V1001
           path: dist/
           if-no-files-found: error
           compression-level: 6
