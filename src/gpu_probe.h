@@ -15,4 +15,6 @@ int ttt_gpu_frame(void *fb, int stride, int psm);
 void ttt_gpu_shutdown(void);
 /* Bits: early=1, mid=2, images loaded from ms0:/PSP/PLUGINS. */
 int ttt_gpu_portrait_status(void);
+/* 1: HD skin loaded from external raw textures, 0: legacy fallback. */
+int ttt_gpu_skin_status(void);
 #endif
