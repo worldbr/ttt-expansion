@@ -43,6 +43,10 @@ jobs:
           cp TTT_EXPANSION/plugin.ini dist/TTT_EXPANSION/plugin.ini
           mkdir -p dist/TTT_EXPANSION/portraits
           cp TTT_EXPANSION/portraits/*.rgba dist/TTT_EXPANSION/portraits/
+          mkdir -p dist/TTT_EXPANSION/ui
+          cp TTT_EXPANSION/ui/*.4444 dist/TTT_EXPANSION/ui/
+          test "$(stat -c%s dist/TTT_EXPANSION/ui/menu_bg.4444)" -eq 131072
+          test "$(stat -c%s dist/TTT_EXPANSION/ui/font_atlas.4444)" -eq 65536
           test -s dist/TTT_EXPANSION/ttt_expansion.prx
           test -s dist/TTT_EXPANSION/plugin.ini
           echo "--- Conteudo pronto para o PPSSPP ---"
@@ -51,14 +55,14 @@ jobs:
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: TTT-Expansion-Build-Log-V0989
+          name: TTT-Expansion-Build-Log-V1000
           path: build.log
           if-no-files-found: warn
       - name: Disponibilizar plugin para instalar
         if: success()
         uses: actions/upload-artifact@v4
         with:
-          name: TTT-Expansion-PRX-V0989
+          name: TTT-Expansion-PRX-V1000
           path: dist/
           if-no-files-found: error
           compression-level: 6
