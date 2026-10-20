@@ -17,6 +17,12 @@ static void test_toggle(void) {
     assert(ttt_toggle_frame(&t,TTT_HOTKEY)==0);
     assert(ttt_toggle_frame(&t,0)==0);
     assert(ttt_toggle_frame(&t,TTT_HOTKEY)==1 && t.open==0);
+    assert(ttt_toggle_frame(&t,0)==0);
+    assert(ttt_toggle_frame(&t,TTT_SQUARE)==0);
+    assert(ttt_toggle_frame(&t,TTT_HOTKEY)==0 && t.open==0); /* Square held + player triggers */
+    assert(ttt_toggle_frame(&t,TTT_LTRIGGER|TTT_RTRIGGER)==0);
+    assert(ttt_toggle_frame(&t,TTT_HOTKEY)==1 && t.open==1); /* Square pressed last */
+
 }
 static void test_framebuffer(void) {
     const int stride = 512, height = 272, guard = 64;

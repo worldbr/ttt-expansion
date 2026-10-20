@@ -17,4 +17,5 @@ int ttt_frame_hook_install(void);
 void ttt_frame_hook_remove(void);
 void ttt_frame_hook_gpu_ready(int enabled);
 TTTFrameHookStats ttt_frame_hook_stats(void);
+int ttt_frame_hook_resume_drawing(void);
 #endif

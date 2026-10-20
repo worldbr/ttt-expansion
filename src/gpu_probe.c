@@ -261,7 +261,7 @@ static void render_menu(uint32_t data) {
     box(26,19,428,39,C_BLUE);
     box(26,56,428,2,C_LIGHT);
     txt(34,27,"TTT EXPANSION",2,C_WHITE);
-    txt(224,30,"V0.9.8.6",1,C_GOLD);
+    txt(224,30,"V0.9.8.7",1,C_GOLD);
     for(i=0;i<4;i++)player_chip(i,302+i*37,player==i,(int)((data>>(10+i))&1u));
     /* Styled navigation tabs as in the V0.2 HTML prototype. */
     for(i=0;i<3;i++) {
@@ -374,7 +374,8 @@ restore:
     ge_frame_restore_rc=sceGeRestoreContext(&ge_saved);
     if(ge_frame_restore_rc<0){guard_failed=1;return -164;}
     ++ge_frame_restores;
-    if(ret<0)guard_failed=1;
+    /* A transient GU command error is retryable after the GE context was
+     * restored successfully. Only save/restore failures poison the guard. */
     return ret;
 }
 void ttt_gpu_shutdown(void) { }

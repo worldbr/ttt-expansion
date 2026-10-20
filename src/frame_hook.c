@@ -25,6 +25,7 @@ static volatile uint32_t our_jal;
 static volatile int hooked, gpu_ready, draw_allowed;
 static volatile uint32_t call_count, draw_count, last_vcount, last_buffer;
 static volatile int last_draw_rc;
+static volatile uint32_t retry_count;
 
 static __attribute__((noinline)) int ttt_framebuf_intercept(void *fb,int stride,int fmt,int sync) {
     uint32_t vcount;
@@ -78,6 +79,7 @@ int ttt_frame_hook_install(void) {
         if(rc<0) return rc - (i * 100); /* identifies first failing site */
     }
     call_count=draw_count=last_vcount=last_buffer=0;
+    retry_count=0;
     last_draw_rc=0; draw_allowed=1;
     our_jal=patch;
     for(i=0;i<SITE_COUNT;i++) {
@@ -101,6 +103,19 @@ void ttt_frame_hook_remove(void) {
         }
     }
     hooked=0;
+}
+/* Worker-thread only: restart a halted render after a transient GU error.
+ * Never bypass a failed GE context guard. Bounded retries avoid loops. */
+int ttt_frame_hook_resume_drawing(void) {
+    if(!hooked || !gpu_ready) return -1;
+    if(draw_allowed) return 1;
+    if(ttt_gpu_guard_stats().failed) return -2;
+    if(retry_count>=2u) return -3;
+    ++retry_count;
+    last_vcount=UINT32_C(0xffffffff);
+    last_draw_rc=0;
+    draw_allowed=1;
+    return 0;
 }
 void ttt_frame_hook_gpu_ready(int enabled) {gpu_ready=(enabled!=0);}
 TTTFrameHookStats ttt_frame_hook_stats(void) {
