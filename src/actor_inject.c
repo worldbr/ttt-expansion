@@ -4,7 +4,7 @@
  * 0x088576CC lw a0,0x18(sp) remains the jal delay slot, so the shim
  * retrieves the pre-delay ID from game's 0x20(sp).
  * PC 0x088576D0 then stores a1 to Color at 8(fp).
- * Only Goku Early (ID00 Color1) is supported until full roster mapping.
+ * V0.9.8.6: experimental external ID00/01/02, Colors1-4.
  */
 #include "actor_inject.h"
 #include <stdint.h>
@@ -84,7 +84,7 @@ int ttt_actor_inject_enable_slot(int player,uint32_t external_id,uint32_t color)
     uint32_t bit;
     if(player<0||player>=4){g_error=-12;return -12;}
     if(!g_installed){g_error=-10;return -10;}
-    if(external_id!=0 || color!=0){g_error=-11;return -11;}
+    if(external_id>2u || color>3u){g_error=-11;return -11;}
     bit=1u<<(uint32_t)player;
     /* Publish changes via mask LAST, so game thread sees complete plan. */
     ttt_ai_enabled_mask &= ~bit;

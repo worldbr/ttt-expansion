@@ -20,10 +20,10 @@
 #define TTT_ID_GOKU_MID   1u
 #define TTT_ID_GOKU_MID_SSJ 2u
 #define TTT_ID_GOKU_TTT 3u
-/* A escolha sera apenas uma previa ate termos os dados internos independentes. */
+/* Tres IDs externos; internal form 0x47 temporarily shared for battle tests. */
 typedef struct TTTMenuState {
     uint32_t previous;
-    uint8_t character;       /* ativo: 0 Goku Early (ID 0), 1 Goku Mid (ID 1) */
+    uint8_t character;       /* 0 Early, 1 Mid, 2 Mid SSJ */
     uint8_t color;           /* ativo: 0..3 */
     uint8_t tab,lang,player; /* 0..2, 0..2, 0..3 */
     uint8_t picked_character[4];

@@ -15,6 +15,7 @@ typedef struct {
 void ttt_slot_plan_init(TTTSlotPlan *p);
 int ttt_slot_plan_select(TTTSlotPlan *p,int player,int external_id,int color_index);
 int ttt_slot_plan_get(const TTTSlotPlan *p,int player,TTTSlotChoice *out);
+void ttt_slot_plan_disable(TTTSlotPlan *p,int player);
 void ttt_slot_plan_reset(TTTSlotPlan *p);
 uint32_t ttt_slot_plan_mask(const TTTSlotPlan *p);
 #endif

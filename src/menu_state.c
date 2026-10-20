@@ -30,8 +30,8 @@ int ttt_menu_buttons(TTTMenuState *m,uint32_t buttons) {
         /* L/R selecionam 1P..4P; apertar ambos nao muda jogador. */
         if((pressed & TTT_BTN_L) && !(buttons & TTT_BTN_R))change_player(m,-1);
         if((pressed & TTT_BTN_R) && !(buttons & TTT_BTN_L))change_player(m,1);
-        if(pressed & TTT_BTN_UP) m->character=0;
-        if(pressed & TTT_BTN_DOWN) m->character=1;
+        if(pressed & TTT_BTN_UP) m->character=(uint8_t)((m->character+2u)%3u);
+        if(pressed & TTT_BTN_DOWN) m->character=(uint8_t)((m->character+1u)%3u);
         if(pressed & TTT_BTN_LEFT) m->color=(uint8_t)((m->color+3u)%4u);
         if(pressed & TTT_BTN_RIGHT) m->color=(uint8_t)((m->color+1u)%4u);
         save_active(m);
@@ -40,18 +40,21 @@ int ttt_menu_buttons(TTTMenuState *m,uint32_t buttons) {
     return 0;
 }
 uint8_t ttt_menu_external_id(const TTTMenuState *m) {
-    return (uint8_t)(m->character?TTT_ID_GOKU_MID:TTT_ID_GOKU_EARLY);
+    return m->character;
 }
 uint32_t ttt_menu_snapshot(const TTTMenuState *m) {
-    /* 0..0 char, 1..2 color, 3..4 tab, 5..6 lang, 7..8 player,
-       9..12 confirm bits, 13..24 stored char(1)+color(2) each player. */
-    uint32_t bits=(uint32_t)(m->character & 1u) | ((uint32_t)(m->color & 3u)<<1)
-        | ((uint32_t)(m->tab & 3u)<<3) | ((uint32_t)(m->lang & 3u)<<5)
-        | ((uint32_t)(m->player & 3u)<<7);
+    /* V0986: char 0..1; color 2..3; tab 4..5; lang 6..7;
+     * player 8..9; confirmed 10..13;
+     * per-player (char 2 + color 2) at bits 14,18,22,26.
+     * bit 30 = bridge active (ORed by worker). */
+    uint32_t bits=(uint32_t)(m->character&3u) | ((uint32_t)(m->color&3u)<<2)
+       | ((uint32_t)(m->tab&3u)<<4) | ((uint32_t)(m->lang&3u)<<6)
+       | ((uint32_t)(m->player&3u)<<8);
     int i;
     for(i=0;i<4;i++) {
-        bits|=((uint32_t)(m->confirmed[i]&1u))<<(9+i);
-        bits|=((uint32_t)(m->picked_character[i]&1u) | ((uint32_t)(m->picked_color[i]&3u)<<1)) << (13+i*3);
+        bits|=((uint32_t)(m->confirmed[i]&1u))<<(10+i);
+        bits|=(((uint32_t)(m->picked_character[i]&3u) |
+                ((uint32_t)(m->picked_color[i]&3u)<<2)) << (14+i*4));
     }
     return bits;
 }

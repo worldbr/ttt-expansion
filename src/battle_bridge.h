@@ -5,11 +5,16 @@
  * Unlike V0.9.3, DO NOT modify Videl.  Goku original group has forms
  * [0,1,2,3,FF,0] at 0x08A73F60; the fifth form becomes 0x47 and a new
  * terminator 0xFF is written to the sixth entry (both validated first).
- * 0x47 = internal form index 71, external ID00 via table B.
+ * 0x47 = internal form index 71, shared experimentally by IDs 00..02.
+ * This is a model-loading experiment, NOT three independently verified move sets.
  * Uses existing game selection UI. Direct match launch is NOT implemented.
  */
 #define TTT_BRIDGE_A_ID00 UINT32_C(0x08A69720)
 #define TTT_BRIDGE_B_ID00 UINT32_C(0x08A743E0)
+#define TTT_BRIDGE_A_ID01 (TTT_BRIDGE_A_ID00+1u)
+#define TTT_BRIDGE_A_ID02 (TTT_BRIDGE_A_ID00+2u)
+#define TTT_BRIDGE_B_ID01 (TTT_BRIDGE_B_ID00+1u)
+#define TTT_BRIDGE_B_ID02 (TTT_BRIDGE_B_ID00+2u)
 #define TTT_BRIDGE_GOKU_GROUP UINT32_C(0x08A73F60)
 /* Read-only control: Videl must stay exactly as in the original game. */
 #define TTT_BRIDGE_VIDEL_FORM2 UINT32_C(0x08A740FC)
@@ -27,6 +32,7 @@ typedef struct TTTBridgeStats {
     int last_error;
     uint32_t a,b,goku_5,goku_end,limit,videl_2,videl_end;
     uint32_t installs,restores;
+    uint32_t a1,b1,a2,b2;
 } TTTBridgeStats;
 
 /* Validates default group before patching, including original four forms. */

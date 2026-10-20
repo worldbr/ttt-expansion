@@ -190,7 +190,7 @@ static const char *foot_hints[3]={
 
 
 /* V0.9.1: visual inspired by the original TTT Expansion V0.2 HTML
- * six-card layout (two active + four reserved), detail panel, bright tabs,
+ * six-card layout (three active + three reserved), detail panel, bright tabs,
  * gold selected frames. Only 480x272 PSP screen coordinates are used.
  * ID00 bridge is optional and managed separately; the renderer never patches IDs.
  */
@@ -199,16 +199,16 @@ static void panel(int x,int y,int w,int h,uint32_t border,uint32_t inside) {
     box(x+2,y+2,w-4,h-4,inside);
 }
 static void card_grid(int idx,int x,int y,int selected) {
-    int active = idx<2;
-    const char *label=idx==0?"EARLY":idx==1?"MID":"FUTURO";
+    int active = idx<3;
+    const char *label=idx==0?"EARLY":idx==1?"MID":idx==2?"MID SSJ":"FUTURO";
     panel(x,y,70,52,selected?C_GOLD:active?C_LIGHT:C_BLUE,selected?C_BLUE:C_DARK);
     if(active) {
         box(x+14,y+4,42,35,selected?C_GOLD:C_LIGHT);
         box(x+16,y+6,38,31,C_BLACK);
-        if(portrait_present[idx])portrait(idx,x+16,y+6,38,31);
-        else txt(x+29,y+16,idx==0?"E":"M",1,C_WHITE);
+        if(idx<2 && portrait_present[idx])portrait(idx,x+16,y+6,38,31);
+        else txt(x+29,y+16,idx==0?"E":idx==1?"M":"S",1,C_WHITE);
         box(x+3,y+4,16,11,C_DARK);
-        txt(x+5,y+6,idx==0?"00":"01",1,C_GOLD);
+        txt(x+5,y+6,idx==0?"00":idx==1?"01":"02",1,C_GOLD);
         txt(x+19,y+42,label,1,selected?C_GOLD:C_WHITE);
     } else {
         box(x+14,y+4,42,35,C_DARK);
@@ -245,9 +245,9 @@ static const char *const footer_v2[3]={
     "TRIANG: PEST   SELECT: IDIOMA   O: CERRAR"
 };
 static void render_menu(uint32_t data) {
-    int character=(int)(data&1u),color=(int)((data>>1)&3u);
-    int tab=(int)((data>>3)&3u),lang=(int)((data>>5)&3u);
-    int player=(int)((data>>7)&3u),marked=(int)((data>>(9+player))&1u),bridge=(int)((data>>25)&1u),i;
+    int character=(int)(data&3u),color=(int)((data>>2)&3u);
+    int tab=(int)((data>>4)&3u),lang=(int)((data>>6)&3u);
+    int player=(int)((data>>8)&3u),marked=(int)((data>>(10+player))&1u),bridge=(int)((data>>30)&1u),i;
     char idtext[6]="ID 00",active[3]="1P";
     if(tab>2)tab=0;
     if(lang>2)lang=0;
@@ -261,8 +261,8 @@ static void render_menu(uint32_t data) {
     box(26,19,428,39,C_BLUE);
     box(26,56,428,2,C_LIGHT);
     txt(34,27,"TTT EXPANSION",2,C_WHITE);
-    txt(224,30,"V0.9.1",1,C_GOLD);
-    for(i=0;i<4;i++)player_chip(i,302+i*37,player==i,(int)((data>>(9+i))&1u));
+    txt(224,30,"V0.9.8.6",1,C_GOLD);
+    for(i=0;i<4;i++)player_chip(i,302+i*37,player==i,(int)((data>>(10+i))&1u));
     /* Styled navigation tabs as in the V0.2 HTML prototype. */
     for(i=0;i<3;i++) {
         int x=30+i*141;
@@ -274,7 +274,7 @@ static void render_menu(uint32_t data) {
     panel(262,90,188,135,C_LIGHT,C_DARK);
     if(tab==0) {
         txt(37,96,"PERSONAGENS EXTRAS",1,C_SOFT);
-        txt(210,96,"02/06",1,C_GOLD);
+        txt(210,96,"03/06",1,C_GOLD);
         /* Vertical progression: Early above Mid, future slots at right. */
         for(i=0;i<6;i++) {
             int x=35+(i/2)*74,y=107+(i%2)*57;
@@ -284,13 +284,13 @@ static void render_menu(uint32_t data) {
         txt(271,101,selected_title[lang],1,C_WHITE);
         box(273,112,72,69,C_GOLD);
         box(275,114,68,65,C_BLACK);
-        if(portrait_present[character])portrait(character,275,114,68,65);
-        else txt(283,139,character==0?"EARLY":"MID",1,C_WHITE);
+        if(character<2 && portrait_present[character])portrait(character,275,114,68,65);
+        else txt(283,139,character==0?"EARLY":character==1?"MID":"SSJ",1,C_WHITE);
         txt(351,114,"GOKU",1,C_WHITE);
-        txt(351,127,character==0?"EARLY":"MID",1,C_GOLD);
+        txt(351,127,character==0?"EARLY":character==1?"MID":"MID SSJ",1,C_GOLD);
         txt(351,141,idtext,1,C_WHITE);
         txt(351,153,active,1,C_SOFT);
-        txt(351,166,bridge?"ID00 ARMADO":marked?"MARCADO":"PREVIA",1,bridge?C_GOLD:marked?C_GOLD:C_SOFT);
+        txt(351,166,bridge?"EXP ATIVO":marked?"MARCADO":"PREVIA",1,bridge?C_GOLD:marked?C_GOLD:C_SOFT);
         box(271,184,172,1,C_LIGHT);
         txt(271,187,lang==1?"COLOR":"TRAJE",1,C_WHITE);
         for(i=0;i<4;i++){
@@ -315,7 +315,7 @@ static void render_menu(uint32_t data) {
     /* Keep all help text inside the 480x272 visible PSP screen. */
     panel(28,229,424,26,C_BLUE,C_OUTER);
     txt(35,232,nav_v2[lang],1,C_WHITE);
-    if(bridge && tab==0) txt(35,244,lang==0?"ID00 ATIVO - GOKU 5 / QUADRADO DESARMA":lang==1?"ID00 ACTIVE - GOKU 5 / SQUARE RESETS":"ID00 ACTIVO - GOKU 5 / CUADRADO DESARMA",1,C_GOLD);
+    if(bridge && tab==0) txt(35,244,lang==0?"3 GOKUS EXPERIMENTAIS / QUADRADO DESARMA":lang==1?"3 GOKUS EXPERIMENTAL / SQUARE RESETS":"3 GOKUS PRUEBA / CUADRADO DESARMA",1,C_GOLD);
     else txt(35,244,footer_v2[lang],1,C_SOFT);
     box(25,258,430,3,C_GOLD);
 }

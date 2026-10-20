@@ -1,7 +1,7 @@
-/* TTT Expansion V0.9.8.5 -- first physical CHR at index 0x3711
- * Supports tested aliases on 0x3712/0x3734, AND one distinct physical
- * CHR, when the 0x3734 PACKFILE's record size == 0x12F220 and its native
- * offset is strictly greater than the original CHR record offset.
+/* TTT Expansion V0.9.8.6 -- three external IDs with 4 color CHRs each
+ * Three groups of four CHR records: 0x3711..0x3714, 0x3716..0x3719,
+ * 0x371B..0x371E. Fifth group entry SFX remains reserved, not redirected.
+ * Checks records are present, unique and plausible before enabling Color.
  * Requires matching EBOOT count patch and a rebuilt ISO with updated
  * ISO9660 size metadata. DO NOT use header-only replacement for new CHR.
  * The original game's loader still performs all file reads/decompression.
@@ -33,6 +33,7 @@ static volatile uint32_t calls_checked,calls_unchecked,redirects;
 static volatile uint32_t last_id,last_variant,last_original,last_result;
 static volatile uint32_t match_count,match_id,match_offset,match_original,match_redirected,match_path;
 static volatile uint32_t pack_magic,pack_count,resource_id,resource_size,original_size;
+static volatile uint32_t asset_mask;
 static volatile uint32_t resource_data_offset,original_data_offset;
 static volatile TTTResourceTrace traces[TTT_RES_TRACE_DEPTH];
 static volatile uint32_t trace_count;
@@ -93,8 +94,17 @@ int ttt_res_validate_entry(uint32_t new_offset,uint32_t original_offset,
     if(new_offset<=original_offset)return -18;
     return 0;
 }
+uint32_t ttt_res_index_for(int id,int color){
+    if(id<0 || id>2 || color<0 || color>3)return UINT32_C(0xFFFFFFFF);
+    return TTT_PACK_EXTRA_INDEX(id,color);
+}
 int ttt_res_should_redirect(int bridge_active,int id,int offset){
-    return bridge_active && id==0 && offset==0;
+    return bridge_active && ttt_res_index_for(id,offset)!=UINT32_C(0xFFFFFFFF);
+}
+uint32_t ttt_res_available_mask(void){return asset_mask;}
+int ttt_res_is_available(int id,int color){
+    if(id<0 || id>2 || color<0 || color>3)return 0;
+    return (int)((asset_mask>>(id*4+color))&1u);
 }
 #ifdef TTT_BRIDGE_PSP
 static void capture_match(int id,int offset,int old_resource,int new_resource,uint32_t route){
@@ -122,9 +132,10 @@ static int intercept_common(int id,int offset,uint32_t site,int unchecked){
     if(unchecked)++calls_unchecked;else ++calls_checked;
     last_id=(uint32_t)id;last_variant=(uint32_t)offset;
     last_original=(uint32_t)old;
-    matched=installed && ttt_res_should_redirect(ttt_bridge_is_active(),id,offset);
+    matched=installed && ttt_res_should_redirect(ttt_bridge_is_active(),id,offset)
+            && ttt_res_is_available(id,offset);
     if(matched){
-        result=(int)TTT_PACK_RESOURCE_EXTRA;
+        result=(int)ttt_res_index_for(id,offset);
         capture_match(id,offset,old,result,unchecked?2u:1u);
         ++redirects;
     }
@@ -163,6 +174,35 @@ int ttt_res_hook_install(void){
     rc=ttt_res_validate_pack(pack_magic,pack_count,resource_id,resource_size);
     if(!rc)rc=ttt_res_validate_entry(resource_data_offset,original_data_offset,resource_size,original_size,pack_count);
     if(rc){last_error=rc;return rc;}
+    /* Scan the first three five-file groups. SFX (fifth) is not redirected.
+     * The game keeps ordinary sound processing while experimental forms load.
+     * We trust only 16-byte RAM entries with valid index, nonzero offset and
+     * plausible CHR length. Aliases of original Goku are accepted ONLY for
+     * Early C1 compatibility with the 0x3712 working baseline. */
+    asset_mask=0;
+    for(i=0;i<(int)TTT_PACK_ASSET_COUNT;i++){
+        uint32_t id=(uint32_t)i/4u, color=(uint32_t)i%4u;
+        uint32_t index=TTT_PACK_EXTRA_INDEX(id,color);
+        uint32_t pos=TTT_PACK_RECORD_BASE+index*16u;
+        uint32_t native_off,size,record_id,j;
+        int dup=0;
+        if(index>=pack_count)continue;
+        native_off=*r32(pos);size=*r32(pos+4u);record_id=*r32(pos+12u);
+        if(record_id!=index || native_off==0u || size<0x10000u || size>0x02000000u)continue;
+        if(id==0u && color==0u && native_off==original_data_offset && size==original_size){
+            asset_mask|=1u<<(uint32_t)i;continue;
+        }
+        /* Appended CHRs have their own native offset. Never treat a
+         * provisional alias as a unique model. */
+        if(native_off<=original_data_offset)continue;
+        for(j=0;j<(uint32_t)i;j++){
+            uint32_t oldidx=TTT_PACK_EXTRA_INDEX(j/4u,j%4u);
+            uint32_t oldpos=TTT_PACK_RECORD_BASE+oldidx*16u;
+            if((asset_mask&(1u<<j)) && *r32(oldpos)==native_off){dup=1;break;}
+        }
+        if(!dup)asset_mask|=1u<<(uint32_t)i;
+    }
+    if(!(asset_mask&1u)){last_error=-22;return -22;}
     for(i=0;i<SITE_N;i++){
         old[i]=*r32(callsites[i]);
         switch(i){
@@ -214,5 +254,6 @@ TTTResourceHookStats ttt_res_hook_stats(void){
     s.pack_magic=pack_magic;s.pack_count=pack_count;
     s.resource_id=resource_id;s.resource_size=resource_size;s.original_size=original_size;
     s.resource_data_offset=resource_data_offset;s.original_data_offset=original_data_offset;
+    s.available_mask=asset_mask;
     return s;
 }

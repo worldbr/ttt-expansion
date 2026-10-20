@@ -31,7 +31,17 @@ int main(void){
     assert(ttt_res_should_redirect(1,0,0)==1);
     assert(ttt_res_should_redirect(0,0,0)==0);
     assert(ttt_res_should_redirect(1,3,0)==0);
-    assert(ttt_res_should_redirect(1,0,1)==0);
-    puts("OK V0.9.8.5 JAL, alias antigo e CHR fisico Goku Inicio no indice 0x3711");
+    assert(ttt_res_should_redirect(1,0,1)==1);
+    assert(ttt_res_should_redirect(1,1,2)==1);
+    assert(ttt_res_should_redirect(1,2,3)==1);
+    assert(ttt_res_should_redirect(1,2,4)==0);
+    assert(ttt_res_index_for(0,0)==0x3711u);
+    assert(ttt_res_index_for(0,3)==0x3714u);
+    assert(ttt_res_index_for(1,0)==0x3716u);
+    assert(ttt_res_index_for(1,3)==0x3719u);
+    assert(ttt_res_index_for(2,0)==0x371Bu);
+    assert(ttt_res_index_for(2,3)==0x371Eu);
+    assert(ttt_res_index_for(3,0)==0xffffffffu);
+    puts("OK V0.9.8.6: indice por ID/color, alias legado e CHR fisico Early C1");
     return 0;
 }

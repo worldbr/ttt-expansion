@@ -1,0 +1,16 @@
+﻿ID externo;Personagem;Recurso;Indice interno;Indice hex;Entrada editor (1-based);Tipo;Estado
+0;GOKU_INICIO;Color 1;14097;0x3711;14098;CHR;experimental
+0;GOKU_INICIO;Color 2;14098;0x3712;14099;CHR;experimental
+0;GOKU_INICIO;Color 3;14099;0x3713;14100;CHR;experimental
+0;GOKU_INICIO;Color 4;14100;0x3714;14101;CHR;experimental
+0;GOKU_INICIO;SFX;14101;0x3715;14102;SFX;reservado, nao redirecionado
+1;GOKU_MID;Color 1;14102;0x3716;14103;CHR;experimental
+1;GOKU_MID;Color 2;14103;0x3717;14104;CHR;experimental
+1;GOKU_MID;Color 3;14104;0x3718;14105;CHR;experimental
+1;GOKU_MID;Color 4;14105;0x3719;14106;CHR;experimental
+1;GOKU_MID;SFX;14106;0x371A;14107;SFX;reservado, nao redirecionado
+2;GOKU_MID_SSJ;Color 1;14107;0x371B;14108;CHR;experimental
+2;GOKU_MID_SSJ;Color 2;14108;0x371C;14109;CHR;experimental
+2;GOKU_MID_SSJ;Color 3;14109;0x371D;14110;CHR;experimental
+2;GOKU_MID_SSJ;Color 4;14110;0x371E;14111;CHR;experimental
+2;GOKU_MID_SSJ;SFX;14111;0x371F;14112;SFX;reservado, nao redirecionado

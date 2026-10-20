@@ -1,15 +1,17 @@
 #ifndef TTT_RESOURCE_HOOK_H
 #define TTT_RESOURCE_HOOK_H
 #include <stdint.h>
-/* ULUS10537 only. First physical Goku Early (ID00 Color1) CHR
- * index 0x3711 (entry 14098), in the 0x3734-count experimental PACKFILE.
- * Other 34 reserved entries are still aliases, not separate resources.
- * Stable alias behavior on 0x3712 and 0x3734 is preserved. */
+/* V0.9.8.6 ULUS10537: 3 IDs x 4 CHRs, SFX positions reserved only.
+ * 0x3711 + 5*id + color (id=0..2; color=0..3).
+ * Experimental: the three external IDs currently share internal form 0x47. */
 #define TTT_PHYSICAL_GOKU_EARLY_C1_SIZE UINT32_C(0x0012F220)
 #define TTT_PACK_HEADER UINT32_C(0x08AF3240)
 #define TTT_PACK_RECORD_BASE UINT32_C(0x08AF3250)
 #define TTT_PACK_RESOURCE_GOKU UINT32_C(0x593)
 #define TTT_PACK_RESOURCE_EXTRA UINT32_C(0x3711)
+#define TTT_PACK_COUNT_EXPANDED UINT32_C(0x3734)
+#define TTT_PACK_ASSET_COUNT 12u
+#define TTT_PACK_EXTRA_INDEX(id,color) (TTT_PACK_RESOURCE_EXTRA + 5u*(uint32_t)(id) + (uint32_t)(color))
 #define TTT_PACK_RESOURCE_EXTRA_RECORD (TTT_PACK_RECORD_BASE + 16u * TTT_PACK_RESOURCE_EXTRA)
 #define TTT_PACK_RESOURCE_GOKU_RECORD (TTT_PACK_RECORD_BASE + 16u * TTT_PACK_RESOURCE_GOKU)
 #define TTT_RES_CHECKED_JAL UINT32_C(0x0E271B28)
@@ -36,6 +38,7 @@ typedef struct {
     uint32_t pack_magic,pack_count,resource_id,resource_size;
     uint32_t original_size;
     uint32_t resource_data_offset,original_data_offset;
+    uint32_t available_mask; /* (id*4+color) masks real, validated CHR */
 } TTTResourceHookStats;
 
 /* Pure validation for host-side testing. No changes to game memory. */
@@ -49,6 +52,9 @@ int ttt_res_validate_entry(uint32_t new_offset,uint32_t original_offset,
                            uint32_t new_size,uint32_t original_size,
                            uint32_t count);
 int ttt_res_should_redirect(int bridge_active,int id,int offset);
+int ttt_res_is_available(int id,int color);
+uint32_t ttt_res_available_mask(void);
+uint32_t ttt_res_index_for(int id,int color);
 int ttt_res_hook_install(void);
 void ttt_res_hook_remove(void);
 TTTResourceHookStats ttt_res_hook_stats(void);
