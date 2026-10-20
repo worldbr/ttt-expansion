@@ -8,6 +8,7 @@ run_test() {
   "/tmp/ttt_expansion_${name}_$$"
   rm -f "/tmp/ttt_expansion_${name}_$$"
 }
+run_test test_gu_budget
 run_test test_native src/overlay.c src/toggle.c src/framecheck.c
 run_test test_menu_state src/menu_state.c
 run_test test_bridge src/battle_bridge.c

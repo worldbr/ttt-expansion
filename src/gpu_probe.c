@@ -12,6 +12,7 @@
 #include <stddef.h>
 #include "framecheck.h"
 #include "gpu_probe.h"
+#include "gu_budget.h"
 
 #define C_OUTER UINT32_C(0xFF0B0F16)
 #define C_DARK  UINT32_C(0xFF402515)
@@ -22,8 +23,14 @@
 #define C_SOFT  UINT32_C(0xFFDEE7FF)
 #define C_BLACK UINT32_C(0xFF13171C)
 
-/* Enough room for text rendered as horizontal bitmap runs. */
-static uint32_t __attribute__((aligned(16))) gu_list[32768];
+/* V0.9.8.8: prevent PSP GU display-list overrun into the plugin's BSS.
+ * Evidence: HOOK installed=0x571ED6FF exactly matches a GU color-command
+ * encoding of menu gold 0x1ED6FF. Old list was only 128 KiB and unbounded.
+ */
+static TTTGuListStorage __attribute__((aligned(16))) gu_storage;
+static TTTGuBudget gu_budget;
+static volatile unsigned gu_peak_primitives, gu_last_primitives, gu_last_skipped;
+static volatile int gu_canary_fault;
 static int gu_initialized;
 /* Save the complete GPU context, not merely the GU enable bits.  The GE is
  * SHARED with TTT; sceGuInit() issues a hardware reset list.  Never call it
@@ -43,6 +50,11 @@ TTTGeGuardStats ttt_gpu_guard_stats(void) {
     r.attempts=ge_frame_attempts;
     r.restores=ge_frame_restores;
     r.failed=guard_failed;
+    r.primitives=gu_last_primitives;
+    r.peak_primitives=gu_peak_primitives;
+    r.skipped_primitives=gu_last_skipped;
+    r.canary_fault=gu_canary_fault;
+    r.list_bytes=TTT_GU_LIST_WORDS * 4u;
     return r;
 }
 static volatile uint32_t menu_snapshot;
@@ -88,6 +100,7 @@ typedef struct { int16_t x,y,z; } Vertex;
 static void box(int x,int y,int w,int h,uint32_t color) {
     Vertex *v;
     if (w<=0||h<=0||x<0||y<0||x+w>480||y+h>272) return;
+    if(!ttt_gu_budget_take(&gu_budget)) return;
     v=(Vertex*)sceGuGetMemory(2*sizeof(Vertex));
     if(!v) return;
     v[0].x=(int16_t)x;v[0].y=(int16_t)y;v[0].z=0;
@@ -154,6 +167,7 @@ static void portrait(int which,int x,int y,int w,int h) {
     TTexVertex *v;
     if(which<0||which>=2 || !portrait_present[which])return;
     if(x<0||y<0||x+w>480||y+h>272)return;
+    if(!ttt_gu_budget_take(&gu_budget)) return;
     v=(TTexVertex*)sceGuGetMemory(2*sizeof(TTexVertex));
     if(!v)return;
     v[0].u=0;v[0].v=0;v[0].x=x;v[0].y=y;v[0].z=0;
@@ -261,7 +275,7 @@ static void render_menu(uint32_t data) {
     box(26,19,428,39,C_BLUE);
     box(26,56,428,2,C_LIGHT);
     txt(34,27,"TTT EXPANSION",2,C_WHITE);
-    txt(224,30,"V0.9.8.7",1,C_GOLD);
+    txt(224,30,"V0.9.8.8",1,C_GOLD);
     for(i=0;i<4;i++)player_chip(i,302+i*37,player==i,(int)((data>>(10+i))&1u));
     /* Styled navigation tabs as in the V0.2 HTML prototype. */
     for(i=0;i<3;i++) {
@@ -324,6 +338,10 @@ int ttt_gpu_init(void) {
     int rc;
     if(gu_initialized) return 0;
     if(guard_failed) return -160;
+    ttt_gu_canaries_init(&gu_storage);
+    ttt_gu_budget_begin(&gu_budget);
+    gu_peak_primitives=gu_last_primitives=gu_last_skipped=0;
+    gu_canary_fault=0;
     ge_init_save_rc=sceGeSaveContext(&ge_saved);
     if(ge_init_save_rc<0){guard_failed=1;return -161;}
     rc=sceGuInit();
@@ -343,13 +361,18 @@ int ttt_gpu_frame(void *fb,int stride,int fmt) {
     int start,finish,sync,ret=0;
     uint32_t snap;
     if(!gu_initialized || guard_failed) return -160;
+    if(!ttt_gu_canaries_ok(&gu_storage)){
+        gu_canary_fault=guard_failed=1;
+        return -165;
+    }
     if(ttt_vram_check((uintptr_t)fb,stride,fmt)!=0)return -11;
     ++ge_frame_attempts;
     ge_frame_save_rc=sceGeSaveContext(&ge_saved);
     if(ge_frame_save_rc<0){guard_failed=1;return -163;}
     offset=(uintptr_t)fb & (uintptr_t)0x003fffff;
     snap=menu_snapshot;
-    start=sceGuStart(GU_DIRECT,gu_list);
+    ttt_gu_budget_begin(&gu_budget);
+    start=sceGuStart(GU_DIRECT,gu_storage.words);
     if(start<0){ret=start;goto restore;}
     sceGuDrawBufferList(fmt,(void*)offset,stride);
     sceGuOffset(2048-240,2048-136);
@@ -363,11 +386,20 @@ int ttt_gpu_frame(void *fb,int stride,int fmt) {
     sceGuDisable(GU_COLOR_LOGIC_OP);sceGuDisable(GU_FOG);
     sceGuDepthMask(1);sceGuShadeModel(GU_FLAT);
     render_menu(snap);
+    gu_last_primitives=gu_budget.used;
+    gu_last_skipped=gu_budget.skipped;
+    if(gu_last_primitives>gu_peak_primitives)gu_peak_primitives=gu_last_primitives;
     finish=sceGuFinish();
     if(finish<0) {ret=finish;goto restore;}
     sync=sceGuSync(GU_SYNC_FINISH,GU_SYNC_WHAT_DONE);
     if(sync<0) ret=sync;
 restore:
+    /* Do not continue after an observed overwrite. Restore GE first so that
+     * the game's GPU is left in its original context when possible. */
+    if(!ttt_gu_canaries_ok(&gu_storage)){
+        gu_canary_fault=guard_failed=1;
+        ret=-165;
+    }
     /* The original hook only restored its JALs; here we also restore the
      * entire GE state after each overlay frame.  Stop the hook if restore
      * fails, to avoid persistent corruption. */

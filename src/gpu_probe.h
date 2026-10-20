@@ -5,6 +5,8 @@ typedef struct TTTGeGuardStats {
     int init_save, init_restore, frame_save, frame_restore;
     unsigned attempts, restores;
     int failed;
+    unsigned primitives, peak_primitives, skipped_primitives, list_bytes;
+    int canary_fault;
 } TTTGeGuardStats;
 TTTGeGuardStats ttt_gpu_guard_stats(void);
 int ttt_gpu_init(void);
