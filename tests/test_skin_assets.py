@@ -12,11 +12,19 @@ for name in ['goku_early','goku_mid','goku_mid_ssj']:
     assert (root/f'TTT_EXPANSION/portraits/{name}.rgba').stat().st_size == 64*64*4
 src=(root/'src/gpu_probe.c').read_text()
 assert 'render_menu_textured' in src
+assert 'skin_frame_fallback(bits)' in src
+assert 'render_menu_legacy(bits)' not in src
+assert 'Goku (Inicio)' in src
+assert 'Goku (Meio)' in src
+assert 'Super Saiyajin' in src
 assert 'skin_load_all()' in src
 assert 'memalign(16' in src
 assert 'TTT_MENU_BG_BYTES (256u*256u*2u)' in src
 assert 'TTT_FONT_BYTES (256u*128u*2u)' in src
 assert 'PORT_MAX_W 64' in src
 assert 'ttt_skin_ready' in src
+assert 'ttt_skin_mask' in src
+assert 'm->focus=1' in (root/'src/menu_state.c').read_text()
+assert '(uint32_t)(m->focus&1u)<<31' in (root/'src/menu_state.c').read_text()
 assert 'ttt_res_index_for' in (root/'src/resource_hook.c').read_text()
-print('OK: skin assets, 3 retratos, renderer PSP e indices preservados')
+print('OK: V1.0.1 skin real, nomes, foco, retratos e indices preservados')

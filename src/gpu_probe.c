@@ -183,159 +183,14 @@ static void portrait(int which,int x,int y,int w,int h) {
     sceGuDrawArray(GU_SPRITES,GU_TEXTURE_16BIT | GU_VERTEX_16BIT | GU_TRANSFORM_2D,2,NULL,v);
     sceGuDisable(GU_TEXTURE_2D);
 }
-static const char *titles[3][3]={
-    {"PERSONAGENS","MAPAS","AJUSTES"},
-    {"CHARACTERS","MAPS","SETTINGS"},
-    {"PERSONAJES","MAPAS","AJUSTES"}
-};
-static const char *colors[3]={"TRAJE","COSTUME","TRAJE"};
-static const char *maps_pending[3]={"MAPAS EM DESENVOLVIMENTO","MAPS UNDER DEVELOPMENT","MAPAS EN DESARROLLO"};
-static const char *settings_hint[3]={"SELECT MUDA IDIOMA","SELECT CHANGES LANGUAGE","SELECT CAMBIA IDIOMA"};
-static const char *preview[3]={"X TESTE  SEM ID","X TEST  NO ID","X PRUEBA SIN ID"};
-static const char *nav_hints[3]={
-    "CIMA/BAIXO PERS  ESQ/DIR TRAJE  L/R JOG",
-    "UP/DOWN CHAR  LEFT/RIGHT COLOR  L/R PLAYER",
-    "ARR/ABA PERSONA  IZQ/DER TRAJE  L/R JUG"
-};
-static const char *foot_hints[3]={
-    "X MARCA   TRIANG ABA   SELECT IDIOMA   O SAI",
-    "X MARK   TRIANGLE TAB   SELECT LANG   O EXIT",
-    "X MARCA   TRIANG ABA   SELECT IDIOMA   O SALE"
-};
-
-
-/* V0.9.1: visual inspired by the original TTT Expansion V0.2 HTML
- * six-card layout (three active + three reserved), detail panel, bright tabs,
- * gold selected frames. Only 480x272 PSP screen coordinates are used.
- * ID00 bridge is optional and managed separately; the renderer never patches IDs.
- */
-static void panel(int x,int y,int w,int h,uint32_t border,uint32_t inside) {
+/* Minimal panel helper is used only when texture assets are missing.
+ * The previous UI and its outdated navigation instructions are removed. */
+static void panel(int x,int y,int w,int h,uint32_t border,uint32_t inside){
     box(x,y,w,h,border);
     box(x+2,y+2,w-4,h-4,inside);
 }
-static void card_grid(int idx,int x,int y,int selected) {
-    int active = idx<3;
-    const char *label=idx==0?"EARLY":idx==1?"MID":idx==2?"MID SSJ":"FUTURO";
-    panel(x,y,70,52,selected?C_GOLD:active?C_LIGHT:C_BLUE,selected?C_BLUE:C_DARK);
-    if(active) {
-        box(x+14,y+4,42,35,selected?C_GOLD:C_LIGHT);
-        box(x+16,y+6,38,31,C_BLACK);
-        if(idx<3 && portrait_present[idx])portrait(idx,x+16,y+6,38,31);
-        else txt(x+29,y+16,idx==0?"E":idx==1?"M":"S",1,C_WHITE);
-        box(x+3,y+4,16,11,C_DARK);
-        txt(x+5,y+6,idx==0?"00":idx==1?"01":"02",1,C_GOLD);
-        txt(x+19,y+42,label,1,selected?C_GOLD:C_WHITE);
-    } else {
-        box(x+14,y+4,42,35,C_DARK);
-        txt(x+29,y+16,"+",2,C_LIGHT);
-        txt(x+13,y+42,label,1,C_SOFT);
-    }
-    /* Tiny inset stripe, echoes the original V0.2 active card. */
-    if(selected) box(x+4,y+49,62,1,C_GOLD);
-}
-static void player_chip(int idx,int x,int selected,int marked) {
-    char nm[3]="1P";
-    nm[0]=(char)('1'+idx);
-    panel(x,29,35,20,selected?C_GOLD:C_BLUE,selected?C_DARK:C_LIGHT);
-    txt(x+11,35,nm,1,selected?C_GOLD:C_WHITE);
-    if(marked) box(x+29,32,3,3,C_GOLD);
-}
-static const char *const map_subtitle[3]={
-    "MAPAS EXTRAS - EM BREVE", "EXTRA MAPS - COMING SOON", "MAPAS EXTRA - PROXIMAMENTE"
-};
-static const char *const settings_subtitle[3]={
-    "SELECT PARA TROCAR IDIOMA", "PRESS SELECT TO CHANGE LANGUAGE", "SELECT PARA CAMBIAR IDIOMA"
-};
-static const char *const selected_title[3]={
-    "FORMA SELECIONADA", "SELECTED CHARACTER", "FORMA SELECCIONADA"
-};
-static const char *const nav_v2[3]={
-    "CIMA/BAIXO: PERS   ESQ/DIR: COLOR   L/R: JOG",
-    "UP/DOWN: CHAR   LEFT/RIGHT: COLOR   L/R: PLAYER",
-    "ARR/ABA: PERS   IZQ/DER: TRAJE   L/R: JUG"
-};
-static const char *const footer_v2[3]={
-    "TRIANG: ABA   SELECT: IDIOMA   O: FECHAR",
-    "TRIANGLE: TAB   SELECT: LANG   O: CLOSE",
-    "TRIANG: PEST   SELECT: IDIOMA   O: CERRAR"
-};
-static void render_menu_legacy(uint32_t data) {
-    int character=(int)(data&3u),color=(int)((data>>2)&3u);
-    int tab=(int)((data>>4)&3u),lang=(int)((data>>6)&3u);
-    int player=(int)((data>>8)&3u),marked=(int)((data>>(10+player))&1u),bridge=(int)((data>>30)&1u),i;
-    char idtext[6]="ID 00",active[3]="1P";
-    if(tab>2)tab=0;
-    if(lang>2)lang=0;
-    idtext[4]=(char)('0'+character);
-    active[0]=(char)('1'+player);
-    /* Outer blue edge and thin cyan/gold highlights: close to HTML preview. */
-    box(16,7,448,259,C_OUTER);
-    panel(19,9,442,255,C_LIGHT,C_DARK);
-    box(24,13,432,3,C_GOLD);
-    box(24,16,432,1,C_LIGHT);
-    box(26,19,428,39,C_BLUE);
-    box(26,56,428,2,C_LIGHT);
-    txt(34,27,"TTT EXPANSION",2,C_WHITE);
-    txt(224,30,"V0.9.8.9",1,C_GOLD);
-    for(i=0;i<4;i++)player_chip(i,302+i*37,player==i,(int)((data>>(10+i))&1u));
-    /* Styled navigation tabs as in the V0.2 HTML prototype. */
-    for(i=0;i<3;i++) {
-        int x=30+i*141;
-        panel(x,62,136,24,tab==i?C_GOLD:C_LIGHT,tab==i?C_BLUE:C_DARK);
-        if(tab==i)box(x+4,66,3,16,C_GOLD);
-        txt(x+11,70,titles[lang][i],1,tab==i?C_GOLD:C_WHITE);
-    }
-    panel(29,90,229,135,C_LIGHT,C_DARK);
-    panel(262,90,188,135,C_LIGHT,C_DARK);
-    if(tab==0) {
-        txt(37,96,"PERSONAGENS EXTRAS",1,C_SOFT);
-        txt(210,96,"03/06",1,C_GOLD);
-        /* Vertical progression: Early above Mid, future slots at right. */
-        for(i=0;i<6;i++) {
-            int x=35+(i/2)*74,y=107+(i%2)*57;
-            card_grid(i,x,y,i==character);
-        }
-        box(270,95,174,2,C_GOLD);
-        txt(271,101,selected_title[lang],1,C_WHITE);
-        box(273,112,72,69,C_GOLD);
-        box(275,114,68,65,C_BLACK);
-        if(character<3 && portrait_present[character])portrait(character,275,114,68,65);
-        else txt(283,139,character==0?"EARLY":character==1?"MID":"SSJ",1,C_WHITE);
-        txt(351,114,"GOKU",1,C_WHITE);
-        txt(351,127,character==0?"EARLY":character==1?"MID":"MID SSJ",1,C_GOLD);
-        txt(351,141,idtext,1,C_WHITE);
-        txt(351,153,active,1,C_SOFT);
-        txt(351,166,bridge?"EXP ATIVO":marked?"MARCADO":"PREVIA",1,bridge?C_GOLD:marked?C_GOLD:C_SOFT);
-        box(271,184,172,1,C_LIGHT);
-        txt(271,187,lang==1?"COLOR":"TRAJE",1,C_WHITE);
-        for(i=0;i<4;i++){
-            char c[3]="C1";
-            int xx=271+i*43;
-            c[1]=(char)('1'+i);
-            panel(xx,197,38,13,color==i?C_GOLD:C_LIGHT,color==i?C_BLUE:C_DARK);
-            txt(xx+12,200,c,1,color==i?C_GOLD:C_WHITE);
-        }
-        txt(271,214,"PREVIA",1,C_SOFT);
-        panel(338,212,104,11,C_GOLD,C_BLUE);
-        txt(354,214,lang==0?"X ATIVAR":lang==1?"X ARM":"X ACTIVAR",1,C_GOLD);
-    } else if(tab==1) {
-        txt(44,115,"TTT EXPANSION - MAPAS",1,C_GOLD);
-        txt(44,147,map_subtitle[lang],1,C_WHITE);
-        txt(281,115,"MAPS",2,C_WHITE);
-    } else {
-        txt(44,115,"TTT EXPANSION - AJUSTES",1,C_GOLD);
-        txt(44,147,settings_subtitle[lang],1,C_WHITE);
-        txt(280,118,lang==0?"PORTUGUES":lang==1?"ENGLISH":"ESPANOL",1,C_GOLD);
-    }
-    /* Keep all help text inside the 480x272 visible PSP screen. */
-    panel(28,229,424,26,C_BLUE,C_OUTER);
-    txt(35,232,nav_v2[lang],1,C_WHITE);
-    if(bridge && tab==0) txt(35,244,lang==0?"3 GOKUS EXPERIMENTAIS / QUADRADO DESARMA":lang==1?"3 GOKUS EXPERIMENTAL / SQUARE RESETS":"3 GOKUS PRUEBA / CUADRADO DESARMA",1,C_GOLD);
-    else txt(35,244,footer_v2[lang],1,C_SOFT);
-    box(25,258,430,3,C_GOLD);
-}
 
-/* === V1.0.0 full textured menu: UI .4444 blobs are loaded AFTER opening.
+/* === V1.0.1 full textured menu: UI .4444 blobs are loaded AFTER opening.
  * Do not store large GUI textures in PRX .bss; a 512KiB static list caused
  * a black-screen regression. Files are raw PSP ABGR4444, NOT PNG. === */
 #define TTT_MENU_BG_BYTES (256u*256u*2u)
@@ -345,8 +200,9 @@ static void render_menu_legacy(uint32_t data) {
 static uint8_t *ttt_skin_bg;
 static uint8_t *ttt_skin_font;
 static volatile int ttt_skin_ready;
+static volatile unsigned ttt_skin_mask;
 
-int ttt_gpu_skin_status(void) { return ttt_skin_ready; }
+int ttt_gpu_skin_status(void) { return (int)ttt_skin_mask; }
 
 static uint8_t *skin_load(const char *path,int expected){
     SceUID fd;uint8_t *buf;int size,count=0;
@@ -370,6 +226,7 @@ static uint8_t *skin_load(const char *path,int expected){
 static void skin_load_all(void){
     ttt_skin_bg=skin_load(TTT_BG_PATH,(int)TTT_MENU_BG_BYTES);
     ttt_skin_font=skin_load(TTT_FONT_PATH,(int)TTT_FONT_BYTES);
+    ttt_skin_mask=(ttt_skin_bg?1u:0u)|(ttt_skin_font?2u:0u);
     ttt_skin_ready=(ttt_skin_bg && ttt_skin_font)?1:0;
     if(!ttt_skin_ready){
         if(ttt_skin_bg){free(ttt_skin_bg);ttt_skin_bg=NULL;}
@@ -434,46 +291,88 @@ static const char *const skin_tabs[3][3]={
     {"CHARACTERS","MAPS","SETTINGS"},
     {"PERSONAJES","MAPAS","AJUSTES"}
 };
-static const char *const skin_short[3]={"EARLY","MID","MID SSJ"};
-static const char *const skin_name[3]={"GOKU EARLY","GOKU MID","GOKU MID SSJ"};
-static const char *const skin_pending[3]={"EM BREVE","COMING SOON","PROXIMAMENTE"};
+/* The three real cards form a horizontal row.  The bottom three are
+ * explicitly non-interactive slots reserved for future characters.
+ * Focus is a separate row: character cards or costume chips (snapshot bit31).
+ * No static selection text is baked into the texture. */
+static const char *const skin_name[3]={"Goku (Inicio)","Goku (Meio)","Goku (Meio)"};
+static const char *const skin_subtitle[3]={"","","Super Saiyajin"};
+static const char *const skin_card_a[3]={"Goku","Goku","Goku (Meio)"};
+static const char *const skin_card_b[3]={"(Inicio)","(Meio)","Super Saiyajin"};
+static const char *const skin_pending[3]={"FUTURO","FUTURE","FUTURO"};
+/* A compact atlas sprite is much less expensive than the old vector glyphs.
+ * Each glyph uses exactly one GU sprite; text remains readable at 480x272. */
+static void skin_text_compact(int x,int y,const char *str,int step,int glyph_w,int glyph_h,uint32_t color){
+    int i;
+    sceGuColor(color);
+    if(!str) return;
+    for(i=0;str[i]&&i<62;i++){
+        unsigned char ch=(unsigned char)str[i];int at;
+        if(ch<32u||ch>127u)ch='?';
+        if(x+i*step+glyph_w>480)break;
+        at=(int)ch-32;
+        if(ch!=' ')skin_sprite(x+i*step,y,glyph_w,glyph_h,(at%16)*16,(at/16)*16,11,14);
+    }
+}
+static void skin_frame_fallback(uint32_t bits){
+    /* Installed PRX must NEVER silently show the old menu.  In the absence
+     * of external texture blobs, keep a minimal NEW layout and show why.
+     * The actual menu navigation remains functional. */
+    int character=(int)(bits&3u),color=(int)((bits>>2)&3u);
+    int player=(int)((bits>>8)&3u),focus=(int)((bits>>31)&1u),i;
+    char num[3]="1P",label[4]="C1";
+    box(8,8,464,256,C_DARK);panel(12,12,456,248,C_LIGHT,C_OUTER);
+    txt(23,23,"TTT EXPANSION V1.0.1",1,C_WHITE);
+    txt(25,50,"TEXTURAS AUSENTES - VERIFIQUE PASTA UI",1,C_GOLD);
+    for(i=0;i<3;i++){
+        int x=22+153*i;
+        panel(x,83,146,79,(character==i&&!focus)?C_GOLD:C_LIGHT,C_DARK);
+        if(portrait_present[i])portrait(i,x+7,91,49,49);
+        txt(x+60,98,i==0?"GOKU":i==1?"GOKU":"GOKU",1,C_WHITE);
+        txt(x+60,112,i==0?"INICIO":i==1?"MEIO":"MEIO SSJ",1,C_GOLD);
+    }
+    txt(25,177,"JOGADOR",1,C_WHITE);
+    num[0]=(char)('1'+player);txt(90,177,num,1,C_GOLD);
+    txt(184,177,"COLOR",1,C_WHITE);
+    label[1]=(char)('1'+color);txt(236,177,label,1,C_GOLD);
+    txt(25,204,focus?"FOCO: COLORS":"FOCO: PERSONAGENS",1,C_GOLD);
+    txt(24,235,"ESQ/DIR SELECIONA  CIMA/BAIXO TROCA FOCO",1,C_WHITE);
+}
 static void render_menu_textured(uint32_t bits){
     int character=(int)(bits&3u),color=(int)((bits>>2)&3u);
     int tab=(int)((bits>>4)&3u),lang=(int)((bits>>6)&3u);
     int player=(int)((bits>>8)&3u),bridge=(int)((bits>>30)&1u);
-    int i;
-    char number[4]="00",idline[9]="ID 00",slot[3]="1P",col[3]="C1";
+    int focus=(int)((bits>>31)&1u),i;
+    char number[3]="00",idline[9]="ID 00",slot[3]="1P",col[3]="C1";
     if(character>2)character=0;
     if(tab>2)tab=0;
     if(lang>2)lang=0;
-    /* Layer 1: single background texture is exactly one sprite. */
+    /* Layer 1: actual PSP 4444 background texture. */
     skin_bind_background();
     skin_sprite(0,0,480,272,0,0,256,256);
     sceGuDisable(GU_TEXTURE_2D);
-    /* Layer 2: GPU-native small highlights for dynamic selection. */
+    /* Layer 2: selective, geometry-aligned interaction highlights. */
     skin_outline(13+153*tab,61,147,26,C_GOLD);
     skin_outline(309+38*player,18,35,31,C_GOLD);
-    for(i=0;i<4;i++){
-        if((bits>>(10+i))&1u)box(338+i*38,21,3,3,C_GOLD);
-    }
+    for(i=0;i<4;i++)if((bits>>(10+i))&1u)box(338+i*38,21,3,3,C_GOLD);
     if(tab==0){
-        skin_outline(19+(character%3)*77,117,73,51,C_GOLD);
-        skin_outline(270+color*48,202,42,20,C_GOLD);
+        skin_outline(19+character*77,117,73,51,focus?C_LIGHT:C_GOLD);
+        skin_outline(270+color*48,202,42,20,focus?C_GOLD:C_LIGHT);
+        /* Small focus indicator follows active navigation row. */
+        box(focus?262:15,focus?206:130,3,11,C_GOLD);
     }
-    /* Layer 3: portraits, per-character and selected detail. */
+    /* Layer 3: all portraits use 64x64 RGBA files supplied with the plugin. */
     if(tab==0){
-        for(i=0;i<3;i++){
-            if(portrait_present[i])portrait(i,24+77*i,121,37,34);
-        }
-        if(portrait_present[character])portrait(character,270,120,80,70);
+        for(i=0;i<3;i++)if(portrait_present[i])portrait(i,26+77*i,122,32,25);
+        if(portrait_present[character])portrait(character,269,120,82,69);
     }
-    /* Layer 4: all text shares ONE PSP font texture. */
+    /* Layer 4: single font atlas, no per-pixel rectangles and no overflow. */
     skin_bind_font();
-    skin_text(23,23,"TTT EXPANSION",1,C_WHITE);
-    skin_text(243,31,"V1.0",0,C_GOLD);
+    skin_text_compact(23,22,"TTT EXPANSION",11,11,17,C_WHITE);
+    skin_text(244,31,"V1.0.1",0,C_GOLD);
     for(i=0;i<4;i++){
         slot[0]=(char)('1'+i);
-        skin_text(318+i*38,27,slot,0,i==player?C_GOLD:C_WHITE);
+        skin_text(319+i*38,27,slot,0,i==player?C_GOLD:C_WHITE);
     }
     for(i=0;i<3;i++)skin_text(23+i*153,70,skin_tabs[lang][i],0,i==tab?C_GOLD:C_WHITE);
     if(tab==0){
@@ -483,36 +382,45 @@ static void render_menu_textured(uint32_t bits){
         for(i=0;i<6;i++){
             int x=19+(i%3)*77,y=117+(i/3)*55;
             number[0]='0';number[1]=(char)('0'+i);
-            skin_text(x+47,y+4,number,0,i==character?C_GOLD:C_SOFT);
-            if(i<3)skin_text(x+5,y+41,skin_short[i],0,i==character?C_GOLD:C_WHITE);
-            else {skin_text(x+26,y+14,"+",1,C_LIGHT);skin_text(x+9,y+40,skin_pending[lang],0,C_SOFT);}
+            skin_text_compact(x+51,y+3,number,5,5,9,i==character?C_GOLD:C_SOFT);
+            if(i<3){
+                /* Two lines make Super Saiyajin a real subtitle. */
+                skin_text_compact(x+4,y+29,skin_card_a[i],5,5,9,i==character?C_GOLD:C_WHITE);
+                skin_text_compact(x+4,y+39,skin_card_b[i],4,5,8,i==character?C_GOLD:C_WHITE);
+            }else{
+                skin_text_compact(x+29,y+13,"+",9,9,14,C_LIGHT);
+                skin_text_compact(x+11,y+39,skin_pending[lang],5,5,8,C_SOFT);
+            }
         }
-        skin_text(359,120,"GOKU",0,C_WHITE);
-        skin_text(359,136,character==2?"MID SSJ":skin_short[character],0,C_GOLD);
+        /* Preview description: exact requested names, SSJ subtitle below. */
+        skin_text_compact(359,124,skin_name[character],6,6,11,C_WHITE);
+        if(character==2)skin_text_compact(359,138,skin_subtitle[character],6,6,10,C_GOLD);
         idline[3]='0';idline[4]=(char)('0'+character);
-        skin_text(359,155,idline,0,C_SOFT);
+        skin_text(360,155,idline,0,C_SOFT);
         slot[0]=(char)('1'+player);
-        skin_text(359,170,slot,0,C_WHITE);
-        skin_text(359,183,bridge?"ATIVO":((bits>>(10+player))&1u)?"MARCADO":"PREVIA",0,bridge?C_GOLD:C_SOFT);
+        skin_text(359,169,slot,0,C_WHITE);
+        skin_text_compact(359,182,bridge?"ATIVO":((bits>>(10+player))&1u)?"CONFIRMADO":"PREVIA",6,6,10,bridge?C_GOLD:C_SOFT);
         for(i=0;i<4;i++){
             col[1]=(char)('1'+i);
-            skin_text(282+i*48,207,col,0,i==color?C_GOLD:C_WHITE);
+            skin_text(282+i*48,207,col,0,(i==color)?C_GOLD:C_WHITE);
         }
-    } else if(tab==1){
+    }else if(tab==1){
         skin_text(27,116,lang==1?"EXTRA MAPS":lang==2?"MAPAS EXTRA":"MAPAS EXTRAS",1,C_WHITE);
         skin_text(28,150,skin_pending[lang],0,C_GOLD);
-    } else {
+    }else{
         skin_text(27,116,lang==1?"SETTINGS":lang==2?"AJUSTES":"CONFIGURACOES",1,C_WHITE);
         skin_text(27,150,lang==0?"SELECT = IDIOMA":lang==1?"SELECT = LANGUAGE":"SELECT = IDIOMA",0,C_GOLD);
     }
-    skin_text(22,246,lang==1?"X CONFIRM L/R PLAYER TRIANG TAB O CLOSE":lang==2?"X CONFIRM L/R JUG TRIANG PEST O SALIR":"X CONFIRM L/R JOG TRIANG ABA O SAIR",0,C_WHITE);
+    /* Two compact instructions; the menu is 480 pixels wide on the PSP. */
+    skin_text_compact(22,242,lang==1?"LEFT/RIGHT: SELECT  UP/DOWN: FOCUS  L/R: PLAYER":lang==2?"IZQ/DER: ELEGIR  ARR/ABA: FOCO  L/R: JUG":"ESQ/DIR: SELECIONAR  CIMA/BAIXO: FOCO  L/R: JOG",6,6,10,C_WHITE);
+    skin_text_compact(22,254,"X: CONFIRMAR  TRIANGULO: ABA  SELECT: IDIOMA  O: SAIR",6,6,10,C_SOFT);
     sceGuDisable(GU_BLEND);
     sceGuDisable(GU_TEXTURE_2D);
 }
 
 static void render_menu(uint32_t bits){
     if(ttt_skin_ready)render_menu_textured(bits);
-    else render_menu_legacy(bits); /* textures absent: game can still be used */
+    else skin_frame_fallback(bits); /* never silently use old layout */
 }
 
 int ttt_gpu_init(void) {
@@ -597,5 +505,5 @@ void ttt_gpu_shutdown(void) {
     /* Called after the frame hook is no longer drawing. */
     if(ttt_skin_bg){free(ttt_skin_bg);ttt_skin_bg=NULL;}
     if(ttt_skin_font){free(ttt_skin_font);ttt_skin_font=NULL;}
-    ttt_skin_ready=0;
+    ttt_skin_ready=0;ttt_skin_mask=0;
 }

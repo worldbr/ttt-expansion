@@ -25,6 +25,7 @@ typedef struct TTTMenuState {
     uint32_t previous;
     uint8_t character;       /* 0 Early, 1 Mid, 2 Mid SSJ */
     uint8_t color;           /* ativo: 0..3 */
+    uint8_t focus;           /* 0=cards Goku, 1=Colors row */
     uint8_t tab,lang,player; /* 0..2, 0..2, 0..3 */
     uint8_t picked_character[4];
     uint8_t picked_color[4];
