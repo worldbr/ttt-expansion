@@ -6,9 +6,9 @@
  * sceGuGetMemory() is not a capacity-checked allocation. A hard primitive
  * budget is mandatory: GU commands and vertex data share the same list.
  */
-#define TTT_GU_LIST_WORDS (131072u)   /* 512 KiB (old version: 128 KiB). */
-#define TTT_GU_MAX_PRIMITIVES (4096u)
-#define TTT_GU_CANARY_WORDS (128u)
+#define TTT_GU_LIST_WORDS (32768u)   /* 128 KiB: same allocation as bootable V0987. */
+#define TTT_GU_MAX_PRIMITIVES (1200u) /* conservative GU command ceiling */
+#define TTT_GU_CANARY_WORDS (16u)
 #define TTT_GU_CANARY_VALUE UINT32_C(0xC0DECAFE)
 
 typedef struct TTTGuBudget {

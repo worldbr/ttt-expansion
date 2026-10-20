@@ -12,7 +12,7 @@ int main(void) {
     assert(b.used==TTT_GU_MAX_PRIMITIVES && b.skipped==9);
     ttt_gu_budget_begin(&b);
     assert(b.used==0 && b.skipped==0 && ttt_gu_budget_take(&b));
-    assert(TTT_GU_LIST_WORDS >= 4u * 32768u);
+    assert(TTT_GU_LIST_WORDS == 32768u);
     s=malloc(sizeof(*s));assert(s);
     memset(s,0,sizeof(*s));
     ttt_gu_canaries_init(s);

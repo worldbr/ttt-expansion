@@ -1,4 +1,4 @@
-/* TTT Expansion V0.9.8.8 -- known-call-site hook, not an import-stub hook.
+/* TTT Expansion V0.5.2 -- known-call-site hook, not an import-stub hook.
  * For ULUS10537 / EBOOT.OLD original game code ONLY.
  * PPSSPP patches the loaded sceDisplaySetFrameBuf import stub with HLE
  * instructions (observed 0x6801AFE2 at 08A66A84). DO NOT PATCH THAT STUB.

@@ -1,4 +1,4 @@
-# TTT Expansion V0.9.8.6 — 3 Gokus / 4 Colors (experimental)
+# TTT Expansion V0.9.8.7 — 3 Gokus / 4 Colors (experimental)
 
 Base: V0.9.8.5 (que carregou um CHR fisico novo) + sequencia da V0.9.8.4G validada.
 
@@ -10,7 +10,7 @@ Base: V0.9.8.5 (que carregou um CHR fisico novo) + sequencia da V0.9.8.4G valida
 - **A/B mappings:** os IDs externos `00`, `01`, `02` compartilham provisoriamente o indice de forma interna `0x47`. Eles podem compartilhar moveset, animacoes, transformacoes ou falhar na batalha. Nao criamos `0x48` e `0x49` sem pesquisa de tabelas internas.
 - **SFX nao redirecionados**: reservados indices `0x3715`, `0x371A`, `0x371F`.
 - A bridge nao e usada isoladamente: a sequencia de ativacao sempre sera **recurso → bridge → injecao** (3 hooks juntos).
-- A fonte do GitHub Actions e `src/` da raiz, junto com `Makefile`. O ZIP completo e para extrair diretamente na **raiz** do repo, nao numa subpasta nova. O artifact esperado e `TTT-Expansion-PRX-V0986`.
+- A fonte do GitHub Actions e `src/` da raiz, junto com `Makefile`. O ZIP completo e para extrair diretamente na **raiz** do repo, nao numa subpasta nova. O artifact esperado e `TTT-Expansion-PRX-V0987`.
 
 ## Tabela
 

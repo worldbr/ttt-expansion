@@ -40,6 +40,8 @@ int main(void){
     assert(ttt_res_index_for(1,0)==0x3716u);
     assert(ttt_res_index_for(1,3)==0x3719u);
     assert(ttt_res_index_for(2,0)==0x371Bu);
+    assert(ttt_res_index_for(2,1)==0x371Cu);
+    assert(ttt_res_index_for(2,2)==0x371Du);
     assert(ttt_res_index_for(2,3)==0x371Eu);
     assert(ttt_res_index_for(3,0)==0xffffffffu);
     puts("OK V0.9.8.6: indice por ID/color, alias legado e CHR fisico Early C1");

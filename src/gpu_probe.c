@@ -23,7 +23,7 @@
 #define C_SOFT  UINT32_C(0xFFDEE7FF)
 #define C_BLACK UINT32_C(0xFF13171C)
 
-/* V0.9.8.8: prevent PSP GU display-list overrun into the plugin's BSS.
+/* V0.9.8.9: prevent PSP GU display-list overrun into the plugin's BSS.
  * Evidence: HOOK installed=0x571ED6FF exactly matches a GU color-command
  * encoding of menu gold 0x1ED6FF. Old list was only 128 KiB and unbounded.
  */
@@ -275,7 +275,7 @@ static void render_menu(uint32_t data) {
     box(26,19,428,39,C_BLUE);
     box(26,56,428,2,C_LIGHT);
     txt(34,27,"TTT EXPANSION",2,C_WHITE);
-    txt(224,30,"V0.9.8.8",1,C_GOLD);
+    txt(224,30,"V0.9.8.9",1,C_GOLD);
     for(i=0;i<4;i++)player_chip(i,302+i*37,player==i,(int)((data>>(10+i))&1u));
     /* Styled navigation tabs as in the V0.2 HTML prototype. */
     for(i=0;i<3;i++) {
