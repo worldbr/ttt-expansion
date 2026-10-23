@@ -1,0 +1,116 @@
+name: TTT Expansion Menu 47 - PRX
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - 'src/**'
+      - 'content/**'
+      - 'tools/**'
+      - 'Makefile'
+      - 'exports.exp'
+      - 'TTT_EXPANSION/**'
+      - 'PREVIA_INTERATIVA_MENU47.html'
+      - '.github/workflows/compilar-prx.yml'
+
+jobs:
+  build:
+    runs-on: ubuntu-24.04
+    container:
+      image: pspdev/pspdev:v20261001
+    steps:
+      - uses: actions/checkout@v5
+      - name: Preparar arquivo de log antes do build
+        shell: bash
+        run: |
+          printf '[TTT DLC Rebuild 2.0.3] Workflow iniciado\n' > build.log
+
+      - name: Compilar PRX e preparar arquivos para instalar
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          # Capture TODOS os erros, inclusive de dependencias, no build.log.
+          # Assim upload-artifact always() sempre tem um arquivo para anexar.
+          {
+            echo "--- PSPDEV / ambiente ---"
+            echo "PWD=$PWD"
+            echo "PSPDEV (antes)=${PSPDEV:-nao_definido}"
+            export PSPDEV=/usr/local/pspdev
+            export PATH="$PSPDEV/bin:$PATH"
+            echo "PATH=$PATH"
+            command -v psp-gcc
+            command -v psp-config
+            psp-gcc --version
+            echo "PSPSDK=$(psp-config --pspsdk-path)"
+
+            # pspdev/pspdev:v20261001 usa Alpine e nao inclui Python 3
+            # em seu Dockerfile final. Instalar para as verificacoes do projeto.
+            if ! command -v python3 >/dev/null 2>&1; then
+              echo "--- Python3 ausente; instalando via apk ---"
+              apk add --no-cache python3
+            fi
+            python3 --version
+            python3 tools/inspecionar_packfile.py --help >/dev/null
+
+            echo "--- Conferindo texturas e plugin.ini ---"
+            test -s TTT_EXPANSION/ui/menu_bg.4444
+            test -s TTT_EXPANSION/ui/font_atlas.4444
+            test -s TTT_EXPANSION/plugin.ini
+            test "$(stat -c%s TTT_EXPANSION/ui/menu_bg.4444)" -eq 131072
+            test "$(stat -c%s TTT_EXPANSION/ui/font_atlas.4444)" -eq 65536
+            python3 tests/test_skin_assets.py
+            python3 tests/test_packed_skin.py
+            python3 tests/test_packfile_expander.py
+            python3 tests/validar_lang.py
+
+            echo "--- Compilando PRX MENU47 (inclui audio) ---"
+            make clean >/dev/null 2>&1 || true
+            make --no-print-directory
+            test -s ttt_expansion.prx
+
+            mkdir -p dist/TTT_EXPANSION dist/debug
+            cp ttt_expansion.prx dist/TTT_EXPANSION/ttt_expansion.prx
+            if test -s ttt_expansion.elf; then
+              cp ttt_expansion.elf dist/debug/ttt_expansion.elf
+              if command -v psp-nm >/dev/null 2>&1; then
+                psp-nm -n ttt_expansion.elf > dist/debug/symbols.txt || true
+              fi
+              if command -v psp-objdump >/dev/null 2>&1; then
+                psp-objdump -d ttt_expansion.elf > dist/debug/disassembly.txt || true
+              fi
+            fi
+            cp TTT_EXPANSION/plugin.ini dist/TTT_EXPANSION/plugin.ini
+            cp PREVIA_INTERATIVA_MENU47.html dist/PREVIA_INTERATIVA_MENU47.html
+            mkdir -p dist/TTT_EXPANSION/portraits dist/TTT_EXPANSION/ui
+            cp TTT_EXPANSION/portraits/*.rgba dist/TTT_EXPANSION/portraits/
+            cp TTT_EXPANSION/ui/*.4444 dist/TTT_EXPANSION/ui/
+            mkdir -p dist/TTT_EXPANSION/lang
+            cp TTT_EXPANSION/lang/*.txt dist/TTT_EXPANSION/lang/
+            test -s dist/TTT_EXPANSION/lang/pt.txt
+            test -s dist/TTT_EXPANSION/lang/en.txt
+            test -s dist/TTT_EXPANSION/lang/es.txt
+            test -s dist/TTT_EXPANSION/ttt_expansion.prx
+            test -s dist/TTT_EXPANSION/plugin.ini
+            test "$(stat -c%s dist/TTT_EXPANSION/portraits/goku_mid_ssj.rgba)" -eq 16384
+            test "$(stat -c%s dist/TTT_EXPANSION/ui/menu_bg.4444)" -eq 131072
+            test "$(stat -c%s dist/TTT_EXPANSION/ui/font_atlas.4444)" -eq 65536
+            cp INSTALAR_PLUGIN_WINDOWS.bat dist/INSTALAR_PLUGIN_WINDOWS.bat
+            cp LEIA_PRIMEIRO_REBUILD_V2.md dist/LEIA_PRIMEIRO_REBUILD_V2.md
+            echo "--- Conteudo pronto para o PPSSPP ---"
+            ls -lh dist/TTT_EXPANSION/
+            echo "--- COMPILACAO CONCLUIDA ---"
+          } 2>&1 | tee -a build.log
+      - name: Disponibilizar log mesmo em caso de falha
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: TTT-Expansion-Menu47-Build-Log
+          path: build.log
+          if-no-files-found: warn
+      - name: Disponibilizar plugin para instalar
+        if: success()
+        uses: actions/upload-artifact@v4
+        with:
+          name: TTT-Expansion-Menu47-PRX
+          path: dist/
+          if-no-files-found: error
+          compression-level: 6
