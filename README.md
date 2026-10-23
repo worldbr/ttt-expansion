@@ -1,7 +1,6 @@
-# TTT Expansion V1.0.1 — Menu refeito, navegação e nomes novos
+# TTT Expansion DLC Rebuild V2.0.3
 
-Projeto PSP PRX ULUS10537 com fundo/fonte texturizados, retratos dos três Gokus, escolha de quatro Colors para 1P–4P e **navegação espacial**.
-
-**Leia `LEIA_V101_MENU_HARMONIZADO.md` para instalar, compilar e testar.**
-
-O PRX não está pré-compilado neste ZIP; gere pelo GitHub Actions (PSPSDK).
+Textos externos em `TTT_EXPANSION/lang/pt.txt`, `en.txt`, `es.txt`, 38 chaves cada.
+Abas PERSONAGENS, MISSOES (EM BREVE), MAPAS (EM BREVE), OPCOES (EM BREVE).
+Preserva 3 IDs, 4 Colors, 12 CHRs, 4 jogadores, PACKFILE 0x3734 e atlas único da V2.0.2.
+Leia `LEIA_V2003_TEXTOS_EXTERNOS.md`.

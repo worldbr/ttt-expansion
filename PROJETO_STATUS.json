@@ -1,0 +1,22 @@
+{
+  "project": "TTT Expansion DLC Rebuild 2.0",
+  "game": "ULUS10537",
+  "verified_user_pack_count": 14132,
+  "max_header_count_theoretical": 14335,
+  "confirmed_external_character_ids": [
+    0,
+    1,
+    2
+  ],
+  "colours_each": 4,
+  "dlc_training_missions": 6,
+  "new_maps_gameplay_hook": false,
+  "story_mode_auto_start": false,
+  "compiled_prx_in_zip": false,
+  "assets_include_one_original_user_chr": true,
+  "files": 96,
+  "version": "2.0.2",
+  "skin_memory_strategy": "128KB single PSP user memory block containing background and font",
+  "verified_in_ppsspp": false,
+  "host_tests_passed": true
+}
