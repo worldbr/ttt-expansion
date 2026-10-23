@@ -1,36 +1,53 @@
 #!/usr/bin/env python3
-"""Teste 35 novos slots (alias e append) usando dados sinteticos, sem ISO real."""
+"""Integration check of CURRENT dlc_packfile_builder (no original game data)."""
 from pathlib import Path
-import sys, subprocess, tempfile
-sys.path.insert(0,str(Path(__file__).resolve().parents[1]/'tools'))
-import expandir_packfile_7_gokus as x
-root=Path(__file__).resolve().parents[1]
-base=(root/'EXPANSAO_7_GOKUS'/'CABECALHO_BASE_3712_EXPERIMENTAL.bin').read_bytes()
-head,entries,template=x.make_header(base)
-assert len(entries)==35 and int.from_bytes(head[4:8],'little')==0x3734
-assert head[8:x.entry_idx(x.FIRST)]==base[8:x.entry_idx(x.FIRST)]
-assert head[(x.EXPANDED+1)*16:]==base[(x.EXPANDED+1)*16:]
-for row in entries:
-    assert x.decode_record(head,row['index'])==(row['offset'],row['size'])
-assert entries[0]['index']==0x3711 and entries[-1]['index']==0x3733
-assert x.decode_record(head,0x3711)==x.decode_record(base,x.ORIGINAL_CHR)
-assert x.decode_record(head,0x3715)==x.decode_record(base,x.ORIGINAL_SFX)
-with tempfile.TemporaryDirectory() as td:
-    temp=Path(td)
-    fake=bytearray(base)
-    fake[x.entry_idx(x.ORIGINAL_CHR):x.entry_idx(x.ORIGINAL_CHR)+16]=x.encode_record(x.ORIGINAL_CHR,x.DATA,4096,template)
-    fake[x.entry_idx(x.ORIGINAL_SFX):x.entry_idx(x.ORIGINAL_SFX)+16]=x.encode_record(x.ORIGINAL_SFX,x.DATA+0x1000,2048,template)
-    orig=temp/'orig.bin'; orig.write_bytes(fake+b'\xab'*0x8000)
-    item=temp/'assets'/'GOKU_EARLY';item.mkdir(parents=True)
-    (item/'C1.PCK1').write_bytes(bytes.fromhex('000001f1')+b'x'*(0x12F220-4))
-    out=temp/'expanded.bin'
-    cmd=[sys.executable,str(root/'tools'/'expandir_packfile_7_gokus.py'),
-         '--input',str(orig),'--output',str(out),'--asset-dir',str(temp/'assets')]
-    subprocess.run(cmd,check=True,stdout=subprocess.DEVNULL)
-    result=out.read_bytes()
-    assert result[:x.entry_idx(x.FIRST)]==orig.read_bytes()[:x.entry_idx(x.FIRST)].replace(
-        bytes.fromhex('12 37 00 00'),bytes.fromhex('34 37 00 00'),1)
-    off,size=x.decode_record(result[:x.DATA],x.FIRST)
-    assert size==0x12F220 and result[off:off+4]==bytes.fromhex('000001f1')
-    assert x.decode_record(result[:x.DATA],x.FIRST+1)==(x.DATA,4096)
-print('PASS: 7 forms, 35 entries, codec, alias, physical append, original entries preserved')
+import json
+import struct
+import sys
+import tempfile
+
+ROOT = Path(__file__).resolve().parents[1]
+sys.path.insert(0, str(ROOT / 'tools'))
+import dlc_packfile_builder as builder
+from inspecionar_packfile import DATA, decode, VERIFIED
+
+with tempfile.TemporaryDirectory() as tmp:
+    tmp = Path(tmp)
+    header = bytearray(DATA)
+    header[:4] = b'PacK'
+    struct.pack_into('<I', header, 4, 0x3711)
+    template = b'\x00' * 8 + b'PacK' + b'\x00' * 4
+    # Create original model/SFX descriptors; offsets are relative to data area.
+    for index, offset, size in [(builder.ORIG_CHR, DATA, 0x1000),
+                                (builder.ORIG_SFX, DATA + 0x1000, 0x800)]:
+        p = 16 + index * 16
+        header[p:p+16] = builder.encode(index, offset, size, template)
+        assert decode(header, index) == (offset, size)
+    original = tmp / 'PACKFILE_original.BIN'
+    original.write_bytes(header + b'C' * 0x1000 + b'S' * 0x800)
+    assets = tmp / 'assets'
+    for form in builder.CHAR_NAMES:
+        d = assets / form
+        d.mkdir(parents=True)
+        for color in range(1, 5):
+            (d / f'C{color}.PCK1').write_bytes(b'\x00\x00\x01\xf1' + bytes([color]) * (0x10000 - 4))
+    output = tmp / 'PACKFILE_DLC.BIN'
+    builder.build(original, output, assets)
+    result = output.read_bytes()
+    assert struct.unpack_from('<I', result, 4)[0] == VERIFIED
+    # Original entries and original CHR/SFX bytes are unaffected.
+    assert result[16:16 + 0x3711 * 16] == header[16:16 + 0x3711 * 16]
+    assert result[DATA:DATA+0x1800] == original.read_bytes()[DATA:]
+    for form_id in range(3):
+        for color_index in range(4):
+            idx = 0x3711 + form_id * 5 + color_index
+            off, length = decode(result[:DATA], idx)
+            assert length == 0x10000
+            assert result[off:off + 4] == b'\x00\x00\x01\xf1'
+        # Each reserved SFX slot aliases original SFX.
+        assert decode(result[:DATA], 0x3711 + form_id * 5 + 4) == (DATA + 0x1000, 0x800)
+    manifest = json.loads(output.with_suffix('.manifest.json').read_text())
+    assert len(manifest['new_entries']) == 47 # 35 aliases iniciais + 12 ajustes fisicos
+    assert sum(row['mode'] == 'NEW_CHR' for row in manifest['new_entries']) == 12
+    assert len(set(row['index'] for row in manifest['new_entries'])) == 35
+print('PASS: DLC builder 12 real CHRs / 35 entries, original files preserved')

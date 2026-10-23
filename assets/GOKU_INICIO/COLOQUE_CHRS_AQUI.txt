@@ -1,0 +1,1 @@
+Insira C1.PCK1, C2.PCK1, C3.PCK1, C4.PCK1 para gerar uma ISO do zero. Nao precisa usar se sua ISO 0x3734 ja contem os CHRs.

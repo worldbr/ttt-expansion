@@ -1,0 +1,43 @@
+{
+  "status": "desafios_preparaveis_no_plugin_sem_lancamento_automatico",
+  "edition": "Rebuild 2.0",
+  "notes": "Apenas o progresso manual e preparo 1P estao programados no plugin. Alterar o JSON requer sincronizar dlc_story.c e recompilar.",
+  "missions": [
+    {
+      "name": "Treino de Kame",
+      "character_external_id": 0,
+      "color": 1,
+      "goal": "Desafio de treinamento"
+    },
+    {
+      "name": "Forca Saiyajin",
+      "character_external_id": 0,
+      "color": 2,
+      "goal": "Defesa e ki"
+    },
+    {
+      "name": "Rumo a Namek",
+      "character_external_id": 1,
+      "color": 1,
+      "goal": "Preparacao de combate"
+    },
+    {
+      "name": "Limite de Goku",
+      "character_external_id": 1,
+      "color": 2,
+      "goal": "Color 2"
+    },
+    {
+      "name": "O Despertar",
+      "character_external_id": 2,
+      "color": 1,
+      "goal": "Super Saiyajin"
+    },
+    {
+      "name": "Lenda Dourada",
+      "character_external_id": 2,
+      "color": 4,
+      "goal": "Color 4"
+    }
+  ]
+}

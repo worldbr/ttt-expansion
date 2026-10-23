@@ -1,0 +1,18 @@
+TTT EXPANSION DLC REBUILD 2.0 - EVIDENCIAS
+
+CONFIRMADO PELO USUARIO EM PPSSPP (VERSOES ANTERIORES):
+- PACKFILE original count 0x3711; EBOOT+PACKFILE expandidos count 0x3734 funcionaram.
+- CHRs fisicos novos e pelo menos Goku Inicio/Mid/Mid SSJ foram visiveis/jogaveis em uma versao anterior.
+
+TESTES AUTOMATICOS DESTA ENTREGA (APENAS PC):
+- Catalogo de 6 missoes, 3 IDs x 4 cores, 1P..4P, hook validation, ponte resource/actor, guard GPU e simulacao de carregamento de texturas.
+- Ferramenta de PACKFILE com 12 modelos sinteticos, contagem 0x3734, preservacao da area original e recusa para fonte ja expandida.
+
+NAO COMPROVADO:
+- PRX Rebuild 2.0 compilado por PSPSDK ou executado no PPSSPP.
+- O modo Historia original, novos mapas ou SFX proprietarios.
+- Expansao para contagens acima de 0x3734 apesar de haver espaco fisico no header.
+- IDs com novos movesets independentes (3 IDs ainda compartilham forma interna 0x47).
+
+CONSIDERACOES:
+- Fase segura de DLC, com menu, personagens e desafios preparaveis. Usuario deve realizar 1 rodada real de testes no PPSSPP para validar o PRX novo. 

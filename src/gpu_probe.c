@@ -11,9 +11,12 @@
 #include <stdint.h>
 #include <stddef.h>
 #include <stdlib.h>
-#include <malloc.h>
+#include <pspsysmem.h>
+#include <pspmodulemgr.h>
 #include "framecheck.h"
 #include "gpu_probe.h"
+#include "dlc_story.h"
+#include "ui_text.h"
 #include "gu_budget.h"
 
 #define C_OUTER UINT32_C(0xFF0B0F16)
@@ -60,6 +63,8 @@ TTTGeGuardStats ttt_gpu_guard_stats(void) {
     return r;
 }
 static volatile uint32_t menu_snapshot;
+static volatile unsigned dlc_mission_index;
+static volatile uint32_t dlc_mission_completed;
 /* Dynamic RGBA portraits; all packaged models are 64x64.
  * Compacting static BSS helps avoid V0988 early black screen regression. */
 #define PORT_MAX_W 64
@@ -190,47 +195,135 @@ static void panel(int x,int y,int w,int h,uint32_t border,uint32_t inside){
     box(x+2,y+2,w-4,h-4,inside);
 }
 
-/* === V1.0.1 full textured menu: UI .4444 blobs are loaded AFTER opening.
- * Do not store large GUI textures in PRX .bss; a 512KiB static list caused
- * a black-screen regression. Files are raw PSP ABGR4444, NOT PNG. === */
+/* DLC V2.0.2 packed skin: the user's game successfully allocates exactly
+ * 128 KiB for BG but refuses another 64 KiB for the font (0x800200D9).
+ * Keep one 128-KiB PSP user partition allocation, and store both textures:
+ * rows 0..159 = downsampled menu BG, rows 160..255 = font rows 0..95.
+ * Existing .4444 files remain unchanged on disk. This is a RAM-only atlas. */
 #define TTT_MENU_BG_BYTES (256u*256u*2u)
 #define TTT_FONT_BYTES (256u*128u*2u)
+#define TTT_SKIN_BG_ROWS 160u
+#define TTT_SKIN_FONT_ROWS 96u
+#define TTT_SKIN_FONT_Y 160u
+#define TTT_SKIN_FONT_USED_BYTES (256u*TTT_SKIN_FONT_ROWS*2u)
 #define TTT_BG_PATH "ms0:/PSP/PLUGINS/TTT_EXPANSION/ui/menu_bg.4444"
 #define TTT_FONT_PATH "ms0:/PSP/PLUGINS/TTT_EXPANSION/ui/font_atlas.4444"
 static uint8_t *ttt_skin_bg;
 static uint8_t *ttt_skin_font;
+/* Exactly ONE PSP allocation for both textures. The font has no separate
+ * block; this matters on a game process with severely fragmented user RAM. */
+static SceUID skin_bg_block=-1;
+static SceUID skin_font_block=-1;
 static volatile int ttt_skin_ready;
 static volatile unsigned ttt_skin_mask;
+static TTTSkinStats skin_stats;
 
 int ttt_gpu_skin_status(void) { return (int)ttt_skin_mask; }
+TTTSkinStats ttt_gpu_skin_stats(void) { return skin_stats; }
 
-static uint8_t *skin_load(const char *path,int expected){
-    SceUID fd;uint8_t *buf;int size,count=0;
+static void skin_free(uint8_t **ptr,SceUID *block){
+    if(*block>=0) {sceKernelFreePartitionMemory(*block);*block=-1;}
+    *ptr=NULL;
+}
+
+static uint8_t *skin_load(const char *path, const char *block_name,
+                           int expected,SceUID *block,TTTSkinFileStats *st){
+    SceUID fd;
+    uint8_t *buf;
+    int size,count=0;
+    st->stage=0;st->open_rc=0;st->file_size=-1;
+    st->alloc_rc=-1;st->read_bytes=0;
+    *block=-1;
     fd=sceIoOpen(path,PSP_O_RDONLY,0);
-    if(fd<0)return NULL;
+    if(fd<0){st->stage=1;st->open_rc=fd;return NULL;}
     size=sceIoLseek(fd,0,PSP_SEEK_END);
-    if(size!=expected){sceIoClose(fd);return NULL;}
-    sceIoLseek(fd,0,PSP_SEEK_SET);
-    buf=(uint8_t*)memalign(16,(size_t)expected);
-    if(!buf){sceIoClose(fd);return NULL;}
+    st->file_size=size;
+    if(size!=expected || sceIoLseek(fd,0,PSP_SEEK_SET)<0){
+        st->stage=2;sceIoClose(fd);return NULL;
+    }
+    /* PSP user-memory partition 2. Allocating outside the module libc
+     * heap avoids PRX CRT heap limitations and preserves stable .bss. */
+    *block=sceKernelAllocPartitionMemory(PSP_MEMORY_PARTITION_USER,
+                  block_name,PSP_SMEM_Low,(SceSize)expected,NULL);
+    st->alloc_rc=*block;
+    if(*block<0){st->stage=3;sceIoClose(fd);return NULL;}
+    buf=(uint8_t*)sceKernelGetBlockHeadAddr(*block);
+    if(!buf){
+        st->stage=4;sceIoClose(fd);
+        sceKernelFreePartitionMemory(*block);*block=-1;
+        return NULL;
+    }
     while(count<expected){
         int n=sceIoRead(fd,buf+count,expected-count);
         if(n<=0)break;
         count+=n;
     }
+    st->read_bytes=count;
     sceIoClose(fd);
-    if(count!=expected){free(buf);return NULL;}
+    if(count!=expected){
+        st->stage=5;
+        sceKernelFreePartitionMemory(*block);*block=-1;
+        return NULL;
+    }
     sceKernelDcacheWritebackRange(buf,(size_t)expected);
     return buf;
 }
+/* Packs both files into the single 128-KiB block that PPSSPP already
+ * proved it can allocate. The original BG is compacted in-place safely:
+ * source row always >= destination row (top-to-bottom). */
+static uint8_t *skin_load_font_into_background(uint8_t *bg,TTTSkinFileStats *st){
+    SceUID fd;
+    int size,count=0;
+    unsigned y,x;
+    uint16_t *pixels;
+    st->stage=0;st->open_rc=0;st->file_size=-1;
+    st->alloc_rc=0; /* Shares BG's block; no second allocation attempted. */
+    st->read_bytes=0;
+    if(!bg){st->stage=6;return NULL;} /* BG failed; no shared buffer. */
+    fd=sceIoOpen(TTT_FONT_PATH,PSP_O_RDONLY,0);
+    if(fd<0){st->stage=1;st->open_rc=fd;return NULL;}
+    size=sceIoLseek(fd,0,PSP_SEEK_END);
+    st->file_size=size;
+    if(size!=(int)TTT_FONT_BYTES || sceIoLseek(fd,0,PSP_SEEK_SET)<0){
+        st->stage=2;sceIoClose(fd);return NULL;
+    }
+    /* Move 256 BG rows into the first 160 rows, preserving their full width.
+     * BG's last row maps to row 159. This does not require any scratch RAM. */
+    pixels=(uint16_t*)bg;
+    for(y=0;y<TTT_SKIN_BG_ROWS;y++){
+        unsigned source=(y*255u)/(TTT_SKIN_BG_ROWS-1u);
+        if(source==y)continue;
+        for(x=0;x<256u;x++)pixels[y*256u+x]=pixels[source*256u+x];
+    }
+    /* The ASCII font occupies six rows of 16x16 cells = 96 pixels.
+     * The last 32 unused source rows are irrelevant; read exactly 96 rows. */
+    while(count<(int)TTT_SKIN_FONT_USED_BYTES){
+        int n=sceIoRead(fd,bg+(TTT_SKIN_FONT_Y*256u*2u)+count,
+                       (int)TTT_SKIN_FONT_USED_BYTES-count);
+        if(n<=0)break;
+        count+=n;
+    }
+    st->read_bytes=count;
+    sceIoClose(fd);
+    if(count!=(int)TTT_SKIN_FONT_USED_BYTES){st->stage=5;return NULL;}
+    sceKernelDcacheWritebackRange(bg,TTT_MENU_BG_BYTES);
+    return bg;
+}
 static void skin_load_all(void){
-    ttt_skin_bg=skin_load(TTT_BG_PATH,(int)TTT_MENU_BG_BYTES);
-    ttt_skin_font=skin_load(TTT_FONT_PATH,(int)TTT_FONT_BYTES);
+    /* Called once at first menu open; keep previous graceful failure. */
+    skin_free(&ttt_skin_bg,&skin_bg_block);
+    skin_free(&ttt_skin_font,&skin_font_block);
+    ttt_skin_mask=0;
+    ttt_skin_ready=0;
+    ttt_skin_bg=skin_load(TTT_BG_PATH,"TTT_UI_ATLAS",
+           (int)TTT_MENU_BG_BYTES,&skin_bg_block,&skin_stats.bg);
+    ttt_skin_font=skin_load_font_into_background(ttt_skin_bg,&skin_stats.font);
     ttt_skin_mask=(ttt_skin_bg?1u:0u)|(ttt_skin_font?2u:0u);
+    skin_stats.mask=ttt_skin_mask;
     ttt_skin_ready=(ttt_skin_bg && ttt_skin_font)?1:0;
     if(!ttt_skin_ready){
-        if(ttt_skin_bg){free(ttt_skin_bg);ttt_skin_bg=NULL;}
-        if(ttt_skin_font){free(ttt_skin_font);ttt_skin_font=NULL;}
+        skin_free(&ttt_skin_bg,&skin_bg_block);
+        skin_free(&ttt_skin_font,&skin_font_block);
     }
 }
 
@@ -265,7 +358,7 @@ static void skin_bind_font(void){
     sceGuTexFunc(GU_TFX_MODULATE,GU_TCC_RGBA);
     sceGuTexFilter(GU_NEAREST,GU_NEAREST);
     sceGuTexWrap(GU_CLAMP,GU_CLAMP);
-    sceGuTexImage(0,256,128,256,ttt_skin_font);
+    sceGuTexImage(0,256,256,256,ttt_skin_bg); /* shared 256x256 atlas */
 }
 /* Font sprite atlas: ASCII 32..127, 16 columns, 16x16 cells.
  * Actual visible glyph in each cell is ~9x12 pixels. */
@@ -279,27 +372,15 @@ static void skin_text(int x,int y,const char *str,int large,uint32_t color){
         if(ch<32||ch>127)ch='?';
         at=(int)(ch-32);
         if(x+i*dx+cw>480)break;
-        if(ch!=' ')skin_sprite(x+i*dx,y,cw,dy,(at%16)*16,(at/16)*16,11,14);
+        if(ch!=' ')skin_sprite(x+i*dx,y,cw,dy,(at%16)*16,(int)TTT_SKIN_FONT_Y+(at/16)*16,11,14);
     }
 }
 static void skin_outline(int x,int y,int w,int h,uint32_t color){
     box(x,y,w,2,color);box(x,y+h-2,w,2,color);
     box(x,y,2,h,color);box(x+w-2,y,2,h,color);
 }
-static const char *const skin_tabs[3][3]={
-    {"PERSONAGENS","MAPAS","AJUSTES"},
-    {"CHARACTERS","MAPS","SETTINGS"},
-    {"PERSONAJES","MAPAS","AJUSTES"}
-};
-/* The three real cards form a horizontal row.  The bottom three are
- * explicitly non-interactive slots reserved for future characters.
- * Focus is a separate row: character cards or costume chips (snapshot bit31).
- * No static selection text is baked into the texture. */
-static const char *const skin_name[3]={"Goku (Inicio)","Goku (Meio)","Goku (Meio)"};
-static const char *const skin_subtitle[3]={"","","Super Saiyajin"};
-static const char *const skin_card_a[3]={"Goku","Goku","Goku (Meio)"};
-static const char *const skin_card_b[3]={"(Inicio)","(Meio)","Super Saiyajin"};
-static const char *const skin_pending[3]={"FUTURO","FUTURE","FUTURO"};
+/* All menu labels come from TTT_EXPANSION/lang/{pt,en,es}.txt;
+ * defaults live in ui_text.c and are used for missing/invalid files. */
 /* A compact atlas sprite is much less expensive than the old vector glyphs.
  * Each glyph uses exactly one GU sprite; text remains readable at 480x272. */
 static void skin_text_compact(int x,int y,const char *str,int step,int glyph_w,int glyph_h,uint32_t color){
@@ -311,10 +392,10 @@ static void skin_text_compact(int x,int y,const char *str,int step,int glyph_w,i
         if(ch<32u||ch>127u)ch='?';
         if(x+i*step+glyph_w>480)break;
         at=(int)ch-32;
-        if(ch!=' ')skin_sprite(x+i*step,y,glyph_w,glyph_h,(at%16)*16,(at/16)*16,11,14);
+        if(ch!=' ')skin_sprite(x+i*step,y,glyph_w,glyph_h,(at%16)*16,(int)TTT_SKIN_FONT_Y+(at/16)*16,11,14);
     }
 }
-static void skin_frame_fallback(uint32_t bits){
+static void __attribute__((unused)) skin_frame_fallback(uint32_t bits){
     /* Installed PRX must NEVER silently show the old menu.  In the absence
      * of external texture blobs, keep a minimal NEW layout and show why.
      * The actual menu navigation remains functional. */
@@ -322,37 +403,42 @@ static void skin_frame_fallback(uint32_t bits){
     int player=(int)((bits>>8)&3u),focus=(int)((bits>>31)&1u),i;
     char num[3]="1P",label[4]="C1";
     box(8,8,464,256,C_DARK);panel(12,12,456,248,C_LIGHT,C_OUTER);
-    txt(23,23,"TTT EXPANSION V1.0.1",1,C_WHITE);
-    txt(25,50,"TEXTURAS AUSENTES - VERIFIQUE PASTA UI",1,C_GOLD);
+    txt(23,23,"TTT DLC REBUILD V2.0.3",1,C_WHITE);
+    txt(25,50,ttt_text(0,TTT_TEXT_TEXTURE_ERROR),1,C_GOLD);
     for(i=0;i<3;i++){
         int x=22+153*i;
         panel(x,83,146,79,(character==i&&!focus)?C_GOLD:C_LIGHT,C_DARK);
         if(portrait_present[i])portrait(i,x+7,91,49,49);
-        txt(x+60,98,i==0?"GOKU":i==1?"GOKU":"GOKU",1,C_WHITE);
-        txt(x+60,112,i==0?"INICIO":i==1?"MEIO":"MEIO SSJ",1,C_GOLD);
+        txt(x+60,98,ttt_text(0,(TTTTextKey)(TTT_TEXT_CHAR0_CARD_TOP+i*2)),1,C_WHITE);
+        txt(x+60,112,ttt_text(0,(TTTTextKey)(TTT_TEXT_CHAR0_CARD_BOTTOM+i*2)),1,C_GOLD);
     }
-    txt(25,177,"JOGADOR",1,C_WHITE);
+    txt(25,177,ttt_text(0,TTT_TEXT_PLAYER_LABEL),1,C_WHITE);
     num[0]=(char)('1'+player);txt(90,177,num,1,C_GOLD);
-    txt(184,177,"COLOR",1,C_WHITE);
+    txt(184,177,ttt_text(0,TTT_TEXT_COLOR_LABEL),1,C_WHITE);
     label[1]=(char)('1'+color);txt(236,177,label,1,C_GOLD);
-    txt(25,204,focus?"FOCO: COLORS":"FOCO: PERSONAGENS",1,C_GOLD);
-    txt(24,235,"ESQ/DIR SELECIONA  CIMA/BAIXO TROCA FOCO",1,C_WHITE);
+    txt(25,204,focus?"FOCO: TRAJES":"FOCO: PERSONAGENS",1,C_GOLD);
+    txt(24,235,"ESQ/DIR: MOVER  CIMA/BAIXO: FOCO",1,C_WHITE);
 }
-static void render_menu_textured(uint32_t bits){
+static void __attribute__((unused)) render_menu_textured(uint32_t bits){
     int character=(int)(bits&3u),color=(int)((bits>>2)&3u);
     int tab=(int)((bits>>4)&3u),lang=(int)((bits>>6)&3u);
     int player=(int)((bits>>8)&3u),bridge=(int)((bits>>30)&1u);
     int focus=(int)((bits>>31)&1u),i;
     char number[3]="00",idline[9]="ID 00",slot[3]="1P",col[3]="C1";
     if(character>2)character=0;
-    if(tab>2)tab=0;
+    if(tab>3)tab=0;
     if(lang>2)lang=0;
     /* Layer 1: actual PSP 4444 background texture. */
     skin_bind_background();
-    skin_sprite(0,0,480,272,0,0,256,256);
+    skin_sprite(0,0,480,272,0,0,256,(int)TTT_SKIN_BG_ROWS);
     sceGuDisable(GU_TEXTURE_2D);
     /* Layer 2: selective, geometry-aligned interaction highlights. */
-    skin_outline(13+153*tab,61,147,26,C_GOLD);
+    /* The source background has three original tab frames; overpaint that
+     * region with FOUR equal dynamic tabs so controls and visuals agree. */
+    box(13,60,454,29,C_DARK);
+    for(i=0;i<4;i++){
+        skin_outline(13+114*i,61,111,26,i==tab?C_GOLD:C_LIGHT);
+    }
     skin_outline(309+38*player,18,35,31,C_GOLD);
     for(i=0;i<4;i++)if((bits>>(10+i))&1u)box(338+i*38,21,3,3,C_GOLD);
     if(tab==0){
@@ -368,60 +454,132 @@ static void render_menu_textured(uint32_t bits){
     }
     /* Layer 4: single font atlas, no per-pixel rectangles and no overflow. */
     skin_bind_font();
-    skin_text_compact(23,22,"TTT EXPANSION",11,11,17,C_WHITE);
-    skin_text(244,31,"V1.0.1",0,C_GOLD);
+    skin_text_compact(23,22,ttt_text(lang,TTT_TEXT_TITLE),11,11,17,C_WHITE);
+    skin_text(244,31,"V2.0.3",0,C_GOLD);
     for(i=0;i<4;i++){
         slot[0]=(char)('1'+i);
         skin_text(319+i*38,27,slot,0,i==player?C_GOLD:C_WHITE);
     }
-    for(i=0;i<3;i++)skin_text(23+i*153,70,skin_tabs[lang][i],0,i==tab?C_GOLD:C_WHITE);
+    for(i=0;i<4;i++){
+        skin_text_compact(18+i*114,i?66:70,ttt_text(lang,(TTTTextKey)(TTT_TEXT_TAB_CHARACTERS+i)),6,6,10,i==tab?C_GOLD:C_WHITE);
+        if(i)skin_text_compact(18+i*114,78,ttt_text(lang,TTT_TEXT_COMING_SOON),5,5,8,C_SOFT);
+    }
     if(tab==0){
-        skin_text(20,101,lang==1?"EXTRA CHARACTERS":lang==2?"PERSONAJES EXTRA":"PERSONAGENS EXTRAS",0,C_WHITE);
+        skin_text(20,101,ttt_text(lang,TTT_TEXT_EXTRA_CHARACTERS),0,C_WHITE);
         skin_text(207,101,"03/06",0,C_GOLD);
-        skin_text(263,101,lang==1?"PREVIEW":lang==2?"VISTA":"PREVIA",0,C_WHITE);
+        skin_text(263,101,ttt_text(lang,TTT_TEXT_PREVIEW),0,C_WHITE);
         for(i=0;i<6;i++){
             int x=19+(i%3)*77,y=117+(i/3)*55;
             number[0]='0';number[1]=(char)('0'+i);
             skin_text_compact(x+51,y+3,number,5,5,9,i==character?C_GOLD:C_SOFT);
             if(i<3){
                 /* Two lines make Super Saiyajin a real subtitle. */
-                skin_text_compact(x+4,y+29,skin_card_a[i],5,5,9,i==character?C_GOLD:C_WHITE);
-                skin_text_compact(x+4,y+39,skin_card_b[i],4,5,8,i==character?C_GOLD:C_WHITE);
+                skin_text_compact(x+4,y+29,ttt_text(lang,(TTTTextKey)(TTT_TEXT_CHAR0_CARD_TOP+i*2)),5,5,9,i==character?C_GOLD:C_WHITE);
+                skin_text_compact(x+4,y+39,ttt_text(lang,(TTTTextKey)(TTT_TEXT_CHAR0_CARD_BOTTOM+i*2)),4,5,8,i==character?C_GOLD:C_WHITE);
             }else{
                 skin_text_compact(x+29,y+13,"+",9,9,14,C_LIGHT);
-                skin_text_compact(x+11,y+39,skin_pending[lang],5,5,8,C_SOFT);
+                skin_text_compact(x+11,y+39,ttt_text(lang,TTT_TEXT_FUTURE),5,5,8,C_SOFT);
             }
         }
         /* Preview description: exact requested names, SSJ subtitle below. */
-        skin_text_compact(359,124,skin_name[character],6,6,11,C_WHITE);
-        if(character==2)skin_text_compact(359,138,skin_subtitle[character],6,6,10,C_GOLD);
+        skin_text_compact(359,124,ttt_text(lang,(TTTTextKey)(TTT_TEXT_CHAR0_NAME+character)),6,6,11,C_WHITE);
+        if(character==2)skin_text_compact(359,138,ttt_text(lang,TTT_TEXT_CHAR2_SUBTITLE),6,6,10,C_GOLD);
         idline[3]='0';idline[4]=(char)('0'+character);
         skin_text(360,155,idline,0,C_SOFT);
         slot[0]=(char)('1'+player);
         skin_text(359,169,slot,0,C_WHITE);
-        skin_text_compact(359,182,bridge?"ATIVO":((bits>>(10+player))&1u)?"CONFIRMADO":"PREVIA",6,6,10,bridge?C_GOLD:C_SOFT);
+        skin_text_compact(359,182,ttt_text(lang,bridge?TTT_TEXT_STATUS_ACTIVE:((bits>>(10+player))&1u)?TTT_TEXT_STATUS_CONFIRMED:TTT_TEXT_STATUS_PREVIEW),6,6,10,bridge?C_GOLD:C_SOFT);
         for(i=0;i<4;i++){
             col[1]=(char)('1'+i);
             skin_text(282+i*48,207,col,0,(i==color)?C_GOLD:C_WHITE);
         }
-    }else if(tab==1){
-        skin_text(27,116,lang==1?"EXTRA MAPS":lang==2?"MAPAS EXTRA":"MAPAS EXTRAS",1,C_WHITE);
-        skin_text(28,150,skin_pending[lang],0,C_GOLD);
-    }else{
-        skin_text(27,116,lang==1?"SETTINGS":lang==2?"AJUSTES":"CONFIGURACOES",1,C_WHITE);
-        skin_text(27,150,lang==0?"SELECT = IDIOMA":lang==1?"SELECT = LANGUAGE":"SELECT = IDIOMA",0,C_GOLD);
+    }else {
+        TTTTextKey heading=(tab==1)?TTT_TEXT_MISSIONS_SOON_TITLE:(tab==2)?TTT_TEXT_MAPS_SOON_TITLE:TTT_TEXT_OPTIONS_SOON_TITLE;
+        TTTTextKey detail=(tab==1)?TTT_TEXT_MISSIONS_SOON_DETAIL:(tab==2)?TTT_TEXT_MAPS_SOON_DETAIL:TTT_TEXT_OPTIONS_SOON_DETAIL;
+        /* Pages remain visible but cannot activate experimental story/map hooks. */
+        box(17,93,446,145,C_DARK);
+        skin_outline(17,93,446,145,C_LIGHT);
+        skin_text_compact(27,124,ttt_text(lang,heading),8,8,14,C_GOLD);
+        skin_text_compact(27,161,ttt_text(lang,detail),6,6,10,C_WHITE);
     }
-    /* Two compact instructions; the menu is 480 pixels wide on the PSP. */
-    skin_text_compact(22,242,lang==1?"LEFT/RIGHT: SELECT  UP/DOWN: FOCUS  L/R: PLAYER":lang==2?"IZQ/DER: ELEGIR  ARR/ABA: FOCO  L/R: JUG":"ESQ/DIR: SELECIONAR  CIMA/BAIXO: FOCO  L/R: JOG",6,6,10,C_WHITE);
-    skin_text_compact(22,254,"X: CONFIRMAR  TRIANGULO: ABA  SELECT: IDIOMA  O: SAIR",6,6,10,C_SOFT);
+    /* Clear 3-line footer: never rely on hard-to-read long sentences. */
+    skin_text_compact(22,233,ttt_text(lang,TTT_TEXT_FOOTER_MOVE),6,6,9,C_WHITE);
+    skin_text_compact(22,244,ttt_text(lang,TTT_TEXT_FOOTER_CONFIRM),6,6,9,C_SOFT);
+    skin_text_compact(22,255,ttt_text(lang,TTT_TEXT_FOOTER_CLOSE),6,6,9,C_SOFT);
     sceGuDisable(GU_BLEND);
     sceGuDisable(GU_TEXTURE_2D);
 }
 
-static void render_menu(uint32_t bits){
-    if(ttt_skin_ready)render_menu_textured(bits);
-    else skin_frame_fallback(bits); /* never silently use old layout */
+
+/* V47: 47 botoes + 4 jogadores + 4 Colors; nenhuma aba.
+ * Todos os fundos sao retangulos GE (sem imagens adicionais nem BGM externa).
+ * O preview mostra retratos ja existentes somente nos slots 0..2. */
+static void menu47_label(int x,int y,const char *t,int step,uint32_t color){
+    if(ttt_skin_ready)skin_text_compact(x,y,t,step,step+1,9,color);
+    else txt(x,y,t,1,color);
 }
+static void render_menu47(uint32_t bits){
+    int current=(int)(bits&63u),color=(int)((bits>>6)&3u);
+    int player=(int)((bits>>8)&3u),focus=(int)((bits>>10)&1u);
+    int sound=(int)((bits>>15)&1u),i;
+    char slot[4]="01", cp[4]="J1", col[4]="C1";
+    uint32_t selected=(bits>>(11+player))&1u;
+    /* Nenhuma textura grande de fundo: apenas azul escuro uniforme. */
+    sceGuDisable(GU_TEXTURE_2D);
+    sceGuDisable(GU_BLEND);
+    box(0,0,480,272,C_OUTER);
+    box(7,7,466,257,C_DARK);
+    box(10,51,286,181,C_BLACK);
+    box(303,51,166,181,C_BLACK);
+    box(10,239,459,1,C_BLUE);
+    for(i=0;i<4;i++){
+        int x=236+i*56;
+        box(x,12,52,25,i==player?C_GOLD:C_LIGHT);
+        box(x+2,14,48,21,i==player?C_BLUE:C_DARK);
+    }
+    for(i=0;i<47;i++){
+        int x=14+(i%8)*35,y=56+(i/8)*29;
+        int active=i==current;
+        uint32_t border=active?(focus?C_WHITE:C_GOLD):(i<3?C_LIGHT:C_BLUE);
+        box(x,y,31,26,border);
+        box(x+2,y+2,27,22,active?C_BLUE:C_OUTER);
+        if(i<3 && portrait_present[i]){
+            portrait(i,x+3,y+3,25,20);
+            box(x+3,y+17,25,6,C_BLACK);
+        }
+    }
+    /* Color 1..4 right panel, visibly selectable. */
+    for(i=0;i<4;i++){
+        int x=315+i*37;
+        box(x,194,33,29,(i==color)?(focus?C_GOLD:C_WHITE):C_BLUE);
+        box(x+2,196,29,25,(i==color)?C_BLUE:C_DARK);
+    }
+    if(current<3 && portrait_present[current])portrait(current,340,97,82,76);
+    /* Text glyphs are sampled from the packed 128 KiB atlas when available. */
+    if(ttt_skin_ready)skin_bind_font();
+    menu47_label(17,17,"TTT EXPANSION",7,C_WHITE);
+    menu47_label(18,34,"47 SLOTS",6,C_SOFT);
+    for(i=0;i<4;i++){cp[1]=(char)('1'+i);menu47_label(254+i*56,20,cp,7,i==player?C_GOLD:C_WHITE);}
+    for(i=0;i<47;i++){
+        int x=14+(i%8)*35,y=56+(i/8)*29;
+        slot[0]=(char)('0'+((i+1)/10));slot[1]=(char)('0'+((i+1)%10));
+        menu47_label(x+8,y+8,slot,6,(i==current)?C_GOLD:(i<3?C_WHITE:C_SOFT));
+    }
+    menu47_label(314,61,"PERSONAGEM",6,C_SOFT);
+    if(current==0)menu47_label(313,76,"GOKU INICIO",6,C_GOLD);
+    else if(current==1)menu47_label(313,76,"GOKU MEIO",6,C_GOLD);
+    else if(current==2)menu47_label(313,76,"GOKU MEIO SSJ",6,C_GOLD);
+    else {menu47_label(313,76,"SLOT VAZIO",6,C_SOFT);}
+    menu47_label(313,85,current<3?"ID 00-02":"SEM ID",5,C_SOFT);
+    menu47_label(313,180,selected?"CONFIRMADO":(current<3?"PRONTO":"EM ESPERA"),5,selected?C_GOLD:C_WHITE);
+    for(i=0;i<4;i++){col[1]=(char)('1'+i);menu47_label(324+i*37,204,col,7,(i==color)?C_GOLD:C_WHITE);}
+    menu47_label(15,246,"L/R JOGADOR  TRIANGULO COLORS  X OK  O VOLTAR",5,C_WHITE);
+    menu47_label(15,257,sound?"SELECT MUSICA ON   QUADRADO LIMPAR":"SELECT MUSICA OFF  QUADRADO LIMPAR",5,C_SOFT);
+    sceGuDisable(GU_BLEND);
+    sceGuDisable(GU_TEXTURE_2D);
+}
+
+static void render_menu(uint32_t bits){render_menu47(bits);}
 
 int ttt_gpu_init(void) {
     int rc;
@@ -439,6 +597,7 @@ int ttt_gpu_init(void) {
     ge_init_restore_rc=sceGeRestoreContext(&ge_saved);
     if(ge_init_restore_rc<0){guard_failed=1;return -162;}
     if(rc<0){guard_failed=1;return rc;}
+    ttt_text_load_external();
     portrait_present[0]=load_portrait(0);
     portrait_present[1]=load_portrait(1);
     portrait_present[2]=load_portrait(2);
@@ -447,6 +606,10 @@ int ttt_gpu_init(void) {
     return 0;
 }
 void ttt_gpu_set_menu(uint32_t snapshot) {menu_snapshot=snapshot;}
+void ttt_gpu_set_dlc(unsigned mission, uint32_t completed){
+    dlc_mission_index=mission<TTT_DLC_MISSIONS?mission:0u;
+    dlc_mission_completed=ttt_dlc_progress_sanitize(completed);
+}
 int ttt_gpu_frame(void *fb,int stride,int fmt) {
     uintptr_t offset;
     int start,finish,sync,ret=0;
@@ -503,7 +666,7 @@ restore:
 }
 void ttt_gpu_shutdown(void) {
     /* Called after the frame hook is no longer drawing. */
-    if(ttt_skin_bg){free(ttt_skin_bg);ttt_skin_bg=NULL;}
-    if(ttt_skin_font){free(ttt_skin_font);ttt_skin_font=NULL;}
+    skin_free(&ttt_skin_bg,&skin_bg_block);
+    skin_free(&ttt_skin_font,&skin_font_block);
     ttt_skin_ready=0;ttt_skin_mask=0;
 }

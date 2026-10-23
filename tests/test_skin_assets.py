@@ -18,7 +18,11 @@ assert 'Goku (Inicio)' in src
 assert 'Goku (Meio)' in src
 assert 'Super Saiyajin' in src
 assert 'skin_load_all()' in src
-assert 'memalign(16' in src
+assert 'sceKernelAllocPartitionMemory' in src
+assert 'sceKernelGetBlockHeadAddr' in src
+assert 'sceKernelFreePartitionMemory' in src
+assert 'buf=(uint8_t*)memalign(' not in src
+assert 'TTT_BG_PATH' in src and 'TTT_FONT_PATH' in src
 assert 'TTT_MENU_BG_BYTES (256u*256u*2u)' in src
 assert 'TTT_FONT_BYTES (256u*128u*2u)' in src
 assert 'PORT_MAX_W 64' in src
@@ -27,4 +31,4 @@ assert 'ttt_skin_mask' in src
 assert 'm->focus=1' in (root/'src/menu_state.c').read_text()
 assert '(uint32_t)(m->focus&1u)<<31' in (root/'src/menu_state.c').read_text()
 assert 'ttt_res_index_for' in (root/'src/resource_hook.c').read_text()
-print('OK: V1.0.1 skin real, nomes, foco, retratos e indices preservados')
+print('OK: V1.0.2 skin real, nomes, foco, retratos e indices preservados')

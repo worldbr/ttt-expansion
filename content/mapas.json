@@ -1,0 +1,10 @@
+{
+  "status": "planejamento_sem_hook_de_mapa",
+  "caution": "Nao foi localizado/validado um seletor de mapas; todos os mapas originais continuam intactos",
+  "candidate_slots": [
+    14113,
+    14114,
+    14115
+  ],
+  "warning": "Estes indices estao reservados como aliases. Nao sao mapas jogaveis."
+}
