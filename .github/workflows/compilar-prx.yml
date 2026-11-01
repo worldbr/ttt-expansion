@@ -62,6 +62,7 @@ jobs:
             python3 tests/test_packed_skin.py
             python3 tests/test_packfile_expander.py
             python3 tests/test_packfile47_plan.py
+            python3 tests/test_catalog_ids.py
             python3 tests/validar_lang.py
 
             echo "--- Compilando PRX MENU47 (inclui audio) ---"
@@ -81,6 +82,7 @@ jobs:
               fi
             fi
             cp TTT_EXPANSION/plugin.ini dist/TTT_EXPANSION/plugin.ini
+            cp TTT_EXPANSION/characters.txt dist/TTT_EXPANSION/characters.txt
             cp PREVIA_INTERATIVA_MENU47.html dist/PREVIA_INTERATIVA_MENU47.html
             mkdir -p dist/TTT_EXPANSION/portraits dist/TTT_EXPANSION/ui
             cp TTT_EXPANSION/portraits/*.rgba dist/TTT_EXPANSION/portraits/
