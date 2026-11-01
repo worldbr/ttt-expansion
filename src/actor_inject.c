@@ -84,7 +84,7 @@ int ttt_actor_inject_enable_slot(int player,uint32_t external_id,uint32_t color)
     uint32_t bit;
     if(player<0||player>=4){g_error=-12;return -12;}
     if(!g_installed){g_error=-10;return -10;}
-    if(external_id>2u || color>3u){g_error=-11;return -11;}
+    if(external_id>0xA0u || color>3u){g_error=-11;return -11;}
     bit=1u<<(uint32_t)player;
     /* Publish changes via mask LAST, so game thread sees complete plan. */
     ttt_ai_enabled_mask &= ~bit;

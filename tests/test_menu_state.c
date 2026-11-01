@@ -10,8 +10,8 @@ int main(void){
     assert(press(&m,TTT_BTN_CROSS)==TTT_EVENT_CONFIRM);
     for(i=0;i<46;i++)press(&m,TTT_BTN_RIGHT);
     assert(m.character==46);
-    assert(press(&m,TTT_BTN_CROSS)==TTT_EVENT_EMPTY);
-    assert(ttt_menu_external_id(&m)==0xffu);
+    assert(press(&m,TTT_BTN_CROSS)==TTT_EVENT_CONFIRM);
+    assert(ttt_menu_external_id(&m)==0x73u);
     assert(press(&m,TTT_BTN_RIGHT)==0 && m.character==0);
     assert(press(&m,TTT_BTN_DOWN)==0 && m.character==8);
     assert(press(&m,TTT_BTN_TRIANGLE)==0 && m.focus==1);
@@ -27,8 +27,8 @@ int main(void){
     assert((snap & 63u)==8u && ((snap>>8)&3u)==0u && ((snap>>15)&1u)==0);
     assert(press(&m,TTT_BTN_SQUARE)==TTT_EVENT_BRIDGE_RESET);
     assert(press(&m,TTT_BTN_CIRCLE)==TTT_EVENT_CLOSE);
-    for(i=0;i<47;i++)assert(ttt_menu_slot_supported(i)==(i<3));
+    for(i=0;i<47;i++)assert(ttt_menu_slot_supported(i));
     assert(!ttt_menu_slot_supported(47));
-    puts("OK MENU47: grade 47, 4 players, 4 colors, bloqueio de 44 slots, sem BGM; efeitos sob demanda");
+    puts("OK MENU47: grade 47, 4 players, 4 colors, IDs 47 slots (V0.4 requerido em runtime), sem BGM; efeitos sob demanda");
     return 0;
 }

@@ -11,7 +11,7 @@ int ttt_slot_plan_select(TTTSlotPlan *p,int player,int external_id,int color_ind
     s=&p->slot[player];
     s->external_id=(uint8_t)external_id;
     s->color_index=(uint8_t)color_index;
-    s->resource_supported=(uint8_t)(external_id<=2 && color_index<=3);
+    s->resource_supported=(uint8_t)(external_id<=0xA0 && color_index<=3);
     s->confirmed=1;s->serial=++p->next_serial;
     return 0;
 }

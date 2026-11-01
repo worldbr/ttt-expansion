@@ -1,14 +1,17 @@
 {
-  "count_hex": "0x37FC",
+  "count_hex": "0x37fc",
   "count": 14332,
   "original_count_hex": "0x3711",
   "current_tested_count_hex": "0x3734",
-  "max_header_count_hex": "0x37FF",
+  "max_header_count_hex": "0x37ff",
+  "notice": "47 IDs / entry aliases are experimental and NOT battle-proven for slots 04..47",
   "groups": [
     {
       "position": 1,
       "name": "Goku (Inicio)",
       "combat_id": 0,
+      "combat_id_hex": "0x00",
+      "menu_marker": "0x80",
       "playable": true,
       "packfile_chr_indexes_hex": [
         "0x3711",
@@ -24,6 +27,8 @@
       "position": 2,
       "name": "Goku (Meio)",
       "combat_id": 1,
+      "combat_id_hex": "0x01",
+      "menu_marker": "0x81",
       "playable": true,
       "packfile_chr_indexes_hex": [
         "0x3716",
@@ -39,6 +44,8 @@
       "position": 3,
       "name": "Goku (Meio) SSJ",
       "combat_id": 2,
+      "combat_id_hex": "0x02",
+      "menu_marker": "0x82",
       "playable": true,
       "packfile_chr_indexes_hex": [
         "0x371B",
@@ -52,8 +59,10 @@
     },
     {
       "position": 4,
-      "name": "A DEFINIR",
-      "combat_id": null,
+      "name": "Personagem 04",
+      "combat_id": 7,
+      "combat_id_hex": "0x07",
+      "menu_marker": "0x83",
       "playable": false,
       "packfile_chr_indexes_hex": [
         "0x3720",
@@ -62,13 +71,15 @@
         "0x3723"
       ],
       "packfile_sfx_index_hex": "0x3724",
-      "source_assets_present": false,
-      "status": "PRECISA de recursos e novo ID de combate"
+      "source_assets_present": true,
+      "status": "Registro preexistente no header, Battle ID experimental"
     },
     {
       "position": 5,
-      "name": "A DEFINIR",
-      "combat_id": null,
+      "name": "Personagem 05",
+      "combat_id": 8,
+      "combat_id_hex": "0x08",
+      "menu_marker": "0x84",
       "playable": false,
       "packfile_chr_indexes_hex": [
         "0x3725",
@@ -77,13 +88,15 @@
         "0x3728"
       ],
       "packfile_sfx_index_hex": "0x3729",
-      "source_assets_present": false,
-      "status": "PRECISA de recursos e novo ID de combate"
+      "source_assets_present": true,
+      "status": "Registro preexistente no header, Battle ID experimental"
     },
     {
       "position": 6,
-      "name": "A DEFINIR",
-      "combat_id": null,
+      "name": "Personagem 06",
+      "combat_id": 9,
+      "combat_id_hex": "0x09",
+      "menu_marker": "0x85",
       "playable": false,
       "packfile_chr_indexes_hex": [
         "0x372A",
@@ -92,13 +105,15 @@
         "0x372D"
       ],
       "packfile_sfx_index_hex": "0x372E",
-      "source_assets_present": false,
-      "status": "PRECISA de recursos e novo ID de combate"
+      "source_assets_present": true,
+      "status": "Registro preexistente no header, Battle ID experimental"
     },
     {
       "position": 7,
-      "name": "A DEFINIR",
-      "combat_id": null,
+      "name": "Personagem 07",
+      "combat_id": 10,
+      "combat_id_hex": "0x0A",
+      "menu_marker": "0x86",
       "playable": false,
       "packfile_chr_indexes_hex": [
         "0x372F",
@@ -107,13 +122,15 @@
         "0x3732"
       ],
       "packfile_sfx_index_hex": "0x3733",
-      "source_assets_present": false,
-      "status": "PRECISA de recursos e novo ID de combate"
+      "source_assets_present": true,
+      "status": "Registro preexistente no header, Battle ID experimental"
     },
     {
       "position": 8,
-      "name": "A DEFINIR",
-      "combat_id": null,
+      "name": "Personagem 08",
+      "combat_id": 11,
+      "combat_id_hex": "0x0B",
+      "menu_marker": "0x87",
       "playable": false,
       "packfile_chr_indexes_hex": [
         "0x3734",
@@ -123,12 +140,14 @@
       ],
       "packfile_sfx_index_hex": "0x3738",
       "source_assets_present": false,
-      "status": "PRECISA de recursos e novo ID de combate"
+      "status": "Alias Goku (ponteiro) + battle ID experimental"
     },
     {
       "position": 9,
-      "name": "A DEFINIR",
-      "combat_id": null,
+      "name": "Personagem 09",
+      "combat_id": 12,
+      "combat_id_hex": "0x0C",
+      "menu_marker": "0x88",
       "playable": false,
       "packfile_chr_indexes_hex": [
         "0x3739",
@@ -138,12 +157,14 @@
       ],
       "packfile_sfx_index_hex": "0x373D",
       "source_assets_present": false,
-      "status": "PRECISA de recursos e novo ID de combate"
+      "status": "Alias Goku (ponteiro) + battle ID experimental"
     },
     {
       "position": 10,
-      "name": "A DEFINIR",
-      "combat_id": null,
+      "name": "Personagem 10",
+      "combat_id": 20,
+      "combat_id_hex": "0x14",
+      "menu_marker": "0x89",
       "playable": false,
       "packfile_chr_indexes_hex": [
         "0x373E",
@@ -153,12 +174,14 @@
       ],
       "packfile_sfx_index_hex": "0x3742",
       "source_assets_present": false,
-      "status": "PRECISA de recursos e novo ID de combate"
+      "status": "Alias Goku (ponteiro) + battle ID experimental"
     },
     {
       "position": 11,
-      "name": "A DEFINIR",
-      "combat_id": null,
+      "name": "Personagem 11",
+      "combat_id": 22,
+      "combat_id_hex": "0x16",
+      "menu_marker": "0x8A",
       "playable": false,
       "packfile_chr_indexes_hex": [
         "0x3743",
@@ -168,12 +191,14 @@
       ],
       "packfile_sfx_index_hex": "0x3747",
       "source_assets_present": false,
-      "status": "PRECISA de recursos e novo ID de combate"
+      "status": "Alias Goku (ponteiro) + battle ID experimental"
     },
     {
       "position": 12,
-      "name": "A DEFINIR",
-      "combat_id": null,
+      "name": "Personagem 12",
+      "combat_id": 24,
+      "combat_id_hex": "0x18",
+      "menu_marker": "0x8B",
       "playable": false,
       "packfile_chr_indexes_hex": [
         "0x3748",
@@ -183,12 +208,14 @@
       ],
       "packfile_sfx_index_hex": "0x374C",
       "source_assets_present": false,
-      "status": "PRECISA de recursos e novo ID de combate"
+      "status": "Alias Goku (ponteiro) + battle ID experimental"
     },
     {
       "position": 13,
-      "name": "A DEFINIR",
-      "combat_id": null,
+      "name": "Personagem 13",
+      "combat_id": 30,
+      "combat_id_hex": "0x1E",
+      "menu_marker": "0x8C",
       "playable": false,
       "packfile_chr_indexes_hex": [
         "0x374D",
@@ -198,12 +225,14 @@
       ],
       "packfile_sfx_index_hex": "0x3751",
       "source_assets_present": false,
-      "status": "PRECISA de recursos e novo ID de combate"
+      "status": "Alias Goku (ponteiro) + battle ID experimental"
     },
     {
       "position": 14,
-      "name": "A DEFINIR",
-      "combat_id": null,
+      "name": "Personagem 14",
+      "combat_id": 31,
+      "combat_id_hex": "0x1F",
+      "menu_marker": "0x8D",
       "playable": false,
       "packfile_chr_indexes_hex": [
         "0x3752",
@@ -213,12 +242,14 @@
       ],
       "packfile_sfx_index_hex": "0x3756",
       "source_assets_present": false,
-      "status": "PRECISA de recursos e novo ID de combate"
+      "status": "Alias Goku (ponteiro) + battle ID experimental"
     },
     {
       "position": 15,
-      "name": "A DEFINIR",
-      "combat_id": null,
+      "name": "Personagem 15",
+      "combat_id": 32,
+      "combat_id_hex": "0x20",
+      "menu_marker": "0x8E",
       "playable": false,
       "packfile_chr_indexes_hex": [
         "0x3757",
@@ -228,12 +259,14 @@
       ],
       "packfile_sfx_index_hex": "0x375B",
       "source_assets_present": false,
-      "status": "PRECISA de recursos e novo ID de combate"
+      "status": "Alias Goku (ponteiro) + battle ID experimental"
     },
     {
       "position": 16,
-      "name": "A DEFINIR",
-      "combat_id": null,
+      "name": "Personagem 16",
+      "combat_id": 33,
+      "combat_id_hex": "0x21",
+      "menu_marker": "0x8F",
       "playable": false,
       "packfile_chr_indexes_hex": [
         "0x375C",
@@ -243,12 +276,14 @@
       ],
       "packfile_sfx_index_hex": "0x3760",
       "source_assets_present": false,
-      "status": "PRECISA de recursos e novo ID de combate"
+      "status": "Alias Goku (ponteiro) + battle ID experimental"
     },
     {
       "position": 17,
-      "name": "A DEFINIR",
-      "combat_id": null,
+      "name": "Personagem 17",
+      "combat_id": 38,
+      "combat_id_hex": "0x26",
+      "menu_marker": "0x90",
       "playable": false,
       "packfile_chr_indexes_hex": [
         "0x3761",
@@ -258,12 +293,14 @@
       ],
       "packfile_sfx_index_hex": "0x3765",
       "source_assets_present": false,
-      "status": "PRECISA de recursos e novo ID de combate"
+      "status": "Alias Goku (ponteiro) + battle ID experimental"
     },
     {
       "position": 18,
-      "name": "A DEFINIR",
-      "combat_id": null,
+      "name": "Personagem 18",
+      "combat_id": 43,
+      "combat_id_hex": "0x2B",
+      "menu_marker": "0x91",
       "playable": false,
       "packfile_chr_indexes_hex": [
         "0x3766",
@@ -273,12 +310,14 @@
       ],
       "packfile_sfx_index_hex": "0x376A",
       "source_assets_present": false,
-      "status": "PRECISA de recursos e novo ID de combate"
+      "status": "Alias Goku (ponteiro) + battle ID experimental"
     },
     {
       "position": 19,
-      "name": "A DEFINIR",
-      "combat_id": null,
+      "name": "Personagem 19",
+      "combat_id": 48,
+      "combat_id_hex": "0x30",
+      "menu_marker": "0x92",
       "playable": false,
       "packfile_chr_indexes_hex": [
         "0x376B",
@@ -288,12 +327,14 @@
       ],
       "packfile_sfx_index_hex": "0x376F",
       "source_assets_present": false,
-      "status": "PRECISA de recursos e novo ID de combate"
+      "status": "Alias Goku (ponteiro) + battle ID experimental"
     },
     {
       "position": 20,
-      "name": "A DEFINIR",
-      "combat_id": null,
+      "name": "Personagem 20",
+      "combat_id": 51,
+      "combat_id_hex": "0x33",
+      "menu_marker": "0x93",
       "playable": false,
       "packfile_chr_indexes_hex": [
         "0x3770",
@@ -303,12 +344,14 @@
       ],
       "packfile_sfx_index_hex": "0x3774",
       "source_assets_present": false,
-      "status": "PRECISA de recursos e novo ID de combate"
+      "status": "Alias Goku (ponteiro) + battle ID experimental"
     },
     {
       "position": 21,
-      "name": "A DEFINIR",
-      "combat_id": null,
+      "name": "Personagem 21",
+      "combat_id": 54,
+      "combat_id_hex": "0x36",
+      "menu_marker": "0x94",
       "playable": false,
       "packfile_chr_indexes_hex": [
         "0x3775",
@@ -318,12 +361,14 @@
       ],
       "packfile_sfx_index_hex": "0x3779",
       "source_assets_present": false,
-      "status": "PRECISA de recursos e novo ID de combate"
+      "status": "Alias Goku (ponteiro) + battle ID experimental"
     },
     {
       "position": 22,
-      "name": "A DEFINIR",
-      "combat_id": null,
+      "name": "Personagem 22",
+      "combat_id": 55,
+      "combat_id_hex": "0x37",
+      "menu_marker": "0x95",
       "playable": false,
       "packfile_chr_indexes_hex": [
         "0x377A",
@@ -333,12 +378,14 @@
       ],
       "packfile_sfx_index_hex": "0x377E",
       "source_assets_present": false,
-      "status": "PRECISA de recursos e novo ID de combate"
+      "status": "Alias Goku (ponteiro) + battle ID experimental"
     },
     {
       "position": 23,
-      "name": "A DEFINIR",
-      "combat_id": null,
+      "name": "Personagem 23",
+      "combat_id": 57,
+      "combat_id_hex": "0x39",
+      "menu_marker": "0x96",
       "playable": false,
       "packfile_chr_indexes_hex": [
         "0x377F",
@@ -348,12 +395,14 @@
       ],
       "packfile_sfx_index_hex": "0x3783",
       "source_assets_present": false,
-      "status": "PRECISA de recursos e novo ID de combate"
+      "status": "Alias Goku (ponteiro) + battle ID experimental"
     },
     {
       "position": 24,
-      "name": "A DEFINIR",
-      "combat_id": null,
+      "name": "Personagem 24",
+      "combat_id": 58,
+      "combat_id_hex": "0x3A",
+      "menu_marker": "0x97",
       "playable": false,
       "packfile_chr_indexes_hex": [
         "0x3784",
@@ -363,12 +412,14 @@
       ],
       "packfile_sfx_index_hex": "0x3788",
       "source_assets_present": false,
-      "status": "PRECISA de recursos e novo ID de combate"
+      "status": "Alias Goku (ponteiro) + battle ID experimental"
     },
     {
       "position": 25,
-      "name": "A DEFINIR",
-      "combat_id": null,
+      "name": "Personagem 25",
+      "combat_id": 59,
+      "combat_id_hex": "0x3B",
+      "menu_marker": "0x98",
       "playable": false,
       "packfile_chr_indexes_hex": [
         "0x3789",
@@ -378,12 +429,14 @@
       ],
       "packfile_sfx_index_hex": "0x378D",
       "source_assets_present": false,
-      "status": "PRECISA de recursos e novo ID de combate"
+      "status": "Alias Goku (ponteiro) + battle ID experimental"
     },
     {
       "position": 26,
-      "name": "A DEFINIR",
-      "combat_id": null,
+      "name": "Personagem 26",
+      "combat_id": 60,
+      "combat_id_hex": "0x3C",
+      "menu_marker": "0x99",
       "playable": false,
       "packfile_chr_indexes_hex": [
         "0x378E",
@@ -393,12 +446,14 @@
       ],
       "packfile_sfx_index_hex": "0x3792",
       "source_assets_present": false,
-      "status": "PRECISA de recursos e novo ID de combate"
+      "status": "Alias Goku (ponteiro) + battle ID experimental"
     },
     {
       "position": 27,
-      "name": "A DEFINIR",
-      "combat_id": null,
+      "name": "Personagem 27",
+      "combat_id": 61,
+      "combat_id_hex": "0x3D",
+      "menu_marker": "0x9A",
       "playable": false,
       "packfile_chr_indexes_hex": [
         "0x3793",
@@ -408,12 +463,14 @@
       ],
       "packfile_sfx_index_hex": "0x3797",
       "source_assets_present": false,
-      "status": "PRECISA de recursos e novo ID de combate"
+      "status": "Alias Goku (ponteiro) + battle ID experimental"
     },
     {
       "position": 28,
-      "name": "A DEFINIR",
-      "combat_id": null,
+      "name": "Personagem 28",
+      "combat_id": 62,
+      "combat_id_hex": "0x3E",
+      "menu_marker": "0x9B",
       "playable": false,
       "packfile_chr_indexes_hex": [
         "0x3798",
@@ -423,12 +480,14 @@
       ],
       "packfile_sfx_index_hex": "0x379C",
       "source_assets_present": false,
-      "status": "PRECISA de recursos e novo ID de combate"
+      "status": "Alias Goku (ponteiro) + battle ID experimental"
     },
     {
       "position": 29,
-      "name": "A DEFINIR",
-      "combat_id": null,
+      "name": "Personagem 29",
+      "combat_id": 63,
+      "combat_id_hex": "0x3F",
+      "menu_marker": "0x9C",
       "playable": false,
       "packfile_chr_indexes_hex": [
         "0x379D",
@@ -438,12 +497,14 @@
       ],
       "packfile_sfx_index_hex": "0x37A1",
       "source_assets_present": false,
-      "status": "PRECISA de recursos e novo ID de combate"
+      "status": "Alias Goku (ponteiro) + battle ID experimental"
     },
     {
       "position": 30,
-      "name": "A DEFINIR",
-      "combat_id": null,
+      "name": "Personagem 30",
+      "combat_id": 64,
+      "combat_id_hex": "0x40",
+      "menu_marker": "0x9D",
       "playable": false,
       "packfile_chr_indexes_hex": [
         "0x37A2",
@@ -453,12 +514,14 @@
       ],
       "packfile_sfx_index_hex": "0x37A6",
       "source_assets_present": false,
-      "status": "PRECISA de recursos e novo ID de combate"
+      "status": "Alias Goku (ponteiro) + battle ID experimental"
     },
     {
       "position": 31,
-      "name": "A DEFINIR",
-      "combat_id": null,
+      "name": "Personagem 31",
+      "combat_id": 65,
+      "combat_id_hex": "0x41",
+      "menu_marker": "0x9E",
       "playable": false,
       "packfile_chr_indexes_hex": [
         "0x37A7",
@@ -468,12 +531,14 @@
       ],
       "packfile_sfx_index_hex": "0x37AB",
       "source_assets_present": false,
-      "status": "PRECISA de recursos e novo ID de combate"
+      "status": "Alias Goku (ponteiro) + battle ID experimental"
     },
     {
       "position": 32,
-      "name": "A DEFINIR",
-      "combat_id": null,
+      "name": "Personagem 32",
+      "combat_id": 66,
+      "combat_id_hex": "0x42",
+      "menu_marker": "0x9F",
       "playable": false,
       "packfile_chr_indexes_hex": [
         "0x37AC",
@@ -483,12 +548,14 @@
       ],
       "packfile_sfx_index_hex": "0x37B0",
       "source_assets_present": false,
-      "status": "PRECISA de recursos e novo ID de combate"
+      "status": "Alias Goku (ponteiro) + battle ID experimental"
     },
     {
       "position": 33,
-      "name": "A DEFINIR",
-      "combat_id": null,
+      "name": "Personagem 33",
+      "combat_id": 67,
+      "combat_id_hex": "0x43",
+      "menu_marker": "0xA0",
       "playable": false,
       "packfile_chr_indexes_hex": [
         "0x37B1",
@@ -498,12 +565,14 @@
       ],
       "packfile_sfx_index_hex": "0x37B5",
       "source_assets_present": false,
-      "status": "PRECISA de recursos e novo ID de combate"
+      "status": "Alias Goku (ponteiro) + battle ID experimental"
     },
     {
       "position": 34,
-      "name": "A DEFINIR",
-      "combat_id": null,
+      "name": "Personagem 34",
+      "combat_id": 68,
+      "combat_id_hex": "0x44",
+      "menu_marker": "0xA1",
       "playable": false,
       "packfile_chr_indexes_hex": [
         "0x37B6",
@@ -513,12 +582,14 @@
       ],
       "packfile_sfx_index_hex": "0x37BA",
       "source_assets_present": false,
-      "status": "PRECISA de recursos e novo ID de combate"
+      "status": "Alias Goku (ponteiro) + battle ID experimental"
     },
     {
       "position": 35,
-      "name": "A DEFINIR",
-      "combat_id": null,
+      "name": "Personagem 35",
+      "combat_id": 69,
+      "combat_id_hex": "0x45",
+      "menu_marker": "0xA2",
       "playable": false,
       "packfile_chr_indexes_hex": [
         "0x37BB",
@@ -528,12 +599,14 @@
       ],
       "packfile_sfx_index_hex": "0x37BF",
       "source_assets_present": false,
-      "status": "PRECISA de recursos e novo ID de combate"
+      "status": "Alias Goku (ponteiro) + battle ID experimental"
     },
     {
       "position": 36,
-      "name": "A DEFINIR",
-      "combat_id": null,
+      "name": "Personagem 36",
+      "combat_id": 72,
+      "combat_id_hex": "0x48",
+      "menu_marker": "0xA3",
       "playable": false,
       "packfile_chr_indexes_hex": [
         "0x37C0",
@@ -543,12 +616,14 @@
       ],
       "packfile_sfx_index_hex": "0x37C4",
       "source_assets_present": false,
-      "status": "PRECISA de recursos e novo ID de combate"
+      "status": "Alias Goku (ponteiro) + battle ID experimental"
     },
     {
       "position": 37,
-      "name": "A DEFINIR",
-      "combat_id": null,
+      "name": "Personagem 37",
+      "combat_id": 74,
+      "combat_id_hex": "0x4A",
+      "menu_marker": "0xA4",
       "playable": false,
       "packfile_chr_indexes_hex": [
         "0x37C5",
@@ -558,12 +633,14 @@
       ],
       "packfile_sfx_index_hex": "0x37C9",
       "source_assets_present": false,
-      "status": "PRECISA de recursos e novo ID de combate"
+      "status": "Alias Goku (ponteiro) + battle ID experimental"
     },
     {
       "position": 38,
-      "name": "A DEFINIR",
-      "combat_id": null,
+      "name": "Personagem 38",
+      "combat_id": 75,
+      "combat_id_hex": "0x4B",
+      "menu_marker": "0xA5",
       "playable": false,
       "packfile_chr_indexes_hex": [
         "0x37CA",
@@ -573,12 +650,14 @@
       ],
       "packfile_sfx_index_hex": "0x37CE",
       "source_assets_present": false,
-      "status": "PRECISA de recursos e novo ID de combate"
+      "status": "Alias Goku (ponteiro) + battle ID experimental"
     },
     {
       "position": 39,
-      "name": "A DEFINIR",
-      "combat_id": null,
+      "name": "Personagem 39",
+      "combat_id": 76,
+      "combat_id_hex": "0x4C",
+      "menu_marker": "0xA6",
       "playable": false,
       "packfile_chr_indexes_hex": [
         "0x37CF",
@@ -588,12 +667,14 @@
       ],
       "packfile_sfx_index_hex": "0x37D3",
       "source_assets_present": false,
-      "status": "PRECISA de recursos e novo ID de combate"
+      "status": "Alias Goku (ponteiro) + battle ID experimental"
     },
     {
       "position": 40,
-      "name": "A DEFINIR",
-      "combat_id": null,
+      "name": "Personagem 40",
+      "combat_id": 78,
+      "combat_id_hex": "0x4E",
+      "menu_marker": "0xA7",
       "playable": false,
       "packfile_chr_indexes_hex": [
         "0x37D4",
@@ -603,12 +684,14 @@
       ],
       "packfile_sfx_index_hex": "0x37D8",
       "source_assets_present": false,
-      "status": "PRECISA de recursos e novo ID de combate"
+      "status": "Alias Goku (ponteiro) + battle ID experimental"
     },
     {
       "position": 41,
-      "name": "A DEFINIR",
-      "combat_id": null,
+      "name": "Personagem 41",
+      "combat_id": 81,
+      "combat_id_hex": "0x51",
+      "menu_marker": "0xA8",
       "playable": false,
       "packfile_chr_indexes_hex": [
         "0x37D9",
@@ -618,12 +701,14 @@
       ],
       "packfile_sfx_index_hex": "0x37DD",
       "source_assets_present": false,
-      "status": "PRECISA de recursos e novo ID de combate"
+      "status": "Alias Goku (ponteiro) + battle ID experimental"
     },
     {
       "position": 42,
-      "name": "A DEFINIR",
-      "combat_id": null,
+      "name": "Personagem 42",
+      "combat_id": 96,
+      "combat_id_hex": "0x60",
+      "menu_marker": "0xA9",
       "playable": false,
       "packfile_chr_indexes_hex": [
         "0x37DE",
@@ -633,12 +718,14 @@
       ],
       "packfile_sfx_index_hex": "0x37E2",
       "source_assets_present": false,
-      "status": "PRECISA de recursos e novo ID de combate"
+      "status": "Alias Goku (ponteiro) + battle ID experimental"
     },
     {
       "position": 43,
-      "name": "A DEFINIR",
-      "combat_id": null,
+      "name": "Personagem 43",
+      "combat_id": 97,
+      "combat_id_hex": "0x61",
+      "menu_marker": "0xAA",
       "playable": false,
       "packfile_chr_indexes_hex": [
         "0x37E3",
@@ -648,12 +735,14 @@
       ],
       "packfile_sfx_index_hex": "0x37E7",
       "source_assets_present": false,
-      "status": "PRECISA de recursos e novo ID de combate"
+      "status": "Alias Goku (ponteiro) + battle ID experimental"
     },
     {
       "position": 44,
-      "name": "A DEFINIR",
-      "combat_id": null,
+      "name": "Personagem 44",
+      "combat_id": 98,
+      "combat_id_hex": "0x62",
+      "menu_marker": "0xAB",
       "playable": false,
       "packfile_chr_indexes_hex": [
         "0x37E8",
@@ -663,12 +752,14 @@
       ],
       "packfile_sfx_index_hex": "0x37EC",
       "source_assets_present": false,
-      "status": "PRECISA de recursos e novo ID de combate"
+      "status": "Alias Goku (ponteiro) + battle ID experimental"
     },
     {
       "position": 45,
-      "name": "A DEFINIR",
-      "combat_id": null,
+      "name": "Personagem 45",
+      "combat_id": 110,
+      "combat_id_hex": "0x6E",
+      "menu_marker": "0xAC",
       "playable": false,
       "packfile_chr_indexes_hex": [
         "0x37ED",
@@ -678,12 +769,14 @@
       ],
       "packfile_sfx_index_hex": "0x37F1",
       "source_assets_present": false,
-      "status": "PRECISA de recursos e novo ID de combate"
+      "status": "Alias Goku (ponteiro) + battle ID experimental"
     },
     {
       "position": 46,
-      "name": "A DEFINIR",
-      "combat_id": null,
+      "name": "Personagem 46",
+      "combat_id": 113,
+      "combat_id_hex": "0x71",
+      "menu_marker": "0xAD",
       "playable": false,
       "packfile_chr_indexes_hex": [
         "0x37F2",
@@ -693,12 +786,14 @@
       ],
       "packfile_sfx_index_hex": "0x37F6",
       "source_assets_present": false,
-      "status": "PRECISA de recursos e novo ID de combate"
+      "status": "Alias Goku (ponteiro) + battle ID experimental"
     },
     {
       "position": 47,
-      "name": "A DEFINIR",
-      "combat_id": null,
+      "name": "Personagem 47",
+      "combat_id": 115,
+      "combat_id_hex": "0x73",
+      "menu_marker": "0xAE",
       "playable": false,
       "packfile_chr_indexes_hex": [
         "0x37F7",
@@ -708,7 +803,7 @@
       ],
       "packfile_sfx_index_hex": "0x37FB",
       "source_assets_present": false,
-      "status": "PRECISA de recursos e novo ID de combate"
+      "status": "Alias Goku (ponteiro) + battle ID experimental"
     }
   ]
 }

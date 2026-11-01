@@ -29,7 +29,7 @@ void ttt_menu_init(TTTMenuState *m);
 void ttt_menu_rebase(TTTMenuState *m,uint32_t buttons);
 int ttt_menu_buttons(TTTMenuState *m,uint32_t buttons);
 uint32_t ttt_menu_snapshot(const TTTMenuState *m);
-/* Slots 0,1,2 sao Goku Early/Mid/Mid SSJ; 3..46 aguardam IDs testados. */
+/* Os 47 slots possuem IDs distintos; exige EBOOT V0.4 para injetar todos. */
 int ttt_menu_slot_supported(unsigned slot);
 uint8_t ttt_menu_external_id(const TTTMenuState *m);
 #endif

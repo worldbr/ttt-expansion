@@ -1,48 +1,48 @@
-menu_slot,personagem,battle_id_hex,chr_c1,chr_c2,chr_c3,chr_c4,sfx,status
-1,Goku (Inicio),00,0x3711,0x3712,0x3713,0x3714,0x3715,ID EBOOT V0.3 testado
-2,Goku (Meio),01,0x3716,0x3717,0x3718,0x3719,0x371A,ID EBOOT V0.3 testado
-3,Goku (Meio) SSJ,02,0x371B,0x371C,0x371D,0x371E,0x371F,ID EBOOT V0.3 testado
-4,A DEFINIR,,0x3720,0x3721,0x3722,0x3723,0x3724,PRECISA de recursos e novo ID de combate
-5,A DEFINIR,,0x3725,0x3726,0x3727,0x3728,0x3729,PRECISA de recursos e novo ID de combate
-6,A DEFINIR,,0x372A,0x372B,0x372C,0x372D,0x372E,PRECISA de recursos e novo ID de combate
-7,A DEFINIR,,0x372F,0x3730,0x3731,0x3732,0x3733,PRECISA de recursos e novo ID de combate
-8,A DEFINIR,,0x3734,0x3735,0x3736,0x3737,0x3738,PRECISA de recursos e novo ID de combate
-9,A DEFINIR,,0x3739,0x373A,0x373B,0x373C,0x373D,PRECISA de recursos e novo ID de combate
-10,A DEFINIR,,0x373E,0x373F,0x3740,0x3741,0x3742,PRECISA de recursos e novo ID de combate
-11,A DEFINIR,,0x3743,0x3744,0x3745,0x3746,0x3747,PRECISA de recursos e novo ID de combate
-12,A DEFINIR,,0x3748,0x3749,0x374A,0x374B,0x374C,PRECISA de recursos e novo ID de combate
-13,A DEFINIR,,0x374D,0x374E,0x374F,0x3750,0x3751,PRECISA de recursos e novo ID de combate
-14,A DEFINIR,,0x3752,0x3753,0x3754,0x3755,0x3756,PRECISA de recursos e novo ID de combate
-15,A DEFINIR,,0x3757,0x3758,0x3759,0x375A,0x375B,PRECISA de recursos e novo ID de combate
-16,A DEFINIR,,0x375C,0x375D,0x375E,0x375F,0x3760,PRECISA de recursos e novo ID de combate
-17,A DEFINIR,,0x3761,0x3762,0x3763,0x3764,0x3765,PRECISA de recursos e novo ID de combate
-18,A DEFINIR,,0x3766,0x3767,0x3768,0x3769,0x376A,PRECISA de recursos e novo ID de combate
-19,A DEFINIR,,0x376B,0x376C,0x376D,0x376E,0x376F,PRECISA de recursos e novo ID de combate
-20,A DEFINIR,,0x3770,0x3771,0x3772,0x3773,0x3774,PRECISA de recursos e novo ID de combate
-21,A DEFINIR,,0x3775,0x3776,0x3777,0x3778,0x3779,PRECISA de recursos e novo ID de combate
-22,A DEFINIR,,0x377A,0x377B,0x377C,0x377D,0x377E,PRECISA de recursos e novo ID de combate
-23,A DEFINIR,,0x377F,0x3780,0x3781,0x3782,0x3783,PRECISA de recursos e novo ID de combate
-24,A DEFINIR,,0x3784,0x3785,0x3786,0x3787,0x3788,PRECISA de recursos e novo ID de combate
-25,A DEFINIR,,0x3789,0x378A,0x378B,0x378C,0x378D,PRECISA de recursos e novo ID de combate
-26,A DEFINIR,,0x378E,0x378F,0x3790,0x3791,0x3792,PRECISA de recursos e novo ID de combate
-27,A DEFINIR,,0x3793,0x3794,0x3795,0x3796,0x3797,PRECISA de recursos e novo ID de combate
-28,A DEFINIR,,0x3798,0x3799,0x379A,0x379B,0x379C,PRECISA de recursos e novo ID de combate
-29,A DEFINIR,,0x379D,0x379E,0x379F,0x37A0,0x37A1,PRECISA de recursos e novo ID de combate
-30,A DEFINIR,,0x37A2,0x37A3,0x37A4,0x37A5,0x37A6,PRECISA de recursos e novo ID de combate
-31,A DEFINIR,,0x37A7,0x37A8,0x37A9,0x37AA,0x37AB,PRECISA de recursos e novo ID de combate
-32,A DEFINIR,,0x37AC,0x37AD,0x37AE,0x37AF,0x37B0,PRECISA de recursos e novo ID de combate
-33,A DEFINIR,,0x37B1,0x37B2,0x37B3,0x37B4,0x37B5,PRECISA de recursos e novo ID de combate
-34,A DEFINIR,,0x37B6,0x37B7,0x37B8,0x37B9,0x37BA,PRECISA de recursos e novo ID de combate
-35,A DEFINIR,,0x37BB,0x37BC,0x37BD,0x37BE,0x37BF,PRECISA de recursos e novo ID de combate
-36,A DEFINIR,,0x37C0,0x37C1,0x37C2,0x37C3,0x37C4,PRECISA de recursos e novo ID de combate
-37,A DEFINIR,,0x37C5,0x37C6,0x37C7,0x37C8,0x37C9,PRECISA de recursos e novo ID de combate
-38,A DEFINIR,,0x37CA,0x37CB,0x37CC,0x37CD,0x37CE,PRECISA de recursos e novo ID de combate
-39,A DEFINIR,,0x37CF,0x37D0,0x37D1,0x37D2,0x37D3,PRECISA de recursos e novo ID de combate
-40,A DEFINIR,,0x37D4,0x37D5,0x37D6,0x37D7,0x37D8,PRECISA de recursos e novo ID de combate
-41,A DEFINIR,,0x37D9,0x37DA,0x37DB,0x37DC,0x37DD,PRECISA de recursos e novo ID de combate
-42,A DEFINIR,,0x37DE,0x37DF,0x37E0,0x37E1,0x37E2,PRECISA de recursos e novo ID de combate
-43,A DEFINIR,,0x37E3,0x37E4,0x37E5,0x37E6,0x37E7,PRECISA de recursos e novo ID de combate
-44,A DEFINIR,,0x37E8,0x37E9,0x37EA,0x37EB,0x37EC,PRECISA de recursos e novo ID de combate
-45,A DEFINIR,,0x37ED,0x37EE,0x37EF,0x37F0,0x37F1,PRECISA de recursos e novo ID de combate
-46,A DEFINIR,,0x37F2,0x37F3,0x37F4,0x37F5,0x37F6,PRECISA de recursos e novo ID de combate
-47,A DEFINIR,,0x37F7,0x37F8,0x37F9,0x37FA,0x37FB,PRECISA de recursos e novo ID de combate
+slot,battle_id,id_menu_expansao,nome,chr_color1,chr_color2,chr_color3,chr_color4,sfx,recurso
+01,00,80,Goku (Inicio),3711,3712,3713,3714,3715,"CHR adicionado, testado"
+02,01,81,Goku (Meio),3716,3717,3718,3719,371A,"CHR adicionado, testado"
+03,02,82,Goku (Meio) SSJ,371B,371C,371D,371E,371F,"CHR adicionado, testado"
+04,07,83,Personagem 04,3720,3721,3722,3723,3724,Recursos ja existentes no header; nao regravados
+05,08,84,Personagem 05,3725,3726,3727,3728,3729,Recursos ja existentes no header; nao regravados
+06,09,85,Personagem 06,372A,372B,372C,372D,372E,Recursos ja existentes no header; nao regravados
+07,0A,86,Personagem 07,372F,3730,3731,3732,3733,Recursos ja existentes no header; nao regravados
+08,0B,87,Personagem 08,3734,3735,3736,3737,3738,Placeholder com dados do Goku; ID ainda nao testado no PPSSPP
+09,0C,88,Personagem 09,3739,373A,373B,373C,373D,Placeholder com dados do Goku; ID ainda nao testado no PPSSPP
+10,14,89,Personagem 10,373E,373F,3740,3741,3742,Placeholder com dados do Goku; ID ainda nao testado no PPSSPP
+11,16,8A,Personagem 11,3743,3744,3745,3746,3747,Placeholder com dados do Goku; ID ainda nao testado no PPSSPP
+12,18,8B,Personagem 12,3748,3749,374A,374B,374C,Placeholder com dados do Goku; ID ainda nao testado no PPSSPP
+13,1E,8C,Personagem 13,374D,374E,374F,3750,3751,Placeholder com dados do Goku; ID ainda nao testado no PPSSPP
+14,1F,8D,Personagem 14,3752,3753,3754,3755,3756,Placeholder com dados do Goku; ID ainda nao testado no PPSSPP
+15,20,8E,Personagem 15,3757,3758,3759,375A,375B,Placeholder com dados do Goku; ID ainda nao testado no PPSSPP
+16,21,8F,Personagem 16,375C,375D,375E,375F,3760,Placeholder com dados do Goku; ID ainda nao testado no PPSSPP
+17,26,90,Personagem 17,3761,3762,3763,3764,3765,Placeholder com dados do Goku; ID ainda nao testado no PPSSPP
+18,2B,91,Personagem 18,3766,3767,3768,3769,376A,Placeholder com dados do Goku; ID ainda nao testado no PPSSPP
+19,30,92,Personagem 19,376B,376C,376D,376E,376F,Placeholder com dados do Goku; ID ainda nao testado no PPSSPP
+20,33,93,Personagem 20,3770,3771,3772,3773,3774,Placeholder com dados do Goku; ID ainda nao testado no PPSSPP
+21,36,94,Personagem 21,3775,3776,3777,3778,3779,Placeholder com dados do Goku; ID ainda nao testado no PPSSPP
+22,37,95,Personagem 22,377A,377B,377C,377D,377E,Placeholder com dados do Goku; ID ainda nao testado no PPSSPP
+23,39,96,Personagem 23,377F,3780,3781,3782,3783,Placeholder com dados do Goku; ID ainda nao testado no PPSSPP
+24,3A,97,Personagem 24,3784,3785,3786,3787,3788,Placeholder com dados do Goku; ID ainda nao testado no PPSSPP
+25,3B,98,Personagem 25,3789,378A,378B,378C,378D,Placeholder com dados do Goku; ID ainda nao testado no PPSSPP
+26,3C,99,Personagem 26,378E,378F,3790,3791,3792,Placeholder com dados do Goku; ID ainda nao testado no PPSSPP
+27,3D,9A,Personagem 27,3793,3794,3795,3796,3797,Placeholder com dados do Goku; ID ainda nao testado no PPSSPP
+28,3E,9B,Personagem 28,3798,3799,379A,379B,379C,Placeholder com dados do Goku; ID ainda nao testado no PPSSPP
+29,3F,9C,Personagem 29,379D,379E,379F,37A0,37A1,Placeholder com dados do Goku; ID ainda nao testado no PPSSPP
+30,40,9D,Personagem 30,37A2,37A3,37A4,37A5,37A6,Placeholder com dados do Goku; ID ainda nao testado no PPSSPP
+31,41,9E,Personagem 31,37A7,37A8,37A9,37AA,37AB,Placeholder com dados do Goku; ID ainda nao testado no PPSSPP
+32,42,9F,Personagem 32,37AC,37AD,37AE,37AF,37B0,Placeholder com dados do Goku; ID ainda nao testado no PPSSPP
+33,43,A0,Personagem 33,37B1,37B2,37B3,37B4,37B5,Placeholder com dados do Goku; ID ainda nao testado no PPSSPP
+34,44,A1,Personagem 34,37B6,37B7,37B8,37B9,37BA,Placeholder com dados do Goku; ID ainda nao testado no PPSSPP
+35,45,A2,Personagem 35,37BB,37BC,37BD,37BE,37BF,Placeholder com dados do Goku; ID ainda nao testado no PPSSPP
+36,48,A3,Personagem 36,37C0,37C1,37C2,37C3,37C4,Placeholder com dados do Goku; ID ainda nao testado no PPSSPP
+37,4A,A4,Personagem 37,37C5,37C6,37C7,37C8,37C9,Placeholder com dados do Goku; ID ainda nao testado no PPSSPP
+38,4B,A5,Personagem 38,37CA,37CB,37CC,37CD,37CE,Placeholder com dados do Goku; ID ainda nao testado no PPSSPP
+39,4C,A6,Personagem 39,37CF,37D0,37D1,37D2,37D3,Placeholder com dados do Goku; ID ainda nao testado no PPSSPP
+40,4E,A7,Personagem 40,37D4,37D5,37D6,37D7,37D8,Placeholder com dados do Goku; ID ainda nao testado no PPSSPP
+41,51,A8,Personagem 41,37D9,37DA,37DB,37DC,37DD,Placeholder com dados do Goku; ID ainda nao testado no PPSSPP
+42,60,A9,Personagem 42,37DE,37DF,37E0,37E1,37E2,Placeholder com dados do Goku; ID ainda nao testado no PPSSPP
+43,61,AA,Personagem 43,37E3,37E4,37E5,37E6,37E7,Placeholder com dados do Goku; ID ainda nao testado no PPSSPP
+44,62,AB,Personagem 44,37E8,37E9,37EA,37EB,37EC,Placeholder com dados do Goku; ID ainda nao testado no PPSSPP
+45,6E,AC,Personagem 45,37ED,37EE,37EF,37F0,37F1,Placeholder com dados do Goku; ID ainda nao testado no PPSSPP
+46,71,AD,Personagem 46,37F2,37F3,37F4,37F5,37F6,Placeholder com dados do Goku; ID ainda nao testado no PPSSPP
+47,73,AE,Personagem 47,37F7,37F8,37F9,37FA,37FB,Placeholder com dados do Goku; ID ainda nao testado no PPSSPP

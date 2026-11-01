@@ -10,6 +10,8 @@
 #include "ui_text.h"
 #include "frame_hook.h"
 #include "menu_state.h"
+#include "character_ids.h"
+#include "character_catalog.h"
 #include "menu_audio.h"
 #include "input_hook.h"
 #include "battle_bridge.h"
@@ -29,6 +31,20 @@ static int native_v03_ready(void){
     volatile const uint32_t *u=(volatile const uint32_t*)(uintptr_t)0x089C6D60u;
     volatile const uint32_t *n=(volatile const uint32_t*)(uintptr_t)0x08AF3244u;
     return *c==UINT32_C(0x2C8800A1) && *u==UINT32_C(0x3C0308A7) && (*n==UINT32_C(0x3734) || *n==UINT32_C(0x37FC));
+}
+
+/* Exige V0.4 e header 0x37FC; nao tenta injetar extras com ELF V0.3. */
+static int native_v04_ready(unsigned slot){
+    uint8_t id=ttt_character_battle_id(slot);
+    volatile const uint32_t *c=(volatile const uint32_t*)(uintptr_t)0x089C6CA0u;
+    volatile const uint32_t *u=(volatile const uint32_t*)(uintptr_t)0x089C6D60u;
+    volatile const uint32_t *n=(volatile const uint32_t*)(uintptr_t)0x08AF3244u;
+    volatile const uint8_t *tab=(volatile const uint8_t*)(uintptr_t)0x08A743E0u;
+    volatile const uint8_t *grp=(volatile const uint8_t*)(uintptr_t)0x08A69720u;
+    if(id>0xA0u||slot>=47u)return 0;
+    return c[0]==UINT32_C(0x2C8800A1) && c[1]==UINT32_C(0x15000007)
+       && u[0]==UINT32_C(0x2C8800A1) && u[1]==UINT32_C(0x11000003)
+       && *n==UINT32_C(0x37FC) && tab[id]==(uint8_t)(0x80u+slot) && grp[id]==0u;
 }
 static volatile int g_running;
 static uint32_t g_mission_progress;
@@ -331,7 +347,7 @@ static int diagnostic_thread(SceSize args,void *argp) {
         if(toggled){
             if(!toggle.open)ttt_audio_play(TTT_SND_CLOSE);
             ttt_audio_open(toggle.open);
-            if(toggle.open)ttt_audio_play(TTT_SND_CONFIRM);
+            if(toggle.open){ttt_catalog_reload();ttt_audio_play(TTT_SND_CONFIRM);}
             ttt_input_hook_menu(toggle.open);
             ttt_menu_rebase(&menu,pad.Buttons);
             if(toggle.open) {
@@ -426,10 +442,10 @@ static int diagnostic_thread(SceSize args,void *argp) {
                 ttt_audio_play(TTT_SND_ERROR);
                 log_line("[TTT MENU47] Slot sem ID de combate habilitado. Nenhuma injecao.\n");
             }else if(ev==TTT_EVENT_CONFIRM){
-                /* V0.3 usa resolvedor NATIVO do EBOOT. Nao ativar resource_hook
+                /* V0.3/V0.4 usam resolvedor NATIVO do EBOOT. Nao ativar resource_hook
                  * nem battle_bridge, para evitar conflito com ELF modificado. */
                 int id=(int)ttt_menu_external_id(&menu),rc;
-                if(id>2){rc=-41;}else if(!native_v03_ready()){rc=-42;}else rc=ttt_actor_inject_install();
+                if(id>0xA0){rc=-41;}else if(!native_v04_ready(menu.character) && !(id<=2 && native_v03_ready())){rc=-42;}else rc=ttt_actor_inject_install();
                 if(rc==0)rc=ttt_actor_inject_enable_slot((int)menu.player,(uint32_t)id,(uint32_t)menu.color);
                 if(rc==0){
                     (void)ttt_slot_plan_select(&plan,menu.player,id,menu.color);

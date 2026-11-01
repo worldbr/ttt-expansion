@@ -34,12 +34,12 @@ assert 'render_menu_legacy(bits)' not in src
 
 # 47 slots no menu, navegacao para quatro jogadores e quatro Colors.
 assert '#define TTT_MENU47_SLOTS 47' in header
-assert 'ttt_menu_slot_supported(unsigned slot){return slot<3u;}' in menu
+assert 'ttt_menu_slot_supported(unsigned slot){return slot<TTT_CHARACTER_COUNT;}' in menu
 assert 'm->player+1u)%4u' in menu
 assert 'm->color+1u)%4u' in menu
 assert '((uint32_t)(m->focus & 1u)<<10)' in menu
 assert 'TTT_EVENT_SOUND_TOGGLE' not in menu
-assert 'if(!native_v03_ready())' in main
+assert 'native_v04_ready(menu.character)' in main
 
 # Carregamento de retratos, fallback de fonte e alocacao PSP preservados.
 for needle in (

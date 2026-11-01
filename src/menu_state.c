@@ -1,12 +1,14 @@
 #include "menu_state.h"
+#include "character_ids.h"
+#include "character_ids.h"
 static void save_active(TTTMenuState *m){
     int p=m->player;
     if(m->picked_character[p]!=m->character||m->picked_color[p]!=m->color)m->confirmed[p]=0;
     m->picked_character[p]=m->character;m->picked_color[p]=m->color;
 }
-int ttt_menu_slot_supported(unsigned slot){return slot<3u;}
+int ttt_menu_slot_supported(unsigned slot){return slot<TTT_CHARACTER_COUNT;}
 uint8_t ttt_menu_external_id(const TTTMenuState *m){
-    return ttt_menu_slot_supported(m->character)?m->character:0xffu;
+    return ttt_character_battle_id(m->character);
 }
 void ttt_menu_init(TTTMenuState *m){
     int i;m->previous=0;m->character=0;m->color=0;m->focus=0;m->player=0;

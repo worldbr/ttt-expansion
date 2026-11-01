@@ -15,6 +15,8 @@
 #include <pspmodulemgr.h>
 #include "framecheck.h"
 #include "gpu_probe.h"
+#include "character_catalog.h"
+#include "character_ids.h"
 #include "dlc_story.h"
 #include "ui_text.h"
 #include "gu_budget.h"
@@ -604,12 +606,16 @@ static void render_menu47(uint32_t bits){
     menu47_label(18,34,"47 SLOTS",6,C_SOFT);
     for(i=0;i<4;i++){cp[1]=(char)('1'+i);menu47_label(254+i*56,20,cp,7,i==player?C_GOLD:C_WHITE);}
     menu47_label(314,61,"PERSONAGEM",6,C_SOFT);
-    if(current==0)menu47_label(313,76,"GOKU INICIO",6,C_GOLD);
-    else if(current==1)menu47_label(313,76,"GOKU MEIO",6,C_GOLD);
-    else if(current==2)menu47_label(313,76,"GOKU MEIO SSJ",6,C_GOLD);
-    else menu47_label(313,76,"A DEFINIR",6,C_SOFT);
-    menu47_label(313,85,current<3?"ID 00-02":"SEM ID",5,C_SOFT);
-    menu47_label(313,180,selected?"CONFIRMADO":(current<3?"PRONTO":"RESERVADO"),5,selected?C_GOLD:C_WHITE);
+    menu47_label(313,76,ttt_catalog_name((unsigned)current),6,C_GOLD);
+    {
+        static const char HEX[]="0123456789ABCDEF";
+        char idline[]="ID 00";
+        unsigned id=ttt_character_battle_id((unsigned)current);
+        idline[3]=HEX[(id>>4)&15u];
+        idline[4]=HEX[id&15u];
+        menu47_label(313,85,idline,5,C_SOFT);
+    }
+    menu47_label(313,180,selected?"CONFIRMADO":"DISPONIVEL",5,selected?C_GOLD:C_WHITE);
     for(i=0;i<4;i++){col[1]=(char)('1'+i);menu47_label(324+i*37,204,col,7,(i==color)?C_GOLD:C_WHITE);}
     /* 1 SINGLE LINE: fit within 480px on the PSP at 5px advance. */
     menu47_label(15,251,"SETAS MOVER  L/R JOG  TRI COR  X OK  O VOLTAR",5,C_WHITE);
@@ -636,6 +642,7 @@ int ttt_gpu_init(void) {
     if(ge_init_restore_rc<0){guard_failed=1;return -162;}
     if(rc<0){guard_failed=1;return rc;}
     ttt_text_load_external();
+    ttt_catalog_reload();
     portrait_present[0]=load_portrait(0);
     portrait_present[1]=load_portrait(1);
     portrait_present[2]=load_portrait(2);
