@@ -4,6 +4,7 @@ on:
   push:
     paths:
       - 'src/**'
+      - 'tests/**'
       - 'content/**'
       - 'tools/**'
       - 'Makefile'
@@ -60,6 +61,7 @@ jobs:
             python3 tests/test_skin_assets.py
             python3 tests/test_packed_skin.py
             python3 tests/test_packfile_expander.py
+            python3 tests/test_packfile47_plan.py
             python3 tests/validar_lang.py
 
             echo "--- Compilando PRX MENU47 (inclui audio) ---"
@@ -82,6 +84,7 @@ jobs:
             cp PREVIA_INTERATIVA_MENU47.html dist/PREVIA_INTERATIVA_MENU47.html
             mkdir -p dist/TTT_EXPANSION/portraits dist/TTT_EXPANSION/ui
             cp TTT_EXPANSION/portraits/*.rgba dist/TTT_EXPANSION/portraits/
+            test "$(stat -c%s dist/TTT_EXPANSION/portraits/placeholder_atlas.rgba)" -eq 65536
             cp TTT_EXPANSION/ui/*.4444 dist/TTT_EXPANSION/ui/
             mkdir -p dist/TTT_EXPANSION/lang
             cp TTT_EXPANSION/lang/*.txt dist/TTT_EXPANSION/lang/
