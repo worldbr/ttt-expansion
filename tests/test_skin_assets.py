@@ -38,7 +38,7 @@ assert 'ttt_menu_slot_supported(unsigned slot){return slot<3u;}' in menu
 assert 'm->player+1u)%4u' in menu
 assert 'm->color+1u)%4u' in menu
 assert '((uint32_t)(m->focus & 1u)<<10)' in menu
-assert '((uint32_t)(m->sound & 1u)<<15)' in menu
+assert 'TTT_EVENT_SOUND_TOGGLE' not in menu
 assert 'if(!native_v03_ready())' in main
 
 # Carregamento de retratos, fallback de fonte e alocacao PSP preservados.
@@ -54,7 +54,15 @@ for needle in (
 
 # Audio opcional do Menu 47 integrado na compilacao PSP.
 assert 'sceAudioChReserve(' in audio
+assert 'audio_music' not in audio
+assert 'TTT_SND_MOVE' in audio
 assert 'sceAudioOutputBlocking(' in audio
 assert 'src/menu_audio.o' in makefile
 assert '-lpspaudio' in makefile
-print('OK: Menu47 ativo, 47 slots, J1-J4, C1-C4, retratos, fallback e audio')
+assert (root / 'TTT_EXPANSION/portraits/placeholder_atlas.rgba').stat().st_size == 128*128*4
+assert 'placeholder_tile(i,x+4,y+2,23,22);' in src
+assert 'box(x+3,y+17,25,6,C_BLACK);' not in src
+assert '47 SLOTS' in src
+assert 'SELECT MUSICA' not in src
+assert 'static void render_menu47' in src
+print('OK: Menu47, 47 retratos/placeholder, uma linha no rodape, sons sem musica')

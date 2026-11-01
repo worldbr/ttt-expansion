@@ -9,7 +9,7 @@ uint8_t ttt_menu_external_id(const TTTMenuState *m){
     return ttt_menu_slot_supported(m->character)?m->character:0xffu;
 }
 void ttt_menu_init(TTTMenuState *m){
-    int i;m->previous=0;m->character=0;m->color=0;m->focus=0;m->player=0;m->sound=1;
+    int i;m->previous=0;m->character=0;m->color=0;m->focus=0;m->player=0;
     for(i=0;i<4;i++){m->picked_character[i]=0;m->picked_color[i]=0;m->confirmed[i]=0;}
 }
 void ttt_menu_rebase(TTTMenuState *m,uint32_t buttons){m->previous=buttons;}
@@ -18,7 +18,6 @@ int ttt_menu_buttons(TTTMenuState *m,uint32_t buttons){
     int ch;
     m->previous=buttons;
     if(hit & TTT_BTN_CIRCLE)return TTT_EVENT_CLOSE;
-    if(hit & TTT_BTN_SELECT){m->sound^=1u;return TTT_EVENT_SOUND_TOGGLE;}
     if((hit & TTT_BTN_SQUARE) && !(buttons & (TTT_BTN_L|TTT_BTN_R)))return TTT_EVENT_BRIDGE_RESET;
     if((hit & TTT_BTN_L) && !(buttons & TTT_BTN_R)){
         save_active(m);m->player=(uint8_t)((m->player+3u)%4u);
@@ -52,8 +51,7 @@ uint32_t ttt_menu_snapshot(const TTTMenuState *m){
     uint32_t bits=(uint32_t)(m->character & 63u) |
         ((uint32_t)(m->color & 3u)<<6) |
         ((uint32_t)(m->player & 3u)<<8) |
-        ((uint32_t)(m->focus & 1u)<<10) |
-        ((uint32_t)(m->sound & 1u)<<15);
+        ((uint32_t)(m->focus & 1u)<<10);
     int i;for(i=0;i<4;i++)bits|=(uint32_t)(m->confirmed[i]&1u)<<(11+i);
     return bits;
 }

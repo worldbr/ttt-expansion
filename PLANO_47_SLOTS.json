@@ -1,0 +1,714 @@
+{
+  "count_hex": "0x37FC",
+  "count": 14332,
+  "original_count_hex": "0x3711",
+  "current_tested_count_hex": "0x3734",
+  "max_header_count_hex": "0x37FF",
+  "groups": [
+    {
+      "position": 1,
+      "name": "Goku (Inicio)",
+      "combat_id": 0,
+      "playable": true,
+      "packfile_chr_indexes_hex": [
+        "0x3711",
+        "0x3712",
+        "0x3713",
+        "0x3714"
+      ],
+      "packfile_sfx_index_hex": "0x3715",
+      "source_assets_present": true,
+      "status": "ID EBOOT V0.3 testado"
+    },
+    {
+      "position": 2,
+      "name": "Goku (Meio)",
+      "combat_id": 1,
+      "playable": true,
+      "packfile_chr_indexes_hex": [
+        "0x3716",
+        "0x3717",
+        "0x3718",
+        "0x3719"
+      ],
+      "packfile_sfx_index_hex": "0x371A",
+      "source_assets_present": true,
+      "status": "ID EBOOT V0.3 testado"
+    },
+    {
+      "position": 3,
+      "name": "Goku (Meio) SSJ",
+      "combat_id": 2,
+      "playable": true,
+      "packfile_chr_indexes_hex": [
+        "0x371B",
+        "0x371C",
+        "0x371D",
+        "0x371E"
+      ],
+      "packfile_sfx_index_hex": "0x371F",
+      "source_assets_present": true,
+      "status": "ID EBOOT V0.3 testado"
+    },
+    {
+      "position": 4,
+      "name": "A DEFINIR",
+      "combat_id": null,
+      "playable": false,
+      "packfile_chr_indexes_hex": [
+        "0x3720",
+        "0x3721",
+        "0x3722",
+        "0x3723"
+      ],
+      "packfile_sfx_index_hex": "0x3724",
+      "source_assets_present": false,
+      "status": "PRECISA de recursos e novo ID de combate"
+    },
+    {
+      "position": 5,
+      "name": "A DEFINIR",
+      "combat_id": null,
+      "playable": false,
+      "packfile_chr_indexes_hex": [
+        "0x3725",
+        "0x3726",
+        "0x3727",
+        "0x3728"
+      ],
+      "packfile_sfx_index_hex": "0x3729",
+      "source_assets_present": false,
+      "status": "PRECISA de recursos e novo ID de combate"
+    },
+    {
+      "position": 6,
+      "name": "A DEFINIR",
+      "combat_id": null,
+      "playable": false,
+      "packfile_chr_indexes_hex": [
+        "0x372A",
+        "0x372B",
+        "0x372C",
+        "0x372D"
+      ],
+      "packfile_sfx_index_hex": "0x372E",
+      "source_assets_present": false,
+      "status": "PRECISA de recursos e novo ID de combate"
+    },
+    {
+      "position": 7,
+      "name": "A DEFINIR",
+      "combat_id": null,
+      "playable": false,
+      "packfile_chr_indexes_hex": [
+        "0x372F",
+        "0x3730",
+        "0x3731",
+        "0x3732"
+      ],
+      "packfile_sfx_index_hex": "0x3733",
+      "source_assets_present": false,
+      "status": "PRECISA de recursos e novo ID de combate"
+    },
+    {
+      "position": 8,
+      "name": "A DEFINIR",
+      "combat_id": null,
+      "playable": false,
+      "packfile_chr_indexes_hex": [
+        "0x3734",
+        "0x3735",
+        "0x3736",
+        "0x3737"
+      ],
+      "packfile_sfx_index_hex": "0x3738",
+      "source_assets_present": false,
+      "status": "PRECISA de recursos e novo ID de combate"
+    },
+    {
+      "position": 9,
+      "name": "A DEFINIR",
+      "combat_id": null,
+      "playable": false,
+      "packfile_chr_indexes_hex": [
+        "0x3739",
+        "0x373A",
+        "0x373B",
+        "0x373C"
+      ],
+      "packfile_sfx_index_hex": "0x373D",
+      "source_assets_present": false,
+      "status": "PRECISA de recursos e novo ID de combate"
+    },
+    {
+      "position": 10,
+      "name": "A DEFINIR",
+      "combat_id": null,
+      "playable": false,
+      "packfile_chr_indexes_hex": [
+        "0x373E",
+        "0x373F",
+        "0x3740",
+        "0x3741"
+      ],
+      "packfile_sfx_index_hex": "0x3742",
+      "source_assets_present": false,
+      "status": "PRECISA de recursos e novo ID de combate"
+    },
+    {
+      "position": 11,
+      "name": "A DEFINIR",
+      "combat_id": null,
+      "playable": false,
+      "packfile_chr_indexes_hex": [
+        "0x3743",
+        "0x3744",
+        "0x3745",
+        "0x3746"
+      ],
+      "packfile_sfx_index_hex": "0x3747",
+      "source_assets_present": false,
+      "status": "PRECISA de recursos e novo ID de combate"
+    },
+    {
+      "position": 12,
+      "name": "A DEFINIR",
+      "combat_id": null,
+      "playable": false,
+      "packfile_chr_indexes_hex": [
+        "0x3748",
+        "0x3749",
+        "0x374A",
+        "0x374B"
+      ],
+      "packfile_sfx_index_hex": "0x374C",
+      "source_assets_present": false,
+      "status": "PRECISA de recursos e novo ID de combate"
+    },
+    {
+      "position": 13,
+      "name": "A DEFINIR",
+      "combat_id": null,
+      "playable": false,
+      "packfile_chr_indexes_hex": [
+        "0x374D",
+        "0x374E",
+        "0x374F",
+        "0x3750"
+      ],
+      "packfile_sfx_index_hex": "0x3751",
+      "source_assets_present": false,
+      "status": "PRECISA de recursos e novo ID de combate"
+    },
+    {
+      "position": 14,
+      "name": "A DEFINIR",
+      "combat_id": null,
+      "playable": false,
+      "packfile_chr_indexes_hex": [
+        "0x3752",
+        "0x3753",
+        "0x3754",
+        "0x3755"
+      ],
+      "packfile_sfx_index_hex": "0x3756",
+      "source_assets_present": false,
+      "status": "PRECISA de recursos e novo ID de combate"
+    },
+    {
+      "position": 15,
+      "name": "A DEFINIR",
+      "combat_id": null,
+      "playable": false,
+      "packfile_chr_indexes_hex": [
+        "0x3757",
+        "0x3758",
+        "0x3759",
+        "0x375A"
+      ],
+      "packfile_sfx_index_hex": "0x375B",
+      "source_assets_present": false,
+      "status": "PRECISA de recursos e novo ID de combate"
+    },
+    {
+      "position": 16,
+      "name": "A DEFINIR",
+      "combat_id": null,
+      "playable": false,
+      "packfile_chr_indexes_hex": [
+        "0x375C",
+        "0x375D",
+        "0x375E",
+        "0x375F"
+      ],
+      "packfile_sfx_index_hex": "0x3760",
+      "source_assets_present": false,
+      "status": "PRECISA de recursos e novo ID de combate"
+    },
+    {
+      "position": 17,
+      "name": "A DEFINIR",
+      "combat_id": null,
+      "playable": false,
+      "packfile_chr_indexes_hex": [
+        "0x3761",
+        "0x3762",
+        "0x3763",
+        "0x3764"
+      ],
+      "packfile_sfx_index_hex": "0x3765",
+      "source_assets_present": false,
+      "status": "PRECISA de recursos e novo ID de combate"
+    },
+    {
+      "position": 18,
+      "name": "A DEFINIR",
+      "combat_id": null,
+      "playable": false,
+      "packfile_chr_indexes_hex": [
+        "0x3766",
+        "0x3767",
+        "0x3768",
+        "0x3769"
+      ],
+      "packfile_sfx_index_hex": "0x376A",
+      "source_assets_present": false,
+      "status": "PRECISA de recursos e novo ID de combate"
+    },
+    {
+      "position": 19,
+      "name": "A DEFINIR",
+      "combat_id": null,
+      "playable": false,
+      "packfile_chr_indexes_hex": [
+        "0x376B",
+        "0x376C",
+        "0x376D",
+        "0x376E"
+      ],
+      "packfile_sfx_index_hex": "0x376F",
+      "source_assets_present": false,
+      "status": "PRECISA de recursos e novo ID de combate"
+    },
+    {
+      "position": 20,
+      "name": "A DEFINIR",
+      "combat_id": null,
+      "playable": false,
+      "packfile_chr_indexes_hex": [
+        "0x3770",
+        "0x3771",
+        "0x3772",
+        "0x3773"
+      ],
+      "packfile_sfx_index_hex": "0x3774",
+      "source_assets_present": false,
+      "status": "PRECISA de recursos e novo ID de combate"
+    },
+    {
+      "position": 21,
+      "name": "A DEFINIR",
+      "combat_id": null,
+      "playable": false,
+      "packfile_chr_indexes_hex": [
+        "0x3775",
+        "0x3776",
+        "0x3777",
+        "0x3778"
+      ],
+      "packfile_sfx_index_hex": "0x3779",
+      "source_assets_present": false,
+      "status": "PRECISA de recursos e novo ID de combate"
+    },
+    {
+      "position": 22,
+      "name": "A DEFINIR",
+      "combat_id": null,
+      "playable": false,
+      "packfile_chr_indexes_hex": [
+        "0x377A",
+        "0x377B",
+        "0x377C",
+        "0x377D"
+      ],
+      "packfile_sfx_index_hex": "0x377E",
+      "source_assets_present": false,
+      "status": "PRECISA de recursos e novo ID de combate"
+    },
+    {
+      "position": 23,
+      "name": "A DEFINIR",
+      "combat_id": null,
+      "playable": false,
+      "packfile_chr_indexes_hex": [
+        "0x377F",
+        "0x3780",
+        "0x3781",
+        "0x3782"
+      ],
+      "packfile_sfx_index_hex": "0x3783",
+      "source_assets_present": false,
+      "status": "PRECISA de recursos e novo ID de combate"
+    },
+    {
+      "position": 24,
+      "name": "A DEFINIR",
+      "combat_id": null,
+      "playable": false,
+      "packfile_chr_indexes_hex": [
+        "0x3784",
+        "0x3785",
+        "0x3786",
+        "0x3787"
+      ],
+      "packfile_sfx_index_hex": "0x3788",
+      "source_assets_present": false,
+      "status": "PRECISA de recursos e novo ID de combate"
+    },
+    {
+      "position": 25,
+      "name": "A DEFINIR",
+      "combat_id": null,
+      "playable": false,
+      "packfile_chr_indexes_hex": [
+        "0x3789",
+        "0x378A",
+        "0x378B",
+        "0x378C"
+      ],
+      "packfile_sfx_index_hex": "0x378D",
+      "source_assets_present": false,
+      "status": "PRECISA de recursos e novo ID de combate"
+    },
+    {
+      "position": 26,
+      "name": "A DEFINIR",
+      "combat_id": null,
+      "playable": false,
+      "packfile_chr_indexes_hex": [
+        "0x378E",
+        "0x378F",
+        "0x3790",
+        "0x3791"
+      ],
+      "packfile_sfx_index_hex": "0x3792",
+      "source_assets_present": false,
+      "status": "PRECISA de recursos e novo ID de combate"
+    },
+    {
+      "position": 27,
+      "name": "A DEFINIR",
+      "combat_id": null,
+      "playable": false,
+      "packfile_chr_indexes_hex": [
+        "0x3793",
+        "0x3794",
+        "0x3795",
+        "0x3796"
+      ],
+      "packfile_sfx_index_hex": "0x3797",
+      "source_assets_present": false,
+      "status": "PRECISA de recursos e novo ID de combate"
+    },
+    {
+      "position": 28,
+      "name": "A DEFINIR",
+      "combat_id": null,
+      "playable": false,
+      "packfile_chr_indexes_hex": [
+        "0x3798",
+        "0x3799",
+        "0x379A",
+        "0x379B"
+      ],
+      "packfile_sfx_index_hex": "0x379C",
+      "source_assets_present": false,
+      "status": "PRECISA de recursos e novo ID de combate"
+    },
+    {
+      "position": 29,
+      "name": "A DEFINIR",
+      "combat_id": null,
+      "playable": false,
+      "packfile_chr_indexes_hex": [
+        "0x379D",
+        "0x379E",
+        "0x379F",
+        "0x37A0"
+      ],
+      "packfile_sfx_index_hex": "0x37A1",
+      "source_assets_present": false,
+      "status": "PRECISA de recursos e novo ID de combate"
+    },
+    {
+      "position": 30,
+      "name": "A DEFINIR",
+      "combat_id": null,
+      "playable": false,
+      "packfile_chr_indexes_hex": [
+        "0x37A2",
+        "0x37A3",
+        "0x37A4",
+        "0x37A5"
+      ],
+      "packfile_sfx_index_hex": "0x37A6",
+      "source_assets_present": false,
+      "status": "PRECISA de recursos e novo ID de combate"
+    },
+    {
+      "position": 31,
+      "name": "A DEFINIR",
+      "combat_id": null,
+      "playable": false,
+      "packfile_chr_indexes_hex": [
+        "0x37A7",
+        "0x37A8",
+        "0x37A9",
+        "0x37AA"
+      ],
+      "packfile_sfx_index_hex": "0x37AB",
+      "source_assets_present": false,
+      "status": "PRECISA de recursos e novo ID de combate"
+    },
+    {
+      "position": 32,
+      "name": "A DEFINIR",
+      "combat_id": null,
+      "playable": false,
+      "packfile_chr_indexes_hex": [
+        "0x37AC",
+        "0x37AD",
+        "0x37AE",
+        "0x37AF"
+      ],
+      "packfile_sfx_index_hex": "0x37B0",
+      "source_assets_present": false,
+      "status": "PRECISA de recursos e novo ID de combate"
+    },
+    {
+      "position": 33,
+      "name": "A DEFINIR",
+      "combat_id": null,
+      "playable": false,
+      "packfile_chr_indexes_hex": [
+        "0x37B1",
+        "0x37B2",
+        "0x37B3",
+        "0x37B4"
+      ],
+      "packfile_sfx_index_hex": "0x37B5",
+      "source_assets_present": false,
+      "status": "PRECISA de recursos e novo ID de combate"
+    },
+    {
+      "position": 34,
+      "name": "A DEFINIR",
+      "combat_id": null,
+      "playable": false,
+      "packfile_chr_indexes_hex": [
+        "0x37B6",
+        "0x37B7",
+        "0x37B8",
+        "0x37B9"
+      ],
+      "packfile_sfx_index_hex": "0x37BA",
+      "source_assets_present": false,
+      "status": "PRECISA de recursos e novo ID de combate"
+    },
+    {
+      "position": 35,
+      "name": "A DEFINIR",
+      "combat_id": null,
+      "playable": false,
+      "packfile_chr_indexes_hex": [
+        "0x37BB",
+        "0x37BC",
+        "0x37BD",
+        "0x37BE"
+      ],
+      "packfile_sfx_index_hex": "0x37BF",
+      "source_assets_present": false,
+      "status": "PRECISA de recursos e novo ID de combate"
+    },
+    {
+      "position": 36,
+      "name": "A DEFINIR",
+      "combat_id": null,
+      "playable": false,
+      "packfile_chr_indexes_hex": [
+        "0x37C0",
+        "0x37C1",
+        "0x37C2",
+        "0x37C3"
+      ],
+      "packfile_sfx_index_hex": "0x37C4",
+      "source_assets_present": false,
+      "status": "PRECISA de recursos e novo ID de combate"
+    },
+    {
+      "position": 37,
+      "name": "A DEFINIR",
+      "combat_id": null,
+      "playable": false,
+      "packfile_chr_indexes_hex": [
+        "0x37C5",
+        "0x37C6",
+        "0x37C7",
+        "0x37C8"
+      ],
+      "packfile_sfx_index_hex": "0x37C9",
+      "source_assets_present": false,
+      "status": "PRECISA de recursos e novo ID de combate"
+    },
+    {
+      "position": 38,
+      "name": "A DEFINIR",
+      "combat_id": null,
+      "playable": false,
+      "packfile_chr_indexes_hex": [
+        "0x37CA",
+        "0x37CB",
+        "0x37CC",
+        "0x37CD"
+      ],
+      "packfile_sfx_index_hex": "0x37CE",
+      "source_assets_present": false,
+      "status": "PRECISA de recursos e novo ID de combate"
+    },
+    {
+      "position": 39,
+      "name": "A DEFINIR",
+      "combat_id": null,
+      "playable": false,
+      "packfile_chr_indexes_hex": [
+        "0x37CF",
+        "0x37D0",
+        "0x37D1",
+        "0x37D2"
+      ],
+      "packfile_sfx_index_hex": "0x37D3",
+      "source_assets_present": false,
+      "status": "PRECISA de recursos e novo ID de combate"
+    },
+    {
+      "position": 40,
+      "name": "A DEFINIR",
+      "combat_id": null,
+      "playable": false,
+      "packfile_chr_indexes_hex": [
+        "0x37D4",
+        "0x37D5",
+        "0x37D6",
+        "0x37D7"
+      ],
+      "packfile_sfx_index_hex": "0x37D8",
+      "source_assets_present": false,
+      "status": "PRECISA de recursos e novo ID de combate"
+    },
+    {
+      "position": 41,
+      "name": "A DEFINIR",
+      "combat_id": null,
+      "playable": false,
+      "packfile_chr_indexes_hex": [
+        "0x37D9",
+        "0x37DA",
+        "0x37DB",
+        "0x37DC"
+      ],
+      "packfile_sfx_index_hex": "0x37DD",
+      "source_assets_present": false,
+      "status": "PRECISA de recursos e novo ID de combate"
+    },
+    {
+      "position": 42,
+      "name": "A DEFINIR",
+      "combat_id": null,
+      "playable": false,
+      "packfile_chr_indexes_hex": [
+        "0x37DE",
+        "0x37DF",
+        "0x37E0",
+        "0x37E1"
+      ],
+      "packfile_sfx_index_hex": "0x37E2",
+      "source_assets_present": false,
+      "status": "PRECISA de recursos e novo ID de combate"
+    },
+    {
+      "position": 43,
+      "name": "A DEFINIR",
+      "combat_id": null,
+      "playable": false,
+      "packfile_chr_indexes_hex": [
+        "0x37E3",
+        "0x37E4",
+        "0x37E5",
+        "0x37E6"
+      ],
+      "packfile_sfx_index_hex": "0x37E7",
+      "source_assets_present": false,
+      "status": "PRECISA de recursos e novo ID de combate"
+    },
+    {
+      "position": 44,
+      "name": "A DEFINIR",
+      "combat_id": null,
+      "playable": false,
+      "packfile_chr_indexes_hex": [
+        "0x37E8",
+        "0x37E9",
+        "0x37EA",
+        "0x37EB"
+      ],
+      "packfile_sfx_index_hex": "0x37EC",
+      "source_assets_present": false,
+      "status": "PRECISA de recursos e novo ID de combate"
+    },
+    {
+      "position": 45,
+      "name": "A DEFINIR",
+      "combat_id": null,
+      "playable": false,
+      "packfile_chr_indexes_hex": [
+        "0x37ED",
+        "0x37EE",
+        "0x37EF",
+        "0x37F0"
+      ],
+      "packfile_sfx_index_hex": "0x37F1",
+      "source_assets_present": false,
+      "status": "PRECISA de recursos e novo ID de combate"
+    },
+    {
+      "position": 46,
+      "name": "A DEFINIR",
+      "combat_id": null,
+      "playable": false,
+      "packfile_chr_indexes_hex": [
+        "0x37F2",
+        "0x37F3",
+        "0x37F4",
+        "0x37F5"
+      ],
+      "packfile_sfx_index_hex": "0x37F6",
+      "source_assets_present": false,
+      "status": "PRECISA de recursos e novo ID de combate"
+    },
+    {
+      "position": 47,
+      "name": "A DEFINIR",
+      "combat_id": null,
+      "playable": false,
+      "packfile_chr_indexes_hex": [
+        "0x37F7",
+        "0x37F8",
+        "0x37F9",
+        "0x37FA"
+      ],
+      "packfile_sfx_index_hex": "0x37FB",
+      "source_assets_present": false,
+      "status": "PRECISA de recursos e novo ID de combate"
+    }
+  ]
+}

@@ -1,6 +1,7 @@
-# TTT Expansion DLC Rebuild V2.0.3
+TTT Expansion Menu 47 V0.1.2
 
-Textos externos em `TTT_EXPANSION/lang/pt.txt`, `en.txt`, `es.txt`, 38 chaves cada.
-Abas PERSONAGENS, MISSOES (EM BREVE), MAPAS (EM BREVE), OPCOES (EM BREVE).
-Preserva 3 IDs, 4 Colors, 12 CHRs, 4 jogadores, PACKFILE 0x3734 e atlas único da V2.0.2.
-Leia `LEIA_V2003_TEXTOS_EXTERNOS.md`.
+Leia `LEIA_PRIMEIRO_MENU47.md` antes de compilar o PRX.
+
+Para preparar futuramente 47 personagens em PACKFILE/EBOOT, leia `LEIA_EBOOT_PACKFILE_47.md`. Os 44 retratos são placeholders; não representam CHR instalados.
+
+Os documentos `LEIA_V2002_*`, `LEIA_V2003_*`, `LEIA_CORRECAO_*` são históricos de versões anteriores.

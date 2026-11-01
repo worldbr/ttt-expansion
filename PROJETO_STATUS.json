@@ -15,8 +15,15 @@
   "compiled_prx_in_zip": false,
   "assets_include_one_original_user_chr": true,
   "files": 96,
-  "version": "2.0.2",
+  "version": "Menu47 v0.1.2",
   "skin_memory_strategy": "128KB single PSP user memory block containing background and font",
   "verified_in_ppsspp": false,
-  "host_tests_passed": true
+  "host_tests_passed": true,
+  "visual_slots": 47,
+  "playable_slots_implemented": 3,
+  "placeholder_portraits": 44,
+  "audio_mode": "SFX only, no music",
+  "full_packfile_in_zip": false,
+  "expanded_eboot_count_only_in_zip": true,
+  "expanded_eboot_safe_to_install": false
 }

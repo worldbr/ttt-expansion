@@ -17,14 +17,12 @@
 #define TTT_EVENT_CLOSE 2
 #define TTT_EVENT_BRIDGE_RESET 3
 #define TTT_EVENT_EMPTY 6
-#define TTT_EVENT_SOUND_TOGGLE 7
 typedef struct TTTMenuState {
     uint32_t previous;
     uint8_t character; /* 0..46: slot de tela */
     uint8_t color;     /* 0..3 */
     uint8_t focus;     /* 0 = grade, 1 = Colors */
     uint8_t player;    /* 0..3 */
-    uint8_t sound;     /* 0 = sem musica, 1 = musica */
     uint8_t picked_character[4], picked_color[4], confirmed[4];
 } TTTMenuState;
 void ttt_menu_init(TTTMenuState *m);

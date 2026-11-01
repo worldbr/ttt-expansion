@@ -72,6 +72,27 @@ static volatile uint32_t dlc_mission_completed;
 static uint8_t portrait_pixels[3][PORT_MAX_LEN] __attribute__((aligned(16)));
 static uint8_t portrait_size[3];
 static int portrait_present[3];
+/* Atlas RGBA8888 128x128: 47 miniaturas, 16x16 cada.
+ * Ocupa apenas 64KiB na BSS em vez de carregar 44 retratos inteiros. */
+static uint8_t placeholder_atlas[128*128*4] __attribute__((aligned(16)));
+static int placeholder_ready;
+static int load_placeholder_atlas(void){
+    SceUID f=sceIoOpen("ms0:/PSP/PLUGINS/TTT_EXPANSION/portraits/placeholder_atlas.rgba",PSP_O_RDONLY,0);
+    int rd,total=0;
+    if(f<0)return 0;
+    if(sceIoLseek(f,0,PSP_SEEK_END)!=(int)sizeof(placeholder_atlas)){sceIoClose(f);return 0;}
+    sceIoLseek(f,0,PSP_SEEK_SET);
+    while(total<(int)sizeof(placeholder_atlas)){
+        rd=sceIoRead(f,placeholder_atlas+total,sizeof(placeholder_atlas)-total);
+        if(rd<=0)break;
+        total+=rd;
+    }
+    sceIoClose(f);
+    if(total!=(int)sizeof(placeholder_atlas))return 0;
+    sceKernelDcacheWritebackRange(placeholder_atlas,sizeof(placeholder_atlas));
+    return 1;
+}
+
 static const char *portrait_paths[3]={
     "ms0:/PSP/PLUGINS/TTT_EXPANSION/portraits/goku_early.rgba",
     "ms0:/PSP/PLUGINS/TTT_EXPANSION/portraits/goku_mid.rgba",
@@ -186,6 +207,32 @@ static void portrait(int which,int x,int y,int w,int h) {
     sceGuTexImage(0,portrait_size[which],portrait_size[which],portrait_size[which],portrait_pixels[which]);
     sceGuColor(C_WHITE);
     sceGuDrawArray(GU_SPRITES,GU_TEXTURE_16BIT | GU_VERTEX_16BIT | GU_TRANSFORM_2D,2,NULL,v);
+    sceGuDisable(GU_TEXTURE_2D);
+}
+/* Render a full-image tile from the atlas, no crop and no text/number over it. */
+static void placeholder_tile(int which,int x,int y,int w,int h){
+    TTexVertex *v;
+    int u=(which%8)*16,q=(which/8)*16;
+    if(which<3||which>=47||x<0||y<0||x+w>480||y+h>272)return;
+    if(!placeholder_ready){
+        box(x,y,w,h,C_BLUE);
+        box(x+w/3,y+3,w/3,h/3,C_BLACK);
+        box(x+w/4,y+h/2,w/2,h/2,C_BLACK);
+        return;
+    }
+    if(!ttt_gu_budget_take(&gu_budget))return;
+    v=(TTexVertex*)sceGuGetMemory(2*sizeof(TTexVertex));
+    if(!v)return;
+    v[0].u=(int16_t)u;v[0].v=(int16_t)q;v[0].x=x;v[0].y=y;v[0].z=0;
+    v[1].u=(int16_t)(u+16);v[1].v=(int16_t)(q+16);v[1].x=x+w;v[1].y=y+h;v[1].z=0;
+    sceGuEnable(GU_TEXTURE_2D);
+    sceGuTexMode(GU_PSM_8888,0,0,0);
+    sceGuTexFunc(GU_TFX_MODULATE,GU_TCC_RGBA);
+    sceGuTexFilter(GU_LINEAR,GU_LINEAR);
+    sceGuTexWrap(GU_CLAMP,GU_CLAMP);
+    sceGuTexImage(0,128,128,128,placeholder_atlas);
+    sceGuColor(C_WHITE);
+    sceGuDrawArray(GU_SPRITES,GU_TEXTURE_16BIT|GU_VERTEX_16BIT|GU_TRANSFORM_2D,2,NULL,v);
     sceGuDisable(GU_TEXTURE_2D);
 }
 /* Minimal panel helper is used only when texture assets are missing.
@@ -520,18 +567,16 @@ static void menu47_label(int x,int y,const char *t,int step,uint32_t color){
 }
 static void render_menu47(uint32_t bits){
     int current=(int)(bits&63u),color=(int)((bits>>6)&3u);
-    int player=(int)((bits>>8)&3u),focus=(int)((bits>>10)&1u);
-    int sound=(int)((bits>>15)&1u),i;
-    char slot[4]="01", cp[4]="J1", col[4]="C1";
+    int player=(int)((bits>>8)&3u),focus=(int)((bits>>10)&1u),i;
+    char cp[4]="J1",col[4]="C1";
     uint32_t selected=(bits>>(11+player))&1u;
-    /* Nenhuma textura grande de fundo: apenas azul escuro uniforme. */
     sceGuDisable(GU_TEXTURE_2D);
     sceGuDisable(GU_BLEND);
     box(0,0,480,272,C_OUTER);
     box(7,7,466,257,C_DARK);
     box(10,51,286,181,C_BLACK);
     box(303,51,166,181,C_BLACK);
-    box(10,239,459,1,C_BLUE);
+    box(10,242,459,1,C_BLUE);
     for(i=0;i<4;i++){
         int x=236+i*56;
         box(x,12,52,25,i==player?C_GOLD:C_LIGHT);
@@ -543,38 +588,31 @@ static void render_menu47(uint32_t bits){
         uint32_t border=active?(focus?C_WHITE:C_GOLD):(i<3?C_LIGHT:C_BLUE);
         box(x,y,31,26,border);
         box(x+2,y+2,27,22,active?C_BLUE:C_OUTER);
-        if(i<3 && portrait_present[i]){
-            portrait(i,x+3,y+3,25,20);
-            box(x+3,y+17,25,6,C_BLACK);
-        }
+        /* Explicit 1:1 aspect ratio: do not stretch or hide the chin. */
+        if(i<3 && portrait_present[i])portrait(i,x+4,y+2,23,22);
+        else placeholder_tile(i,x+4,y+2,23,22);
     }
-    /* Color 1..4 right panel, visibly selectable. */
     for(i=0;i<4;i++){
         int x=315+i*37;
         box(x,194,33,29,(i==color)?(focus?C_GOLD:C_WHITE):C_BLUE);
         box(x+2,196,29,25,(i==color)?C_BLUE:C_DARK);
     }
-    if(current<3 && portrait_present[current])portrait(current,340,97,82,76);
-    /* Text glyphs are sampled from the packed 128 KiB atlas when available. */
+    if(current<3 && portrait_present[current])portrait(current,341,94,76,76);
+    else placeholder_tile(current,341,94,76,76);
     if(ttt_skin_ready)skin_bind_font();
     menu47_label(17,17,"TTT EXPANSION",7,C_WHITE);
     menu47_label(18,34,"47 SLOTS",6,C_SOFT);
     for(i=0;i<4;i++){cp[1]=(char)('1'+i);menu47_label(254+i*56,20,cp,7,i==player?C_GOLD:C_WHITE);}
-    for(i=0;i<47;i++){
-        int x=14+(i%8)*35,y=56+(i/8)*29;
-        slot[0]=(char)('0'+((i+1)/10));slot[1]=(char)('0'+((i+1)%10));
-        menu47_label(x+8,y+8,slot,6,(i==current)?C_GOLD:(i<3?C_WHITE:C_SOFT));
-    }
     menu47_label(314,61,"PERSONAGEM",6,C_SOFT);
     if(current==0)menu47_label(313,76,"GOKU INICIO",6,C_GOLD);
     else if(current==1)menu47_label(313,76,"GOKU MEIO",6,C_GOLD);
     else if(current==2)menu47_label(313,76,"GOKU MEIO SSJ",6,C_GOLD);
-    else {menu47_label(313,76,"SLOT VAZIO",6,C_SOFT);}
+    else menu47_label(313,76,"A DEFINIR",6,C_SOFT);
     menu47_label(313,85,current<3?"ID 00-02":"SEM ID",5,C_SOFT);
-    menu47_label(313,180,selected?"CONFIRMADO":(current<3?"PRONTO":"EM ESPERA"),5,selected?C_GOLD:C_WHITE);
+    menu47_label(313,180,selected?"CONFIRMADO":(current<3?"PRONTO":"RESERVADO"),5,selected?C_GOLD:C_WHITE);
     for(i=0;i<4;i++){col[1]=(char)('1'+i);menu47_label(324+i*37,204,col,7,(i==color)?C_GOLD:C_WHITE);}
-    menu47_label(15,246,"L/R JOGADOR  TRIANGULO COLORS  X OK  O VOLTAR",5,C_WHITE);
-    menu47_label(15,257,sound?"SELECT MUSICA ON   QUADRADO LIMPAR":"SELECT MUSICA OFF  QUADRADO LIMPAR",5,C_SOFT);
+    /* 1 SINGLE LINE: fit within 480px on the PSP at 5px advance. */
+    menu47_label(15,251,"SETAS MOVER  L/R JOG  TRI COR  X OK  O VOLTAR",5,C_WHITE);
     sceGuDisable(GU_BLEND);
     sceGuDisable(GU_TEXTURE_2D);
 }
@@ -601,6 +639,7 @@ int ttt_gpu_init(void) {
     portrait_present[0]=load_portrait(0);
     portrait_present[1]=load_portrait(1);
     portrait_present[2]=load_portrait(2);
+    placeholder_ready=load_placeholder_atlas();
     skin_load_all();
     gu_initialized=1;
     return 0;

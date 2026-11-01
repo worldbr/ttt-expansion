@@ -28,7 +28,7 @@ static int native_v03_ready(void){
     volatile const uint32_t *c=(volatile const uint32_t*)(uintptr_t)0x089C6CA0u;
     volatile const uint32_t *u=(volatile const uint32_t*)(uintptr_t)0x089C6D60u;
     volatile const uint32_t *n=(volatile const uint32_t*)(uintptr_t)0x08AF3244u;
-    return *c==UINT32_C(0x2C8800A1) && *u==UINT32_C(0x3C0308A7) && *n==UINT32_C(0x3734);
+    return *c==UINT32_C(0x2C8800A1) && *u==UINT32_C(0x3C0308A7) && (*n==UINT32_C(0x3734) || *n==UINT32_C(0x37FC));
 }
 static volatile int g_running;
 static uint32_t g_mission_progress;
@@ -329,6 +329,7 @@ static int diagnostic_thread(SceSize args,void *argp) {
         if(sceCtrlPeekBufferPositive(&pad,1)>0) {
         int toggled=ttt_toggle_frame(&toggle,pad.Buttons);
         if(toggled){
+            if(!toggle.open)ttt_audio_play(TTT_SND_CLOSE);
             ttt_audio_open(toggle.open);
             if(toggle.open)ttt_audio_play(TTT_SND_CONFIRM);
             ttt_input_hook_menu(toggle.open);
@@ -421,10 +422,7 @@ static int diagnostic_thread(SceSize args,void *argp) {
                 ttt_actor_inject_disable_slot(menu.player);
                 ttt_slot_plan_disable(&plan,menu.player);
             }
-            if(ev==TTT_EVENT_SOUND_TOGGLE){
-                ttt_audio_music(menu.sound);
-                ttt_audio_play(TTT_SND_MOVE);
-            }else if(ev==TTT_EVENT_EMPTY){
+            if(ev==TTT_EVENT_EMPTY){
                 ttt_audio_play(TTT_SND_ERROR);
                 log_line("[TTT MENU47] Slot sem ID de combate habilitado. Nenhuma injecao.\n");
             }else if(ev==TTT_EVENT_CONFIRM){
@@ -453,6 +451,7 @@ static int diagnostic_thread(SceSize args,void *argp) {
                 log_line("[TTT MENU47] QUADRADO: selecoes limpas.\n");
                 ttt_gpu_set_menu(ttt_menu_snapshot(&menu));
             }else if(ev==TTT_EVENT_CLOSE){
+                ttt_audio_play(TTT_SND_CLOSE);
                 toggle.open=0;
                 ttt_audio_open(0);
                 ttt_input_hook_menu(0);
@@ -483,6 +482,7 @@ static int diagnostic_thread(SceSize args,void *argp) {
                 append(b,&q,sizeof(b)," primitives=");hex(b,&q,sizeof(b),gs.primitives);
                 append(b,&q,sizeof(b)," skipped=");hex(b,&q,sizeof(b),gs.skipped_primitives);
                 append(b,&q,sizeof(b)," canary=");hex(b,&q,sizeof(b),(uint32_t)gs.canary_fault);
+                append(b,&q,sizeof(b)," audio_rc=");hex(b,&q,sizeof(b),(uint32_t)ttt_audio_status());
                 append(b,&q,sizeof(b),"\n");log_line(b);
                 if(armed && hs.installed && !hs.draw_enabled && !gs.failed) {
                     int retry_rc=ttt_frame_hook_resume_drawing();

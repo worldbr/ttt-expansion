@@ -22,13 +22,13 @@ int main(void){
     assert(press(&m,TTT_BTN_RIGHT)==0 && m.character==1);
     assert(press(&m,TTT_BTN_CROSS)==TTT_EVENT_CONFIRM && m.confirmed[1]);
     assert(press(&m,TTT_BTN_L)==0 && m.player==0 && m.character==8);
-    assert(press(&m,TTT_BTN_SELECT)==TTT_EVENT_SOUND_TOGGLE && !m.sound);
+    assert(press(&m,TTT_BTN_SELECT)==0); /* SELECT nao toca nem alterna BGM */
     snap=ttt_menu_snapshot(&m);
     assert((snap & 63u)==8u && ((snap>>8)&3u)==0u && ((snap>>15)&1u)==0);
     assert(press(&m,TTT_BTN_SQUARE)==TTT_EVENT_BRIDGE_RESET);
     assert(press(&m,TTT_BTN_CIRCLE)==TTT_EVENT_CLOSE);
     for(i=0;i<47;i++)assert(ttt_menu_slot_supported(i)==(i<3));
     assert(!ttt_menu_slot_supported(47));
-    puts("OK MENU47: grade 47, 4 players, 4 colors, bloqueio de 44 slots, audio toggle");
+    puts("OK MENU47: grade 47, 4 players, 4 colors, bloqueio de 44 slots, sem BGM; efeitos sob demanda");
     return 0;
 }
