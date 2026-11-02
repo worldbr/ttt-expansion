@@ -54,12 +54,27 @@ static void sync_opcode(uint32_t site){
     sceKernelIcacheInvalidateRange((void*)(uintptr_t)site,4);
 }
 #endif
+/* Distinguish an active JAL from an original opcode restored by the game.
+ * Never claim success based on g_installed alone: selection may return after
+ * another module reload or a battle transition. */
+int ttt_actor_inject_hook_state(uint32_t current,uint32_t expected_patch,uint32_t delay){
+    if(delay!=TTT_ACTOR_DELAY_EXPECTED)return -23;
+    if(current==expected_patch)return 0;
+    if(current==TTT_ACTOR_STORE_EXPECTED)return 1;
+    return -22; /* A different patch: do not overwrite foreign instructions. */
+}
 int ttt_actor_inject_install(void){
 #ifdef TTT_BRIDGE_PSP
     uint32_t a,b,patch;int rc;int i;
-    if(g_installed){g_error=0;return 0;}
     a=*(volatile const uint32_t*)(uintptr_t)TTT_ACTOR_STORE_PC;
     b=*(volatile const uint32_t*)(uintptr_t)(TTT_ACTOR_STORE_PC+4u);
+    if(g_installed){
+        rc=ttt_actor_inject_hook_state(a,g_patch,b);
+        if(rc==0){g_error=0;return 0;}
+        if(rc<0){g_error=rc;return rc;}
+        /* Original instruction appeared again; re-arm safely. */
+        g_installed=0;
+    }
     rc=ttt_actor_inject_make_jal(TTT_ACTOR_STORE_PC,
         (uint32_t)(uintptr_t)&ttt_actor_inject_shim,a,b,&patch);
     if(rc){g_error=rc;return rc;}

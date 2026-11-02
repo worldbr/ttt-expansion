@@ -26,6 +26,8 @@ typedef struct {
 int ttt_actor_inject_slot_for_address(uint32_t actor_id_address);
 int ttt_actor_inject_should_replace(uint32_t actor_id_address,uint32_t enabled_mask,uint32_t original_id);
 int ttt_actor_inject_make_jal(uint32_t site,uint32_t target,uint32_t original,uint32_t delay,uint32_t *out);
+/* 0=our JAL active; 1=original instruction restored; negative=unsafe. */
+int ttt_actor_inject_hook_state(uint32_t current,uint32_t expected_patch,uint32_t delay);
 int ttt_actor_inject_install(void);
 /* player is zero-based, 0..3; only ID00 Color1 (index zero) supported. */
 int ttt_actor_inject_enable_slot(int player,uint32_t external_id,uint32_t color);

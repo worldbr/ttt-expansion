@@ -17,6 +17,7 @@
 #include "battle_bridge.h"
 #include "resource_hook.h"
 #include "slot_plan.h"
+#include "match_cycle.h"
 #include "actor_watch.h"
 #include "actor_inject.h"
 #include "dlc_story.h"
@@ -314,16 +315,17 @@ static void trace_log(uint32_t *cursor){
     *cursor=end;
 }
 static int diagnostic_thread(SceSize args,void *argp) {
-    TTTToggle toggle;TTTMenuState menu;TTTSlotPlan plan;unsigned frames=0;int gpu_ready=0,armed=0;uint32_t last_trace=0,last_actor=0;
+    TTTToggle toggle;TTTMenuState menu;TTTSlotPlan plan;TTTMatchCycle cycle;unsigned frames=0;int gpu_ready=0,armed=0;uint32_t last_trace=0,last_actor=0;
     (void)args;(void)argp;
     ttt_toggle_init(&toggle);
     ttt_menu_init(&menu);
     (void)ttt_audio_init();
     ttt_slot_plan_init(&plan);
+    ttt_match_cycle_init(&cycle);
     ttt_actor_watch_init(&g_actor_watch);
     g_mission_progress=ttt_dlc_progress_load();
     ttt_gpu_set_dlc(0,g_mission_progress);
-    log_line("[TTT MENU47] Inicializado. 47 slots (3 habilitados). ELF V0.3 nativo OBRIGATORIO.\n");
+    log_line("[TTT MENU47] Inicializado. 47 slots. EBOOT V0.4 para todos os IDS (V0.3 apenas para 00-02).\n");
     /* Wait until game starts drawing and the loader finishes linking imports. */
     sceKernelDelayThread(1500000);
     probe_log("APOS_START");
@@ -347,7 +349,22 @@ static int diagnostic_thread(SceSize args,void *argp) {
         if(toggled){
             if(!toggle.open)ttt_audio_play(TTT_SND_CLOSE);
             ttt_audio_open(toggle.open);
-            if(toggle.open){ttt_catalog_reload();ttt_audio_play(TTT_SND_CONFIRM);}
+            if(toggle.open){
+                /* A new actor initialization happened since the last overlay
+                 * opening: the previous match has consumed our old choices.
+                 * Keep character/color preferences, but require fresh X and
+                 * do not carry old overrides into the next fight. */
+                TTTActorInjectStats last=ttt_actor_inject_stats();
+                if(ttt_match_cycle_on_open(&cycle,last.hits,ttt_slot_plan_mask(&plan))){
+                    int k;
+                    ttt_actor_inject_disable();
+                    ttt_slot_plan_reset(&plan);
+                    for(k=0;k<4;k++)menu.confirmed[k]=0;
+                    log_line("[TTT MENU47 V0.4.1] NOVA RODADA: actor hit detectado; selecoes antigas liberadas.\n");
+                }
+                ttt_catalog_reload();
+                ttt_audio_play(TTT_SND_CONFIRM);
+            }
             ttt_input_hook_menu(toggle.open);
             ttt_menu_rebase(&menu,pad.Buttons);
             if(toggle.open) {
@@ -446,17 +463,43 @@ static int diagnostic_thread(SceSize args,void *argp) {
                  * nem battle_bridge, para evitar conflito com ELF modificado. */
                 int id=(int)ttt_menu_external_id(&menu),rc;
                 if(id>0xA0){rc=-41;}else if(!native_v04_ready(menu.character) && !(id<=2 && native_v03_ready())){rc=-42;}else rc=ttt_actor_inject_install();
+                if(rc==0){
+                    /* If the game's actor-store opcode was restored between
+                     * rounds, install() starts with an empty enabled mask.
+                     * Restore ALL other confirmed players, not just the one
+                     * that pressed X now. */
+                    int k;
+                    for(k=0;k<4;k++){
+                        TTTSlotChoice choice;
+                        if(k==(int)menu.player)continue;
+                        if(ttt_slot_plan_get(&plan,k,&choice)==0 && choice.confirmed && choice.resource_supported){
+                            rc=ttt_actor_inject_enable_slot(k,choice.external_id,choice.color_index);
+                            if(rc!=0)break;
+                        }
+                    }
+                }
                 if(rc==0)rc=ttt_actor_inject_enable_slot((int)menu.player,(uint32_t)id,(uint32_t)menu.color);
                 if(rc==0){
                     (void)ttt_slot_plan_select(&plan,menu.player,id,menu.color);
                     ttt_audio_play(TTT_SND_CONFIRM);
-                    log_line("[TTT MENU47] JOGADOR CONFIRMADO: ELF V0.3 requerido.\n");
+                    log_line("[TTT MENU47 V0.4.1] PERSONAGEM CONFIRMADO NO PLUGIN; confirme tambem no seletor ORIGINAL do jogo.\n");
                 }else{
                     menu.confirmed[menu.player]=0;
                     ttt_slot_plan_disable(&plan,menu.player);
                     ttt_actor_inject_disable_slot((int)menu.player);
                     ttt_audio_play(TTT_SND_ERROR);
-                    log_line("[TTT MENU47] BLOQUEADO: falha ao instalar injector.\n");
+                    {
+                        char errline[160];int ep=0;errline[0]=0;
+                        append(errline,&ep,sizeof(errline),"[TTT MENU47 V0.4.1] CONFIRMAR FALHOU rc=");
+                        hex(errline,&ep,sizeof(errline),(uint32_t)rc);
+                        append(errline,&ep,sizeof(errline)," id=");
+                        hex(errline,&ep,sizeof(errline),(uint32_t)id);
+                        append(errline,&ep,sizeof(errline)," store_pc=");
+                        hex(errline,&ep,sizeof(errline),*(volatile const uint32_t*)(uintptr_t)TTT_ACTOR_STORE_PC);
+                        append(errline,&ep,sizeof(errline)," pack_count=");
+                        hex(errline,&ep,sizeof(errline),*(volatile const uint32_t*)(uintptr_t)0x08AF3244u);
+                        append(errline,&ep,sizeof(errline),"\n");log_line(errline);
+                    }
                 }
                 ttt_gpu_set_menu(ttt_menu_snapshot(&menu));
             }else if(ev==TTT_EVENT_BRIDGE_RESET){

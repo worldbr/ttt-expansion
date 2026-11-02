@@ -615,7 +615,7 @@ static void render_menu47(uint32_t bits){
         idline[4]=HEX[id&15u];
         menu47_label(313,85,idline,5,C_SOFT);
     }
-    menu47_label(313,180,selected?"CONFIRMADO":"DISPONIVEL",5,selected?C_GOLD:C_WHITE);
+    menu47_label(313,180,selected?"OK - CONFIRME NO JOGO":"DISPONIVEL",5,selected?C_GOLD:C_WHITE);
     for(i=0;i<4;i++){col[1]=(char)('1'+i);menu47_label(324+i*37,204,col,7,(i==color)?C_GOLD:C_WHITE);}
     /* 1 SINGLE LINE: fit within 480px on the PSP at 5px advance. */
     menu47_label(15,251,"SETAS MOVER  L/R JOG  TRI COR  X OK  O VOLTAR",5,C_WHITE);
