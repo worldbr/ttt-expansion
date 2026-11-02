@@ -109,24 +109,6 @@ static void hex(char *d,int *p,int cap,uint32_t v) {
     for(j=7;j>=0;--j)if(*p<cap-1)d[(*p)++]=h[(v>>(4*j))&15];
     d[*p]=0;
 }
-static void native_repair_log(int rc){
-    char b[265];int k=0;b[0]=0;
-    append(b,&k,sizeof(b),"[TTT MENU47 V0.4.6] CODE_RECOVERY rc=");
-    hex(b,&k,sizeof(b),(uint32_t)rc);
-    append(b,&k,sizeof(b)," checked0=");
-    hex(b,&k,sizeof(b),*(volatile uint32_t*)(uintptr_t)0x089C6CA0u);
-    if(rc<0){
-        unsigned mod=2u,idx=0u;uint32_t actual=0,want=0;
-        (void)ttt_v04_code_diagnose(
-            (volatile const uint32_t*)(uintptr_t)0x089C6CA0u,
-            (volatile const uint32_t*)(uintptr_t)0x089C6D60u,
-            *(volatile const uint32_t*)(uintptr_t)0x08AF3244u,
-            &mod,&idx,&actual,&want);
-        append(b,&k,sizeof(b)," module=");hex(b,&k,sizeof(b),mod);
-        append(b,&k,sizeof(b)," word=");hex(b,&k,sizeof(b),idx);
-        append(b,&k,sizeof(b)," actual=");hex(b,&k,sizeof(b),actual);
-        append(b,&k,sizeof(b)," expected=");hex(b,&k,sizeof(b),want);
-    }
     append(b,&k,sizeof(b)," mask=");hex(b,&k,sizeof(b),g_last_repair_mask);
     append(b,&k,sizeof(b)," trusted=");hex(b,&k,sizeof(b),(uint32_t)g_pristine_v04_seen);
     append(b,&k,sizeof(b)," success=");hex(b,&k,sizeof(b),g_restore_success);
