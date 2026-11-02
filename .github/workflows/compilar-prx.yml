@@ -23,7 +23,7 @@ jobs:
       - name: Preparar arquivo de log antes do build
         shell: bash
         run: |
-          printf '[TTT DLC Rebuild 2.0.3] Workflow iniciado\n' > build.log
+          printf '[TTT MENU47 V0.4.3] Workflow iniciado\n' > build.log
 
       - name: Compilar PRX e preparar arquivos para instalar
         shell: bash
@@ -63,6 +63,7 @@ jobs:
             python3 tests/test_packfile_expander.py
             python3 tests/test_packfile47_plan.py
             python3 tests/test_catalog_ids.py
+            python3 tests/test_menu47_build_contract.py
             python3 tests/validar_lang.py
 
             echo "--- Compilando PRX MENU47 (inclui audio) ---"
@@ -99,7 +100,7 @@ jobs:
             test "$(stat -c%s dist/TTT_EXPANSION/ui/menu_bg.4444)" -eq 131072
             test "$(stat -c%s dist/TTT_EXPANSION/ui/font_atlas.4444)" -eq 65536
             cp INSTALAR_PLUGIN_WINDOWS.bat dist/INSTALAR_PLUGIN_WINDOWS.bat
-            cp LEIA_PRIMEIRO_REBUILD_V2.md dist/LEIA_PRIMEIRO_REBUILD_V2.md
+            cp LEIA_PRIMEIRO_V043.md dist/LEIA_PRIMEIRO_V043.md
             echo "--- Conteudo pronto para o PPSSPP ---"
             ls -lh dist/TTT_EXPANSION/
             echo "--- COMPILACAO CONCLUIDA ---"
