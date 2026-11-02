@@ -58,3 +58,33 @@ int ttt_v04_first_word_repairable(const volatile uint32_t *checked,
                                   uint32_t pack_count){
     return ttt_v04_code_diagnose(checked,unchecked,pack_count,0,0,0,0);
 }
+
+uint32_t ttt_v04_expected_checked_word(unsigned index){
+    return index<TTT_V04_CHECKED_WORDS?checked_expected[index]:0u;
+}
+/* Pure/read-only decision. Return 1 only for a small, observed post-battle
+ * overwrite pattern in two known indices. 0 = intact; negative = refuse. */
+int ttt_v04_repair_plan(const volatile uint32_t *checked,
+                        const volatile uint32_t *unchecked,
+                        uint32_t pack_count,int pristine_seen,
+                        uint32_t *mask){
+    uint32_t diff=0u;unsigned i;
+    if(mask)*mask=0u;
+    if(!checked || !unchecked || !mask)return -1;
+    if(pack_count!=TTT_V04_COUNT)return -2;
+    for(i=0;i<TTT_V04_UNCHECKED_WORDS;i++)
+        if(unchecked[i]!=unchecked_expected[i])return -3;
+    for(i=0;i<TTT_V04_CHECKED_WORDS;i++){
+        const uint32_t actual=checked[i];
+        if(actual==checked_expected[i])continue;
+        /* Only these two indices exhibited the 0x682Bxxxx overwrite in
+         * diagnostico(7). The branch, return and load logic stays intact. */
+        if(i!=0u && i!=9u)return -5;
+        if((actual&0xFFFF0000u)!=0x682B0000u)return -6;
+        diff|=1u<<i;
+    }
+    if(!diff)return 0;
+    if(!pristine_seen)return -4;
+    *mask=diff;
+    return 1;
+}

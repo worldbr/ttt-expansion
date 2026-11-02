@@ -20,7 +20,7 @@ for name,count,expected in (
     assert observed==expected, (name,observed)
 main=(r/'src/main.c').read_text()
 assert 'v04_repair_checked_opcode()' in main
-assert 'sceKernelIcacheInvalidateRange((void*)(uintptr_t)0x089C6CA0u,4u)' in main
+assert 'sceKernelIcacheInvalidateRange((void*)(uintptr_t)0x089C6CA0u,' in main
 assert 'ACTOR_RESULT J=' in main
 assert 'EXPECTED_RESOURCE slot=' in main
-print('PASS V0.4.4: EBOOT V0.4 code images match byte-exact hashes, trace hooks wired')
+print('PASS V0.4.5: EBOOT V0.4 code images match byte-exact hashes, trace hooks wired')

@@ -28,20 +28,37 @@
 PSP_MODULE_INFO("TTTExpCallHook", PSP_MODULE_USER, 1, 12);
 PSP_NO_CREATE_MAIN_THREAD();
 #define LOG_PATH "ms0:/PSP/PLUGINS/TTT_EXPANSION/diagnostico.txt"
-/* Validate the entire V0.4 image before considering ANY code repair.
- * A battle may overwrite or overlay this address. If the other 38 words
- * are not byte-exact, DO NOT patch unknown code. Never patch on a timer.
- */
+/* The game's post-battle scene overwrites checked resolver words 0 and 9
+ * with 0x682Bxxxx. Repair only these two observed positions, only if this
+ * process first verified an intact V0.4 EBOOT. Never write unchecked code. */
+static int g_pristine_v04_seen=0;
+static uint32_t g_last_repair_mask=0;
 static int v04_repair_checked_opcode(void){
     volatile uint32_t *c=(volatile uint32_t*)(uintptr_t)0x089C6CA0u;
     volatile const uint32_t *u=(volatile const uint32_t*)(uintptr_t)0x089C6D60u;
     volatile const uint32_t *n=(volatile const uint32_t*)(uintptr_t)0x08AF3244u;
-    int state=ttt_v04_first_word_repairable(c,u,*n);
+    uint32_t mask=0u;int state;unsigned i;
+    /* Establish trust only with a pristine runtime image, not after repair. */
+    if(!g_pristine_v04_seen &&
+        ttt_v04_code_diagnose(c,u,*n,0,0,0,0)==0)
+        g_pristine_v04_seen=1;
+    state=ttt_v04_repair_plan(c,u,*n,g_pristine_v04_seen,&mask);
+    g_last_repair_mask=mask;
     if(state!=1)return state;
-    c[0]=TTT_V04_CHECKED0;
-    sceKernelDcacheWritebackInvalidateRange((void*)(uintptr_t)0x089C6CA0u,4u);
-    sceKernelIcacheInvalidateRange((void*)(uintptr_t)0x089C6CA0u,4u);
-    if(c[0]!=TTT_V04_CHECKED0)return -3;
+    /* Recheck every proposed word before modifying any memory. */
+    for(i=0;i<TTT_V04_CHECKED_WORDS;i++){
+        if(mask&(1u<<i)){
+            if(i!=0u && i!=9u)return -7;
+            if((c[i]&0xFFFF0000u)!=0x682B0000u)return -7;
+        }
+    }
+    for(i=0;i<TTT_V04_CHECKED_WORDS;i++)
+        if(mask&(1u<<i))c[i]=ttt_v04_expected_checked_word(i);
+    sceKernelDcacheWritebackInvalidateRange((void*)(uintptr_t)0x089C6CA0u,
+                                               TTT_V04_CHECKED_WORDS*4u);
+    sceKernelIcacheInvalidateRange((void*)(uintptr_t)0x089C6CA0u,
+                                    TTT_V04_CHECKED_WORDS*4u);
+    if(ttt_v04_code_diagnose(c,u,*n,0,0,0,0)!=0)return -8;
     return 1;
 }
 static uint32_t g_restore_success, g_restore_rejected;
@@ -110,8 +127,8 @@ static void hex(char *d,int *p,int cap,uint32_t v) {
     d[*p]=0;
 }
 static void native_repair_log(int rc){
-    char b[185];int k=0;b[0]=0;
-    append(b,&k,sizeof(b),"[TTT MENU47 V0.4.4] CODE_RECOVERY rc=");
+    char b[265];int k=0;b[0]=0;
+    append(b,&k,sizeof(b),"[TTT MENU47 V0.4.5] CODE_RECOVERY rc=");
     hex(b,&k,sizeof(b),(uint32_t)rc);
     append(b,&k,sizeof(b)," checked0=");
     hex(b,&k,sizeof(b),*(volatile uint32_t*)(uintptr_t)0x089C6CA0u);
@@ -127,6 +144,8 @@ static void native_repair_log(int rc){
         append(b,&k,sizeof(b)," actual=");hex(b,&k,sizeof(b),actual);
         append(b,&k,sizeof(b)," expected=");hex(b,&k,sizeof(b),want);
     }
+    append(b,&k,sizeof(b)," mask=");hex(b,&k,sizeof(b),g_last_repair_mask);
+    append(b,&k,sizeof(b)," trusted=");hex(b,&k,sizeof(b),(uint32_t)g_pristine_v04_seen);
     append(b,&k,sizeof(b)," success=");hex(b,&k,sizeof(b),g_restore_success);
     append(b,&k,sizeof(b)," rejected=");hex(b,&k,sizeof(b),g_restore_rejected);
     append(b,&k,sizeof(b),"\n");log_line(b);
@@ -387,7 +406,7 @@ static int diagnostic_thread(SceSize args,void *argp) {
     ttt_actor_watch_init(&g_actor_watch);
     g_mission_progress=ttt_dlc_progress_load();
     ttt_gpu_set_dlc(0,g_mission_progress);
-    log_line("[TTT MENU47 V0.4.4] Inicializado. 47 slots. EBOOT V0.4, guard individual por ID ativo.\n");
+    log_line("[TTT MENU47 V0.4.5] Inicializado. 47 slots. EBOOT V0.4, reparo pos-batalha de words 0+9 com whitelist.\n");
     /* Wait until game starts drawing and the loader finishes linking imports. */
     sceKernelDelayThread(1500000);
     probe_log("APOS_START");
@@ -421,7 +440,7 @@ static int diagnostic_thread(SceSize args,void *argp) {
                  * were actually written into actors, not just confirmed UI. */
                 {
                     char at[190];int ap=0;at[0]=0;
-                    append(at,&ap,sizeof(at),"[TTT MENU47 V0.4.4] ACTOR_SNAPSHOT hits=");
+                    append(at,&ap,sizeof(at),"[TTT MENU47 V0.4.5] ACTOR_SNAPSHOT hits=");
                     hex(at,&ap,sizeof(at),last.hits);
                     append(at,&ap,sizeof(at)," enabled=");hex(at,&ap,sizeof(at),last.enabled_mask);
                     append(at,&ap,sizeof(at)," last_original=");hex(at,&ap,sizeof(at),last.last_original_id);
@@ -438,7 +457,7 @@ static int diagnostic_thread(SceSize args,void *argp) {
                         TTTSlotChoice ch;
                         char msg[195];int z=0;msg[0]=0;
                         if(ttt_slot_plan_get(&plan,k,&ch)!=0 || !ch.confirmed)continue;
-                        append(msg,&z,sizeof(msg),"[TTT MENU47 V0.4.4] ACTOR_RESULT J=");
+                        append(msg,&z,sizeof(msg),"[TTT MENU47 V0.4.5] ACTOR_RESULT J=");
                         hex(msg,&z,sizeof(msg),(uint32_t)k+1u);
                         append(msg,&z,sizeof(msg)," expected_id=");hex(msg,&z,sizeof(msg),ch.external_id);
                         append(msg,&z,sizeof(msg)," actual_ram_id=");
@@ -452,14 +471,14 @@ static int diagnostic_thread(SceSize args,void *argp) {
                     ttt_actor_inject_disable();
                     ttt_slot_plan_reset(&plan);
                     for(k=0;k<4;k++)menu.confirmed[k]=0;
-                    log_line("[TTT MENU47 V0.4.4] NOVA RODADA: actor hit detectado; selecoes antigas liberadas.\n");
+                    log_line("[TTT MENU47 V0.4.5] NOVA RODADA: actor hit detectado; selecoes antigas liberadas.\n");
                 }
                 /* Run the guard at each selection opening, not only on X.
                  * This lets a scene-restored FF mapping recover before any
                  * attempt to re-arm a player for a second fight. */
                 {
                     int ok=native_v04_check(menu.character,1);char gs[290];int gp=0;gs[0]=0;
-                    append(gs,&gp,sizeof(gs),"[TTT MENU47 V0.4.4] OPEN NATIVE ok=");
+                    append(gs,&gp,sizeof(gs),"[TTT MENU47 V0.4.5] OPEN NATIVE ok=");
                     hex(gs,&gp,sizeof(gs),(uint32_t)ok);
                     append(gs,&gp,sizeof(gs)," error=");
                     hex(gs,&gp,sizeof(gs),(uint32_t)g_native_status.error);
@@ -580,7 +599,7 @@ static int diagnostic_thread(SceSize args,void *argp) {
                 else rc=ttt_actor_inject_install();
                 if((g_native_status.repaired_text || g_native_status.repaired_group) && rc==0){
                     char msg[165];int mp=0;msg[0]=0;
-                    append(msg,&mp,sizeof(msg),"[TTT MENU47 V0.4.4] MAPEAMENTOS RESTAURADOS text=");
+                    append(msg,&mp,sizeof(msg),"[TTT MENU47 V0.4.5] MAPEAMENTOS RESTAURADOS text=");
                     hex(msg,&mp,sizeof(msg),g_native_status.repaired_text);
                     append(msg,&mp,sizeof(msg)," group=");hex(msg,&mp,sizeof(msg),g_native_status.repaired_group);
                     append(msg,&mp,sizeof(msg),"\n");log_line(msg);
@@ -608,7 +627,7 @@ static int diagnostic_thread(SceSize args,void *argp) {
                         volatile const uint32_t *rec=(volatile const uint32_t*)(uintptr_t)(0x08AF3250u+index*16u);
                         volatile const uint8_t *table=(volatile const uint8_t*)(uintptr_t)0x08A743E0u;
                         char msg[260];int qp=0;msg[0]=0;
-                        append(msg,&qp,sizeof(msg),"[TTT MENU47 V0.4.4] EXPECTED_RESOURCE slot=");
+                        append(msg,&qp,sizeof(msg),"[TTT MENU47 V0.4.5] EXPECTED_RESOURCE slot=");
                         hex(msg,&qp,sizeof(msg),(uint32_t)menu.character+1u);
                         append(msg,&qp,sizeof(msg)," id=");hex(msg,&qp,sizeof(msg),(uint32_t)id);
                         append(msg,&qp,sizeof(msg)," color=");hex(msg,&qp,sizeof(msg),(uint32_t)menu.color);
@@ -619,7 +638,7 @@ static int diagnostic_thread(SceSize args,void *argp) {
                         append(msg,&qp,sizeof(msg),"\n");log_line(msg);
                     }
                     ttt_audio_play(TTT_SND_CONFIRM);
-                    log_line("[TTT MENU47 V0.4.4] PERSONAGEM CONFIRMADO NO PLUGIN; confirme tambem no seletor ORIGINAL do jogo.\n");
+                    log_line("[TTT MENU47 V0.4.5] PERSONAGEM CONFIRMADO NO PLUGIN; confirme tambem no seletor ORIGINAL do jogo.\n");
                 }else{
                     menu.confirmed[menu.player]=0;
                     ttt_slot_plan_disable(&plan,menu.player);
@@ -627,7 +646,7 @@ static int diagnostic_thread(SceSize args,void *argp) {
                     ttt_audio_play(TTT_SND_ERROR);
                     {
                         char errline[160];int ep=0;errline[0]=0;
-                        append(errline,&ep,sizeof(errline),"[TTT MENU47 V0.4.4] CONFIRMAR FALHOU rc=");
+                        append(errline,&ep,sizeof(errline),"[TTT MENU47 V0.4.5] CONFIRMAR FALHOU rc=");
                         hex(errline,&ep,sizeof(errline),(uint32_t)rc);
                         append(errline,&ep,sizeof(errline)," id=");
                         hex(errline,&ep,sizeof(errline),(uint32_t)id);
@@ -638,7 +657,7 @@ static int diagnostic_thread(SceSize args,void *argp) {
                         append(errline,&ep,sizeof(errline),"\n");log_line(errline);
                         if(rc==-42){
                             char detail[360];int dp=0;detail[0]=0;
-                            append(detail,&dp,sizeof(detail),"[TTT MENU47 V0.4.4] NATIVE_GUARD error=");
+                            append(detail,&dp,sizeof(detail),"[TTT MENU47 V0.4.5] NATIVE_GUARD error=");
                             hex(detail,&dp,sizeof(detail),(uint32_t)g_native_status.error);
                             append(detail,&dp,sizeof(detail)," checked0=");hex(detail,&dp,sizeof(detail),g_native_status.checked0);
                             append(detail,&dp,sizeof(detail)," checked1=");hex(detail,&dp,sizeof(detail),g_native_status.checked1);
@@ -726,7 +745,7 @@ static int diagnostic_thread(SceSize args,void *argp) {
 }
 int module_start(SceSize args,void *argp) {
     (void)args;(void)argp;
-    log_line("\n[TTT MENU47 V0.4.4] module_start OK - ULUS10537 | 47 IDs V0.4 + 3 CHR proprios + 44 placeholders; diagnostico por ID\n");
+    log_line("\n[TTT MENU47 V0.4.5] module_start OK - ULUS10537 | 47 IDs V0.4; segunda batalha: reparo validado de 2 words\n");
     g_running=1;
     g_worker=sceKernelCreateThread("TTTExpMenuWorker",diagnostic_thread,0x20,0x4000,0,NULL);
     if(g_worker<0){g_running=0;log_line("[TTT DLC V2.0.3] ERROR: thread create\n");return 0;}

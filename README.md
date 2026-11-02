@@ -1,7 +1,1 @@
-# TTT Expansion Menu47 V0.4.4
-
-Leia primeiro `LEIA_PRIMEIRO_V044.md`.
-
-Correção condicionada de uma instrução perdida após a batalha com comparação integral dos dois resolvedores. 47 IDs, placeholders e nomes individuais preservados.
-
-O jogo PPSSPP ainda precisa validar a V0.4.4.
+TTT Expansion Menu 47 V0.4.5. Leia LEIA_PRIMEIRO_V045.md. Diagnostico(7): restauracao experimental de duas palavras do EBOOT, sem alterar recursos.

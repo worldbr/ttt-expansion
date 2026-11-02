@@ -19,4 +19,13 @@ int ttt_v04_code_diagnose(const volatile uint32_t *checked,
 int ttt_v04_first_word_repairable(const volatile uint32_t *checked,
                                   const volatile uint32_t *unchecked,
                                   uint32_t pack_count);
+/* Experimental V0.4.5: only indices 0 and 9 of the checked resolver may
+ * be recovered, only after observing an intact EBOOT V0.4 in this process.
+ * The observed overwritten data has the exact 0x682Bxxxx signature.
+ * No other words, no unchecked resolver, no unknown code are patched. */
+uint32_t ttt_v04_expected_checked_word(unsigned index);
+int ttt_v04_repair_plan(const volatile uint32_t *checked,
+                        const volatile uint32_t *unchecked,
+                        uint32_t pack_count,int pristine_seen,
+                        uint32_t *mask);
 #endif
