@@ -19,8 +19,8 @@ for name,count,expected in (
     observed=hashlib.sha256(struct.pack('<'+str(count)+'I',*words)).hexdigest()
     assert observed==expected, (name,observed)
 main=(r/'src/main.c').read_text()
-assert 'v04_repair_checked_opcode()' in main
-assert 'sceKernelIcacheInvalidateRange((void*)(uintptr_t)0x089C6CA0u,' in main
+assert 'ttt_v04_resolver_phase' in main
+assert 'BATTLE_RESOLVER actor_hits=' in main
 assert 'ACTOR_RESULT J=' in main
 assert 'EXPECTED_RESOURCE slot=' in main
-print('PASS V0.4.5: EBOOT V0.4 code images match byte-exact hashes, trace hooks wired')
+print('PASS V0.4.6: EBOOT V0.4 code images match byte-exact hashes, trace hooks wired')

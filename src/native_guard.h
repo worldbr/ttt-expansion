@@ -51,4 +51,10 @@ int ttt_native_v04_ensure_slot(TTTNativeGuard *st,
 int ttt_native_v04_repair_all(TTTNativeGuard *st,
                               volatile uint8_t *text_table,
                               volatile uint8_t *group_table);
+/* Validate-only path when checked code was replaced by a different scene.
+ * No writes, no code execution, no resources loaded. */
+int ttt_native_v04_verify_mappings(TTTNativeGuard *st,
+                                   volatile const uint8_t *text_table,
+                                   volatile const uint8_t *group_table,
+                                   unsigned slot,int audit_all);
 #endif

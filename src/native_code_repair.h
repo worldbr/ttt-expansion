@@ -28,4 +28,9 @@ int ttt_v04_repair_plan(const volatile uint32_t *checked,
                         const volatile uint32_t *unchecked,
                         uint32_t pack_count,int pristine_seen,
                         uint32_t *mask);
+/* 0 = pristine V0.4; 1 = another scene owns checked resolver (read-only
+ * deferred selection); negative = do not accept a character. */
+int ttt_v04_resolver_phase(const volatile uint32_t *checked,
+                           const volatile uint32_t *unchecked,
+                           uint32_t count,int pristine_seen,int actor_hit_seen);
 #endif

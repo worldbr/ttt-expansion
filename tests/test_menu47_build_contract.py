@@ -7,19 +7,19 @@ main=(r/'src/main.c').read_text()
 menu=(r/'src/menu_state.c').read_text()
 workflow=(r/'.github/workflows/compilar-prx.yml').read_text()
 make=(r/'Makefile').read_text()
-assert '[TTT MENU47 V0.4.5] module_start OK' in main
+assert '[TTT MENU47 V0.4.6] module_start OK' in main
 assert 'native_v04_check(menu.character,0)' in main
 assert 'ttt_native_v04_repair_all' in main
-assert 'v04_repair_checked_opcode()' in main
+assert 'ttt_v04_resolver_phase' in main
 assert 'EXPECTED_RESOURCE slot=' in main
 assert 'ACTOR_RESULT J=' in main
 assert 'ttt_menu_slot_supported(unsigned slot){return slot<TTT_CHARACTER_COUNT;}' in menu
 assert '#define TTT_CHARACTER_COUNT 47u' in (r/'src/character_ids.h').read_text()
 assert 'src/native_guard.o' in make and 'src/native_code_repair.o' in make and 'src/match_cycle.o' in make
-assert 'cp LEIA_PRIMEIRO_V045.md dist/LEIA_PRIMEIRO_V045.md' in workflow
+assert 'cp LEIA_PRIMEIRO_V046.md dist/LEIA_PRIMEIRO_V046.md' in workflow
 assert 'cp LEIA_PRIMEIRO_REBUILD_V2.md' not in workflow
-assert (r/'LEIA_PRIMEIRO_V045.md').is_file()
+assert (r/'LEIA_PRIMEIRO_V046.md').is_file()
 assert (r/'TTT_EXPANSION/characters.txt').is_file()
 assert (r/'TTT_EXPANSION/plugin.ini').is_file()
 assert len([x for x in (r/'TTT_EXPANSION/characters.txt').read_text().splitlines() if re.match(r'^\d\d=',x)])==47
-print('PASS: V0.4.5 build contract, 47 characters, all required distribution files')
+print('PASS: V0.4.6 build contract, 47 characters, all required distribution files')

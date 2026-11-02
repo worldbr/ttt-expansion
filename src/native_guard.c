@@ -121,3 +121,33 @@ int ttt_native_v04_ensure(TTTNativeGuard *st,
     }
     return TTT_NATIVE_VALID;
 }
+
+/* V0.4.6: extra characters may be selected between battles while the checked
+ * resolver is overlayed. Only VALIDATE existing mapping bytes, never try to
+ * restore code or tables in a foreign scene. */
+int ttt_native_v04_verify_mappings(TTTNativeGuard *st,
+                                   volatile const uint8_t *txt,
+                                   volatile const uint8_t *grp,
+                                   unsigned slot,int audit_all){
+    unsigned i,begin,end;
+    if(!st||!txt||!grp)return TTT_NATIVE_CONFLICT;
+    clear_status(st);
+    if(st->count!=TTT_V04_COUNT)return st->error=TTT_NATIVE_BAD_COUNT;
+    if(!audit_all && slot>=TTT_CHARACTER_COUNT)
+        return st->error=TTT_NATIVE_BAD_SLOT;
+    begin=audit_all?0u:slot;
+    end=audit_all?TTT_CHARACTER_COUNT:slot+1u;
+    for(i=begin;i<end;i++){
+        uint8_t id=ttt_character_battle_id(i);
+        uint8_t want=(uint8_t)(0x80u+i);
+        if(txt[id]!=want || grp[id]!=0u){
+            if(!st->conflicts){
+                st->bad_slot=i;st->found_text=txt[id];
+                st->found_group=grp[id];st->expected_text=want;
+            }
+            ++st->conflicts;
+        }
+    }
+    return st->error=st->conflicts?
+        (audit_all?TTT_NATIVE_PARTIAL:TTT_NATIVE_CONFLICT):TTT_NATIVE_VALID;
+}
