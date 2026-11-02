@@ -18,6 +18,8 @@
 #include "resource_hook.h"
 #include "slot_plan.h"
 #include "match_cycle.h"
+#include "native_guard.h"
+#include <psputils.h>
 #include "actor_watch.h"
 #include "actor_inject.h"
 #include "dlc_story.h"
@@ -25,27 +27,40 @@
 PSP_MODULE_INFO("TTTExpCallHook", PSP_MODULE_USER, 1, 12);
 PSP_NO_CREATE_MAIN_THREAD();
 #define LOG_PATH "ms0:/PSP/PLUGINS/TTT_EXPANSION/diagnostico.txt"
-/* Assinaturas exatas dos dois resolvedores patched no ELF V0.3.
- * Sem isso NUNCA injetar ID 00-02; o jogo original nao sabe carregar CHR extra. */
+/* V0.3 runs only on a genuine V0.3 PACKFILE (0x3734).
+ * Previously a stale fallback admitted just 3 characters even when
+ * count=0x37FC, hiding the V0.4 mapping failure. */
 static int native_v03_ready(void){
     volatile const uint32_t *c=(volatile const uint32_t*)(uintptr_t)0x089C6CA0u;
     volatile const uint32_t *u=(volatile const uint32_t*)(uintptr_t)0x089C6D60u;
     volatile const uint32_t *n=(volatile const uint32_t*)(uintptr_t)0x08AF3244u;
-    return *c==UINT32_C(0x2C8800A1) && *u==UINT32_C(0x3C0308A7) && (*n==UINT32_C(0x3734) || *n==UINT32_C(0x37FC));
+    return c[0]==UINT32_C(0x2C8800A1) && u[0]==UINT32_C(0x3C0308A7) && *n==UINT32_C(0x3734);
 }
+static TTTNativeGuard g_native_status;
 
-/* Exige V0.4 e header 0x37FC; nao tenta injetar extras com ELF V0.3. */
-static int native_v04_ready(unsigned slot){
-    uint8_t id=ttt_character_battle_id(slot);
+/* Each selected ID is checked independently: one conflicting placeholder
+ * must not disable other valid characters after returning from a battle. */
+static int native_v04_check(unsigned slot, int audit_all){
     volatile const uint32_t *c=(volatile const uint32_t*)(uintptr_t)0x089C6CA0u;
     volatile const uint32_t *u=(volatile const uint32_t*)(uintptr_t)0x089C6D60u;
     volatile const uint32_t *n=(volatile const uint32_t*)(uintptr_t)0x08AF3244u;
-    volatile const uint8_t *tab=(volatile const uint8_t*)(uintptr_t)0x08A743E0u;
-    volatile const uint8_t *grp=(volatile const uint8_t*)(uintptr_t)0x08A69720u;
-    if(id>0xA0u||slot>=47u)return 0;
-    return c[0]==UINT32_C(0x2C8800A1) && c[1]==UINT32_C(0x15000007)
-       && u[0]==UINT32_C(0x2C8800A1) && u[1]==UINT32_C(0x11000003)
-       && *n==UINT32_C(0x37FC) && tab[id]==(uint8_t)(0x80u+slot) && grp[id]==0u;
+    volatile uint8_t *tab=(volatile uint8_t*)(uintptr_t)0x08A743E0u;
+    volatile uint8_t *grp=(volatile uint8_t*)(uintptr_t)0x08A69720u;
+    g_native_status.checked0=c[0];g_native_status.checked1=c[1];
+    g_native_status.unchecked0=u[0];g_native_status.unchecked1=u[1];
+    g_native_status.count=*n;
+    {
+        int rc=audit_all
+            ?ttt_native_v04_repair_all(&g_native_status,tab,grp)
+            :ttt_native_v04_ensure_slot(&g_native_status,tab,grp,slot);
+        if(g_native_status.repaired_text || g_native_status.repaired_group){
+            sceKernelDcacheWritebackInvalidateRange((void*)(uintptr_t)0x08A743E0u,0xA1u);
+            sceKernelDcacheWritebackInvalidateRange((void*)(uintptr_t)0x08A69720u,0xA1u);
+        }
+        /* PARTIAL is allowed only for the opening audit; X checks its own
+         * selected slot separately and refuses any conflict on that slot. */
+        return rc==TTT_NATIVE_VALID || (audit_all && rc==TTT_NATIVE_PARTIAL);
+    }
 }
 static volatile int g_running;
 static uint32_t g_mission_progress;
@@ -325,7 +340,7 @@ static int diagnostic_thread(SceSize args,void *argp) {
     ttt_actor_watch_init(&g_actor_watch);
     g_mission_progress=ttt_dlc_progress_load();
     ttt_gpu_set_dlc(0,g_mission_progress);
-    log_line("[TTT MENU47] Inicializado. 47 slots. EBOOT V0.4 para todos os IDS (V0.3 apenas para 00-02).\n");
+    log_line("[TTT MENU47 V0.4.3] Inicializado. 47 slots. EBOOT V0.4, guard individual por ID ativo.\n");
     /* Wait until game starts drawing and the loader finishes linking imports. */
     sceKernelDelayThread(1500000);
     probe_log("APOS_START");
@@ -360,7 +375,28 @@ static int diagnostic_thread(SceSize args,void *argp) {
                     ttt_actor_inject_disable();
                     ttt_slot_plan_reset(&plan);
                     for(k=0;k<4;k++)menu.confirmed[k]=0;
-                    log_line("[TTT MENU47 V0.4.1] NOVA RODADA: actor hit detectado; selecoes antigas liberadas.\n");
+                    log_line("[TTT MENU47 V0.4.3] NOVA RODADA: actor hit detectado; selecoes antigas liberadas.\n");
+                }
+                /* Run the guard at each selection opening, not only on X.
+                 * This lets a scene-restored FF mapping recover before any
+                 * attempt to re-arm a player for a second fight. */
+                {
+                    int ok=native_v04_check(menu.character,1);char gs[290];int gp=0;gs[0]=0;
+                    append(gs,&gp,sizeof(gs),"[TTT MENU47 V0.4.3] OPEN NATIVE ok=");
+                    hex(gs,&gp,sizeof(gs),(uint32_t)ok);
+                    append(gs,&gp,sizeof(gs)," error=");
+                    hex(gs,&gp,sizeof(gs),(uint32_t)g_native_status.error);
+                    append(gs,&gp,sizeof(gs)," restored_text=");
+                    hex(gs,&gp,sizeof(gs),g_native_status.repaired_text);
+                    append(gs,&gp,sizeof(gs)," restored_group=");
+                    hex(gs,&gp,sizeof(gs),g_native_status.repaired_group);
+                    append(gs,&gp,sizeof(gs)," conflicts=");
+                    hex(gs,&gp,sizeof(gs),g_native_status.conflicts);
+                    append(gs,&gp,sizeof(gs)," first_bad_slot=");
+                    hex(gs,&gp,sizeof(gs),g_native_status.bad_slot);
+                    append(gs,&gp,sizeof(gs)," count=");
+                    hex(gs,&gp,sizeof(gs),g_native_status.count);
+                    append(gs,&gp,sizeof(gs),"\n");log_line(gs);
                 }
                 ttt_catalog_reload();
                 ttt_audio_play(TTT_SND_CONFIRM);
@@ -462,7 +498,16 @@ static int diagnostic_thread(SceSize args,void *argp) {
                 /* V0.3/V0.4 usam resolvedor NATIVO do EBOOT. Nao ativar resource_hook
                  * nem battle_bridge, para evitar conflito com ELF modificado. */
                 int id=(int)ttt_menu_external_id(&menu),rc;
-                if(id>0xA0){rc=-41;}else if(!native_v04_ready(menu.character) && !(id<=2 && native_v03_ready())){rc=-42;}else rc=ttt_actor_inject_install();
+                if(id>0xA0){rc=-41;}
+                else if(!native_v04_check(menu.character,0) && !(id<=2 && native_v03_ready())){rc=-42;}
+                else rc=ttt_actor_inject_install();
+                if((g_native_status.repaired_text || g_native_status.repaired_group) && rc==0){
+                    char msg[165];int mp=0;msg[0]=0;
+                    append(msg,&mp,sizeof(msg),"[TTT MENU47 V0.4.3] MAPEAMENTOS RESTAURADOS text=");
+                    hex(msg,&mp,sizeof(msg),g_native_status.repaired_text);
+                    append(msg,&mp,sizeof(msg)," group=");hex(msg,&mp,sizeof(msg),g_native_status.repaired_group);
+                    append(msg,&mp,sizeof(msg),"\n");log_line(msg);
+                }
                 if(rc==0){
                     /* If the game's actor-store opcode was restored between
                      * rounds, install() starts with an empty enabled mask.
@@ -482,7 +527,7 @@ static int diagnostic_thread(SceSize args,void *argp) {
                 if(rc==0){
                     (void)ttt_slot_plan_select(&plan,menu.player,id,menu.color);
                     ttt_audio_play(TTT_SND_CONFIRM);
-                    log_line("[TTT MENU47 V0.4.1] PERSONAGEM CONFIRMADO NO PLUGIN; confirme tambem no seletor ORIGINAL do jogo.\n");
+                    log_line("[TTT MENU47 V0.4.3] PERSONAGEM CONFIRMADO NO PLUGIN; confirme tambem no seletor ORIGINAL do jogo.\n");
                 }else{
                     menu.confirmed[menu.player]=0;
                     ttt_slot_plan_disable(&plan,menu.player);
@@ -490,15 +535,31 @@ static int diagnostic_thread(SceSize args,void *argp) {
                     ttt_audio_play(TTT_SND_ERROR);
                     {
                         char errline[160];int ep=0;errline[0]=0;
-                        append(errline,&ep,sizeof(errline),"[TTT MENU47 V0.4.1] CONFIRMAR FALHOU rc=");
+                        append(errline,&ep,sizeof(errline),"[TTT MENU47 V0.4.3] CONFIRMAR FALHOU rc=");
                         hex(errline,&ep,sizeof(errline),(uint32_t)rc);
                         append(errline,&ep,sizeof(errline)," id=");
                         hex(errline,&ep,sizeof(errline),(uint32_t)id);
                         append(errline,&ep,sizeof(errline)," store_pc=");
                         hex(errline,&ep,sizeof(errline),*(volatile const uint32_t*)(uintptr_t)TTT_ACTOR_STORE_PC);
                         append(errline,&ep,sizeof(errline)," pack_count=");
-                        hex(errline,&ep,sizeof(errline),*(volatile const uint32_t*)(uintptr_t)0x08AF3244u);
+                        hex(errline,&ep,sizeof(errline),g_native_status.count);
                         append(errline,&ep,sizeof(errline),"\n");log_line(errline);
+                        if(rc==-42){
+                            char detail[360];int dp=0;detail[0]=0;
+                            append(detail,&dp,sizeof(detail),"[TTT MENU47 V0.4.3] NATIVE_GUARD error=");
+                            hex(detail,&dp,sizeof(detail),(uint32_t)g_native_status.error);
+                            append(detail,&dp,sizeof(detail)," checked0=");hex(detail,&dp,sizeof(detail),g_native_status.checked0);
+                            append(detail,&dp,sizeof(detail)," checked1=");hex(detail,&dp,sizeof(detail),g_native_status.checked1);
+                            append(detail,&dp,sizeof(detail)," unchecked0=");hex(detail,&dp,sizeof(detail),g_native_status.unchecked0);
+                            append(detail,&dp,sizeof(detail)," unchecked1=");hex(detail,&dp,sizeof(detail),g_native_status.unchecked1);
+                            append(detail,&dp,sizeof(detail)," selected_slot=");hex(detail,&dp,sizeof(detail),menu.character);
+                            append(detail,&dp,sizeof(detail)," conflicts=");hex(detail,&dp,sizeof(detail),g_native_status.conflicts);
+                            append(detail,&dp,sizeof(detail)," slot=");hex(detail,&dp,sizeof(detail),g_native_status.bad_slot);
+                            append(detail,&dp,sizeof(detail)," txt=");hex(detail,&dp,sizeof(detail),g_native_status.found_text);
+                            append(detail,&dp,sizeof(detail)," grp=");hex(detail,&dp,sizeof(detail),g_native_status.found_group);
+                            append(detail,&dp,sizeof(detail)," want=");hex(detail,&dp,sizeof(detail),g_native_status.expected_text);
+                            append(detail,&dp,sizeof(detail),"\n");log_line(detail);
+                        }
                     }
                 }
                 ttt_gpu_set_menu(ttt_menu_snapshot(&menu));
@@ -573,7 +634,7 @@ static int diagnostic_thread(SceSize args,void *argp) {
 }
 int module_start(SceSize args,void *argp) {
     (void)args;(void)argp;
-    log_line("\n[TTT DLC V2.0.3] module_start OK - ULUS10537 | DLC Rebuild V2.0.3: ATLAS UNICO 128KB + 3 GOKUS + 6 MISSOES\n");
+    log_line("\n[TTT MENU47 V0.4.3] module_start OK - ULUS10537 | 47 IDs V0.4 + 3 CHR proprios + 44 placeholders; diagnostico por ID\n");
     g_running=1;
     g_worker=sceKernelCreateThread("TTTExpMenuWorker",diagnostic_thread,0x20,0x4000,0,NULL);
     if(g_worker<0){g_running=0;log_line("[TTT DLC V2.0.3] ERROR: thread create\n");return 0;}
