@@ -23,4 +23,4 @@ assert 'ttt_v04_resolver_phase' in main
 assert 'BATTLE_RESOLVER actor_hits=' in main
 assert 'ACTOR_RESULT J=' in main
 assert 'EXPECTED_RESOURCE slot=' in main
-print('PASS V0.4.6: EBOOT V0.4 code images match byte-exact hashes, trace hooks wired')
+print('PASS V0.4.7: EBOOT V0.4 code images match byte-exact hashes, trace hooks wired')

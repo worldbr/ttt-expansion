@@ -89,24 +89,30 @@ int ttt_v04_repair_plan(const volatile uint32_t *checked,
     return 1;
 }
 
-/* V0.4.6: the checked resolver address is scene-overlaid after a battle.
- * Do NOT restore instructions at this address while the other scene owns it.
- * Returning 1 means only that a NEW selection may be staged, provided its
- * mapping bytes are already valid; it does NOT mean the resolver is callable.
- * 0: all bytes match V0.4; 1: deferred until next battle scene; negative: refuse.
+/* V0.4.7: both resolver regions may be scene-overlaid after a battle.
+ * In diagnostico(8) the second battle injected IDs 0x16/0x01/0x02,
+ * but the NEXT menu reported phase=-3 because an instruction after the
+ * first two words of the unchecked resolver changed. The native code is
+ * never called or written to here. Return STAGED when a known post-battle
+ * checked-region signature, intact branch sentinels, a previously observed
+ * pristine V0.4 image and an actual completed actor injection all agree.
+ * The caller separately validates the selected ID's existing table bytes.
+ * Reject unknown prefixes, missing sentinels, bad count or missing history.
  */
 int ttt_v04_resolver_phase(const volatile uint32_t *checked,
                            const volatile uint32_t *unchecked,
                            uint32_t count,int pristine_seen,int actor_hit_seen){
-    unsigned i;
     if(!checked||!unchecked)return -1;
     if(count!=TTT_V04_COUNT)return -2;
     if(ttt_v04_code_diagnose(checked,unchecked,count,0,0,0,0)==0)return 0;
     if(!pristine_seen||!actor_hit_seen)return -4;
-    for(i=0;i<TTT_V04_UNCHECKED_WORDS;i++)
-        if(unchecked[i]!=unchecked_expected[i])return -3;
-    /* Both prefixes were recorded in diagnostico(8), on different fights.
-     * 0x682Axxxx and 0x682Bxxxx are considered scene data, NOT code to run. */
+    /* Distinguishes read-only foreign-scene data from an unknown code patch.
+     * The 0x682A/0x682B high-halfword patterns are observed in both logs. */
     if((checked[0]&UINT32_C(0xFFFE0000))!=UINT32_C(0x682A0000))return -5;
+    if(checked[1]!=checked_expected[1])return -6;
+    if(unchecked[0]!=unchecked_expected[0] ||
+       unchecked[1]!=unchecked_expected[1])return -7;
+    /* Remaining unchecked words can be owned by another scene: DO NOT use
+     * them to veto a staged actor selection. No game code is patched here. */
     return 1;
 }

@@ -28,7 +28,7 @@
 PSP_MODULE_INFO("TTTExpCallHook", PSP_MODULE_USER, 1, 12);
 PSP_NO_CREATE_MAIN_THREAD();
 #define LOG_PATH "ms0:/PSP/PLUGINS/TTT_EXPANSION/diagnostico.txt"
-/* V0.4.6: the checked resolver memory is reused by a different scene
+/* V0.4.7: the checked resolver memory is reused by a different scene
  * after a fight. NEVER write instructions there just to accept an overlay
  * selection. The battle actor hook is independent from this resolver. */
 static int g_pristine_v04_seen=0;
@@ -45,8 +45,9 @@ static int native_v03_ready(void){
     volatile const uint32_t *n=(volatile const uint32_t*)(uintptr_t)0x08AF3244u;
     return c[0]==UINT32_C(0x2C8800A1) && u[0]==UINT32_C(0x3C0308A7) && *n==UINT32_C(0x3734);
 }
-/* When checked code is present, use the original full native guard. When it
- * is owned by the post-battle scene, only accept an already-correct mapping.
+/* When both resolver code regions are present, use the original full native
+ * guard. Between battles, allow only an already-correct mapping, without
+ * requiring every instruction of the scene-overlaid code to match V0.4.
  * The latter result means STAGED, not native code guaranteed to run. */
 static int native_v04_check(unsigned slot,int audit_all){
     volatile const uint32_t *c=(volatile const uint32_t*)(uintptr_t)0x089C6CA0u;
@@ -75,12 +76,20 @@ static int native_v04_check(unsigned slot,int audit_all){
         rc=TTT_NATIVE_BAD_CODE;
     }
     if(phase!=g_last_phase_log){
-        char msg[230];int k=0;msg[0]=0;
-        append(msg,&k,sizeof(msg),"[TTT MENU47 V0.4.6] RESOLVER_PHASE phase=");
+        char msg[400];int k=0;unsigned bad_module=0,bad_index=0;
+        uint32_t bad_actual=0,bad_expected=0;
+        msg[0]=0;
+        (void)ttt_v04_code_diagnose(c,u,*n,&bad_module,&bad_index,&bad_actual,&bad_expected);
+        append(msg,&k,sizeof(msg),"[TTT MENU47 V0.4.7] RESOLVER_PHASE phase=");
         hex(msg,&k,sizeof(msg),(uint32_t)phase);
         append(msg,&k,sizeof(msg)," trusted=");hex(msg,&k,sizeof(msg),(uint32_t)g_pristine_v04_seen);
         append(msg,&k,sizeof(msg)," actor_hit_seen=");hex(msg,&k,sizeof(msg),(uint32_t)g_completed_actor_injection);
         append(msg,&k,sizeof(msg)," checked0=");hex(msg,&k,sizeof(msg),c[0]);
+        append(msg,&k,sizeof(msg)," unchecked0=");hex(msg,&k,sizeof(msg),u[0]);
+        append(msg,&k,sizeof(msg)," bad_module=");hex(msg,&k,sizeof(msg),bad_module);
+        append(msg,&k,sizeof(msg)," bad_word=");hex(msg,&k,sizeof(msg),bad_index);
+        append(msg,&k,sizeof(msg)," bad_actual=");hex(msg,&k,sizeof(msg),bad_actual);
+        append(msg,&k,sizeof(msg)," bad_expected=");hex(msg,&k,sizeof(msg),bad_expected);
         append(msg,&k,sizeof(msg)," count=");hex(msg,&k,sizeof(msg),*n);
         append(msg,&k,sizeof(msg),"\n");log_line(msg);
         g_last_phase_log=phase;
@@ -365,7 +374,7 @@ static int diagnostic_thread(SceSize args,void *argp) {
     ttt_actor_watch_init(&g_actor_watch);
     g_mission_progress=ttt_dlc_progress_load();
     ttt_gpu_set_dlc(0,g_mission_progress);
-    log_line("[TTT MENU47 V0.4.6] Inicializado. 47 slots. EBOOT V0.4, confirmacao diferida segura entre cenas; 47 IDs.\n");
+    log_line("[TTT MENU47 V0.4.7] Inicializado. 47 slots. EBOOT V0.4, confirmacao diferida segura entre cenas; 47 IDs.\n");
     /* Wait until game starts drawing and the loader finishes linking imports. */
     sceKernelDelayThread(1500000);
     probe_log("APOS_START");
@@ -400,7 +409,7 @@ static int diagnostic_thread(SceSize args,void *argp) {
                  * were actually written into actors, not just confirmed UI. */
                 {
                     char at[190];int ap=0;at[0]=0;
-                    append(at,&ap,sizeof(at),"[TTT MENU47 V0.4.6] ACTOR_SNAPSHOT hits=");
+                    append(at,&ap,sizeof(at),"[TTT MENU47 V0.4.7] ACTOR_SNAPSHOT hits=");
                     hex(at,&ap,sizeof(at),last.hits);
                     append(at,&ap,sizeof(at)," enabled=");hex(at,&ap,sizeof(at),last.enabled_mask);
                     append(at,&ap,sizeof(at)," last_original=");hex(at,&ap,sizeof(at),last.last_original_id);
@@ -417,7 +426,7 @@ static int diagnostic_thread(SceSize args,void *argp) {
                         TTTSlotChoice ch;
                         char msg[195];int z=0;msg[0]=0;
                         if(ttt_slot_plan_get(&plan,k,&ch)!=0 || !ch.confirmed)continue;
-                        append(msg,&z,sizeof(msg),"[TTT MENU47 V0.4.6] ACTOR_RESULT J=");
+                        append(msg,&z,sizeof(msg),"[TTT MENU47 V0.4.7] ACTOR_RESULT J=");
                         hex(msg,&z,sizeof(msg),(uint32_t)k+1u);
                         append(msg,&z,sizeof(msg)," expected_id=");hex(msg,&z,sizeof(msg),ch.external_id);
                         append(msg,&z,sizeof(msg)," actual_ram_id=");
@@ -431,14 +440,14 @@ static int diagnostic_thread(SceSize args,void *argp) {
                     ttt_actor_inject_disable();
                     ttt_slot_plan_reset(&plan);
                     for(k=0;k<4;k++)menu.confirmed[k]=0;
-                    log_line("[TTT MENU47 V0.4.6] NOVA RODADA: actor hit detectado; selecoes antigas liberadas.\n");
+                    log_line("[TTT MENU47 V0.4.7] NOVA RODADA: actor hit detectado; selecoes antigas liberadas.\n");
                 }
                 /* Run the guard at each selection opening, not only on X.
                  * This lets a scene-restored FF mapping recover before any
                  * attempt to re-arm a player for a second fight. */
                 {
                     int ok=native_v04_check(menu.character,1);char gs[290];int gp=0;gs[0]=0;
-                    append(gs,&gp,sizeof(gs),"[TTT MENU47 V0.4.6] OPEN NATIVE ok=");
+                    append(gs,&gp,sizeof(gs),"[TTT MENU47 V0.4.7] OPEN NATIVE ok=");
                     hex(gs,&gp,sizeof(gs),(uint32_t)ok);
                     append(gs,&gp,sizeof(gs)," error=");
                     hex(gs,&gp,sizeof(gs),(uint32_t)g_native_status.error);
@@ -559,7 +568,7 @@ static int diagnostic_thread(SceSize args,void *argp) {
                 else rc=ttt_actor_inject_install();
                 if((g_native_status.repaired_text || g_native_status.repaired_group) && rc==0){
                     char msg[165];int mp=0;msg[0]=0;
-                    append(msg,&mp,sizeof(msg),"[TTT MENU47 V0.4.6] MAPEAMENTOS RESTAURADOS text=");
+                    append(msg,&mp,sizeof(msg),"[TTT MENU47 V0.4.7] MAPEAMENTOS RESTAURADOS text=");
                     hex(msg,&mp,sizeof(msg),g_native_status.repaired_text);
                     append(msg,&mp,sizeof(msg)," group=");hex(msg,&mp,sizeof(msg),g_native_status.repaired_group);
                     append(msg,&mp,sizeof(msg),"\n");log_line(msg);
@@ -587,7 +596,7 @@ static int diagnostic_thread(SceSize args,void *argp) {
                         volatile const uint32_t *rec=(volatile const uint32_t*)(uintptr_t)(0x08AF3250u+index*16u);
                         volatile const uint8_t *table=(volatile const uint8_t*)(uintptr_t)0x08A743E0u;
                         char msg[260];int qp=0;msg[0]=0;
-                        append(msg,&qp,sizeof(msg),"[TTT MENU47 V0.4.6] EXPECTED_RESOURCE slot=");
+                        append(msg,&qp,sizeof(msg),"[TTT MENU47 V0.4.7] EXPECTED_RESOURCE slot=");
                         hex(msg,&qp,sizeof(msg),(uint32_t)menu.character+1u);
                         append(msg,&qp,sizeof(msg)," id=");hex(msg,&qp,sizeof(msg),(uint32_t)id);
                         append(msg,&qp,sizeof(msg)," color=");hex(msg,&qp,sizeof(msg),(uint32_t)menu.color);
@@ -599,9 +608,9 @@ static int diagnostic_thread(SceSize args,void *argp) {
                     }
                     ttt_audio_play(TTT_SND_CONFIRM);
                     if(g_resolver_phase==1){
-                        log_line("[TTT MENU47 V0.4.6] CONFIRMACAO DIFERIDA: ID armazenado, resolver pertencendo a outra cena; aguardar batalha para recarregamento.\n");
+                        log_line("[TTT MENU47 V0.4.7] CONFIRMACAO DIFERIDA: ID armazenado, resolver pertencendo a outra cena; aguardar batalha para recarregamento.\n");
                     }else{
-                        log_line("[TTT MENU47 V0.4.6] PERSONAGEM CONFIRMADO NO PLUGIN; confirme tambem no seletor ORIGINAL do jogo.\n");
+                        log_line("[TTT MENU47 V0.4.7] PERSONAGEM CONFIRMADO NO PLUGIN; confirme tambem no seletor ORIGINAL do jogo.\n");
                     }
                 }else{
                     menu.confirmed[menu.player]=0;
@@ -610,7 +619,7 @@ static int diagnostic_thread(SceSize args,void *argp) {
                     ttt_audio_play(TTT_SND_ERROR);
                     {
                         char errline[160];int ep=0;errline[0]=0;
-                        append(errline,&ep,sizeof(errline),"[TTT MENU47 V0.4.6] CONFIRMAR FALHOU rc=");
+                        append(errline,&ep,sizeof(errline),"[TTT MENU47 V0.4.7] CONFIRMAR FALHOU rc=");
                         hex(errline,&ep,sizeof(errline),(uint32_t)rc);
                         append(errline,&ep,sizeof(errline)," id=");
                         hex(errline,&ep,sizeof(errline),(uint32_t)id);
@@ -621,7 +630,7 @@ static int diagnostic_thread(SceSize args,void *argp) {
                         append(errline,&ep,sizeof(errline),"\n");log_line(errline);
                         if(rc==-42){
                             char detail[360];int dp=0;detail[0]=0;
-                            append(detail,&dp,sizeof(detail),"[TTT MENU47 V0.4.6] NATIVE_GUARD error=");
+                            append(detail,&dp,sizeof(detail),"[TTT MENU47 V0.4.7] NATIVE_GUARD error=");
                             hex(detail,&dp,sizeof(detail),(uint32_t)g_native_status.error);
                             append(detail,&dp,sizeof(detail)," checked0=");hex(detail,&dp,sizeof(detail),g_native_status.checked0);
                             append(detail,&dp,sizeof(detail)," checked1=");hex(detail,&dp,sizeof(detail),g_native_status.checked1);
@@ -668,7 +677,7 @@ static int diagnostic_thread(SceSize args,void *argp) {
             if(h.hits!=reported_hits){
                 char b[180];int q=0;b[0]=0;
                 reported_hits=h.hits;
-                append(b,&q,sizeof(b),"[TTT MENU47 V0.4.6] BATTLE_RESOLVER actor_hits=");
+                append(b,&q,sizeof(b),"[TTT MENU47 V0.4.7] BATTLE_RESOLVER actor_hits=");
                 hex(b,&q,sizeof(b),h.hits);
                 append(b,&q,sizeof(b)," checked0=");
                 hex(b,&q,sizeof(b),*(volatile const uint32_t*)(uintptr_t)0x089C6CA0u);
@@ -726,7 +735,7 @@ static int diagnostic_thread(SceSize args,void *argp) {
 }
 int module_start(SceSize args,void *argp) {
     (void)args;(void)argp;
-    log_line("\n[TTT MENU47 V0.4.6] module_start OK - ULUS10537 | 47 IDs V0.4; segunda rodada: confirmacao diferida sem patch de memoria\n");
+    log_line("\n[TTT MENU47 V0.4.7] module_start OK - ULUS10537 | 47 IDs V0.4; rodadas sucessivas: confirmacao diferida sem patch de memoria\n");
     g_running=1;
     g_worker=sceKernelCreateThread("TTTExpMenuWorker",diagnostic_thread,0x20,0x4000,0,NULL);
     if(g_worker<0){g_running=0;log_line("[TTT DLC V2.0.3] ERROR: thread create\n");return 0;}
