@@ -1,0 +1,22 @@
+#ifndef TTT_NATIVE_CODE_REPAIR_H
+#define TTT_NATIVE_CODE_REPAIR_H
+#include <stdint.h>
+/* Verified ULUS10537 EBOOT V0.4 code image, not a generic pattern patch.
+ * Return 0 when intact, 1 ONLY if the first checked word alone was lost,
+ * -1 if any other word differs, -2 if the PACKFILE count is wrong. Read-only.
+ * This does not execute or write into the PSP address space.
+ */
+#define TTT_V04_CHECKED_WORDS 24u
+#define TTT_V04_UNCHECKED_WORDS 15u
+/* First mismatching opcode for diagnostics. Null output arguments allowed.
+ * Return: 0 exact; 1 first checked word only; -1 unsafe mismatch; -2 bad count.
+ * module=0 checked, module=1 unchecked; index=word index. */
+int ttt_v04_code_diagnose(const volatile uint32_t *checked,
+                           const volatile uint32_t *unchecked,
+                           uint32_t pack_count,
+                           unsigned *module, unsigned *index,
+                           uint32_t *actual, uint32_t *expected);
+int ttt_v04_first_word_repairable(const volatile uint32_t *checked,
+                                  const volatile uint32_t *unchecked,
+                                  uint32_t pack_count);
+#endif

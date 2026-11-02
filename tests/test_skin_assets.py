@@ -41,7 +41,7 @@ assert '((uint32_t)(m->focus & 1u)<<10)' in menu
 assert 'TTT_EVENT_SOUND_TOGGLE' not in menu
 assert 'native_v04_check(menu.character,0)' in main
 assert 'ttt_native_v04_ensure_slot' in (root/'src/native_guard.c').read_text()
-assert 'V0.4.3' in main
+assert 'V0.4.4' in main
 
 # Carregamento de retratos, fallback de fonte e alocacao PSP preservados.
 for needle in (

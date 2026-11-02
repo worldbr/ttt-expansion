@@ -15,6 +15,8 @@ run_test test_gu_budget
 run_test test_native src/overlay.c src/toggle.c src/framecheck.c
 run_test test_menu_state src/menu_state.c
 run_test test_match_cycle src/match_cycle.c
+run_test test_native_guard src/native_guard.c
+run_test test_native_code_repair src/native_code_repair.c
 run_test test_bridge src/battle_bridge.c
 run_test test_resource src/resource_hook.c
 run_test test_actor_watch src/actor_watch.c
