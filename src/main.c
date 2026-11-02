@@ -109,12 +109,6 @@ static void hex(char *d,int *p,int cap,uint32_t v) {
     for(j=7;j>=0;--j)if(*p<cap-1)d[(*p)++]=h[(v>>(4*j))&15];
     d[*p]=0;
 }
-    append(b,&k,sizeof(b)," mask=");hex(b,&k,sizeof(b),g_last_repair_mask);
-    append(b,&k,sizeof(b)," trusted=");hex(b,&k,sizeof(b),(uint32_t)g_pristine_v04_seen);
-    append(b,&k,sizeof(b)," success=");hex(b,&k,sizeof(b),g_restore_success);
-    append(b,&k,sizeof(b)," rejected=");hex(b,&k,sizeof(b),g_restore_rejected);
-    append(b,&k,sizeof(b),"\n");log_line(b);
-}
 static void probe_log(const char *phase) {
     TTTStubProbe x=ttt_frame_hook_probe();
     char s[270];int pos=0;s[0]=0;

@@ -28,3 +28,13 @@ Faça backup do PRX e da ISO. Atualize os arquivos no GitHub, compile e substitu
 **Limitação importante:** o log até agora não prova que o resolvedor checked é recarregado antes da *segunda* batalha. A V0.4.6 não restaura nem executa o código desse resolvedor; apenas prepara a escolha para que o jogo possa processá-la quando trocar de cena. Se o jogo NÃO recarregar o código, este teste pode falhar ou o combate pode não carregar. Teste com backup e interrompa em caso de crash.
 
 Testes host do código C e verificações estáticas não equivalem a build PSPDEV nem à execução no PPSSPP.
+
+
+### Correcao de compilacao 2026-11-02
+Esta distribuicao inclui um `src/main.c` completo corrigido. A antiga funcao
+`native_repair_log` foi removida por inteiro porque nao era chamada e usava
+`g_last_repair_mask`, `g_restore_success` e `g_restore_rejected`, variaveis
+inexistentes na V0.4.6. Nao apague manualmente linhas isoladas: substitua
+`src/main.c` pelo arquivo deste pacote para evitar comandos soltos e os erros
+`expected ')' before '&' token` / `conflicting types for log_line`.
+A logica de confirmacao pos-batalha nao foi alterada neste ajuste de build.
